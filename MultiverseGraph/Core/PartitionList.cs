@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MultiverseGraph.Core
 {
@@ -85,6 +86,8 @@ namespace MultiverseGraph.Core
             internal Position Position;
             internal ulong StartIndex;
             internal PartitionNode Previous;
+
+            internal LinkedList<PartitionNode> SeverenceSubscribers;
 
             internal PartitionNode(Position position, ulong startIndex)
             {
