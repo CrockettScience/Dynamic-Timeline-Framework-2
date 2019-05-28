@@ -11,7 +11,7 @@ namespace MultiverseGraph.Core
         {
             get
             {
-                var current = _head;
+                var current = Head;
                 
                 //Iterate back until the node range covers the index
                 while (current.StartIndex > index)
@@ -25,17 +25,29 @@ namespace MultiverseGraph.Core
 
         public PartitionList()
         {
-            _head = new PartitionNode(new Position(), 0);
+            Head = new PartitionNode(new Position(), 0);
         }
         
         public PartitionList(Position position)
         {
-            _head = new PartitionNode(position, 0);
+            Head = new PartitionNode(position, 0);
         }
 
         private PartitionList(PartitionNode head)
         {
-            _head = head;
+            Head = head;
+        }
+
+        private PartitionNode Head
+        {
+            get { return _head; }
+            set
+            {
+                _head.HeadOwner = null;
+                
+                _head = value;
+                _head.HeadOwner = this;
+            }
         }
 
         public void And(PartitionList other)
@@ -45,8 +57,8 @@ namespace MultiverseGraph.Core
 
         public static PartitionList operator &(PartitionList left, PartitionList right)
         {
-            var currentLeft = left._head;
-            var currentRight = right._head;
+            var currentLeft = left.Head;
+            var currentRight = right.Head;
             
             var currentNew = new PartitionNode(currentLeft.Position & currentRight.Position, currentLeft.StartIndex >= currentRight.StartIndex ? currentLeft.StartIndex : currentRight.StartIndex);
             var newPartition = new PartitionList(currentNew);
@@ -81,18 +93,23 @@ namespace MultiverseGraph.Core
 
         }
         
-        private class PartitionNode
+        public class PartitionNode
         {
             internal Position Position;
             internal ulong StartIndex;
             internal PartitionNode Previous;
 
-            internal LinkedList<PartitionNode> SeverenceSubscribers;
+            private LinkedList<PartitionNode> _severenceSubscribers;
+            internal PartitionList HeadOwner;
 
             internal PartitionNode(Position position, ulong startIndex)
             {
                 Position = position;
                 StartIndex = startIndex;
+            }
+
+            internal void Sever(PartitionNode recourseTail, PartitionList graft) {
+                
             }
         }
     }
