@@ -49,7 +49,7 @@
     <Compile Include="Core\Diff.cs" />
     <Compile Include="Core\Handle.cs" />
     <Compile Include="Core\Multiverse.cs" />
-    <Compile Include="Core\PartitionList.cs" />
+    <Compile Include="Core\ContinuityBranch.cs" />
     <Compile Include="Core\Position.cs" />
     <Compile Include="Core\Tools\IndexedStack.cs" />
     <Compile Include="Core\Universe.cs" />
