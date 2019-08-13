@@ -3,7 +3,7 @@
 
 This framework is a continuation of a proof of concept project I made before (see Paradawn). The idea is to create a framework and library that manages a boundless virtual timeline that can persistently manage separate resolution paths (think of it like a multiverse). 
 
-What makes this unique is the ability to resolve the state of any object on the timeline in an O(1) worst case access time, where n is defined as the "point" of the timeline being accessed, and an O(nLogn) worst case access time where n is defined as the number of "splits" in the resolution paths.
+What makes this unique is the ability to resolve the state of any object on the timeline in an O(1) worst case access time, where n is defined as the "point" of the timeline being accessed, an O(nLogn) worst case access time where n is defined as the number of "splits" in the resolution paths, and an O(n) worst case access time where n is defined as the number of discreet states needed to navigate to that point. This is to be contrasted with, say, Dwarf Fortresses linear robust-but-horrendously-cumbersome "brute-force" timeline generator with an O(n^k) worst case resolution, where n is defined as the date to generate to and k is the number of separate, interconnected objects on the timeline, of which there could thousands.
 
 The main procedural principle that makes this work is loosely inspired on the work of [Maxim Gumin](http://github.com/mxgmn) and the [WaveFunctionCollapse](http://github.com/mxgmn/WaveFunctionCollapse) algorithm.
 
