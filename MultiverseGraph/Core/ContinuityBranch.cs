@@ -5,7 +5,8 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace MultiverseGraph.Core
 {
-    //TODO - Find a way to naturally unsubscribe unused branches
+    ///
+    /// OLd implementation of the sprig data structure. For future reference.
     internal class ContinuityBranch
     {
         private ContinuityBranchNode _head;

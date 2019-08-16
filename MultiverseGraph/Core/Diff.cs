@@ -63,7 +63,7 @@ namespace MultiverseGraph.Core
                 deltaHash ^= pair.Value.GetHashCode();
             }
 
-            return Date.GetHashCode() * 397 ^ deltaHash;
+            return (Date.GetHashCode() * 397) ^ deltaHash;
         }
     }
 }

@@ -52,11 +52,14 @@
     <Compile Include="Core\ContinuityBranch.cs" />
     <Compile Include="Core\Position.cs" />
     <Compile Include="Core\Tools\IndexedStack.cs" />
+    <Compile Include="Core\Tools\Sprig\SBranchNode.cs" />
+    <Compile Include="Core\Tools\Sprig\SHeadNode.cs" />
+    <Compile Include="Core\Tools\Sprig\Spine.cs" />
+    <Compile Include="Core\Tools\Sprig\SpineNode.cs" />
+    <Compile Include="Core\Tools\Sprig\Sprig.cs" />
+    <Compile Include="Core\Tools\Sprig\SprigNode.cs" />
     <Compile Include="Core\Universe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Core\Exception" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

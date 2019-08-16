@@ -173,7 +173,7 @@ namespace MultiverseGraph.Core
                 }
             }
 
-            return count * 397 ^ shuffleHash;
+            return (count * 397) ^ shuffleHash;
 
         }
     }
