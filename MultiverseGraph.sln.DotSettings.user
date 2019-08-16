@@ -2,5 +2,11 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7A5A0F78_002DEB43_002D473F_002DA559_002DBE126CB42E37_002Fd_003ACore_002Fd_003ATools_002Ff_003AIndexedStack_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:Boolean x:Key="/Default/CodeStyle/Naming/CSharpAutoNaming/IsNotificationDisabled/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeStyle/Naming/CSharpAutoNaming/IsNamingAutoDetectionCompleted/@EntryValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=2b56b940_002D43e5_002D4322_002Db0f7_002D7fbe81df8fb6_0023Unit_0020Tests/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=4726f444_002D1723_002D4bdb_002Db4e9_002Dbe53e8e4eacd_0023Console_0020Tests/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UnloadedProject/UnloadedProjects/=7a5a0f78_002Deb43_002D473f_002Da559_002Dbe126cb42e37_0023DynamicTimelineFramework/@EntryIndexedValue">True</s:Boolean>
+	
+	
+	
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=bools/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Multiverse/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

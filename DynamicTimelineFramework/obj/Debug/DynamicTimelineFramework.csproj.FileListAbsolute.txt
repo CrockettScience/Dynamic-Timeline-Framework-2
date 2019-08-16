@@ -1,0 +1,6 @@
+C:\Users\jcrockett\Documents\multiverseframework\DynamicTimelineFramework\bin\Debug\DynamicTimelineFramework.dll
+C:\Users\jcrockett\Documents\multiverseframework\DynamicTimelineFramework\bin\Debug\DynamicTimelineFramework.pdb
+C:\Users\jcrockett\Documents\multiverseframework\DynamicTimelineFramework\obj\Debug\DynamicTimelineFramework.csprojAssemblyReference.cache
+C:\Users\jcrockett\Documents\multiverseframework\DynamicTimelineFramework\obj\Debug\DynamicTimelineFramework.csproj.CoreCompileInputs.cache
+C:\Users\jcrockett\Documents\multiverseframework\DynamicTimelineFramework\obj\Debug\DynamicTimelineFramework.dll
+C:\Users\jcrockett\Documents\multiverseframework\DynamicTimelineFramework\obj\Debug\DynamicTimelineFramework.pdb

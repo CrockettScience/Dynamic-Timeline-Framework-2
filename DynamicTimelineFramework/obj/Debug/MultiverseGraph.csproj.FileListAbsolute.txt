@@ -1,0 +1,6 @@
+C:\Users\jcrockett\Documents\multiverseframework\MultiverseGraph\bin\Debug\MultiverseGraph.dll
+C:\Users\jcrockett\Documents\multiverseframework\MultiverseGraph\bin\Debug\MultiverseGraph.pdb
+C:\Users\jcrockett\Documents\multiverseframework\MultiverseGraph\obj\Debug\MultiverseGraph.csprojAssemblyReference.cache
+C:\Users\jcrockett\Documents\multiverseframework\MultiverseGraph\obj\Debug\MultiverseGraph.csproj.CoreCompileInputs.cache
+C:\Users\jcrockett\Documents\multiverseframework\MultiverseGraph\obj\Debug\MultiverseGraph.dll
+C:\Users\jcrockett\Documents\multiverseframework\MultiverseGraph\obj\Debug\MultiverseGraph.pdb
