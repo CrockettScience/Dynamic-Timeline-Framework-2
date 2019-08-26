@@ -52,7 +52,7 @@
     <Compile Include="Core\Tools\Sprig\SprigVector.cs" />
     <Compile Include="Core\Universe.cs" />
     <Compile Include="Objects\DTFObject.cs" />
-    <Compile Include="Objects\Ruleset.cs" />
+    <Compile Include="Objects\LeteralRuleset.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -7,6 +7,11 @@ namespace DynamicTimelineFramework.Objects {
     public abstract class DTFObject {
         private Dictionary<Diff, Sprig> _sprigs;
 
-        internal Sprig this[Diff diff] => _sprigs[diff];
+        private Dictionary<Type, LateralRuleset> _lateralRulesets;
+
+        private Dictionary<Position, Position> _forwardRuleset;
+
+        internal Sprig this[Diff diff] => _sprigs[diff]; 
+        
     }
 }
