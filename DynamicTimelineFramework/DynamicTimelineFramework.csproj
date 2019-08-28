@@ -57,8 +57,8 @@
     <Compile Include="Core\Tools\Sprig\SprigNode.cs" />
     <Compile Include="Core\Tools\Sprig\SprigVector.cs" />
     <Compile Include="Core\Universe.cs" />
+    <Compile Include="Exception\DTFRulesetCompilerError.cs" />
     <Compile Include="Objects\DTFObject.cs" />
-    <Compile Include="Objects\LeteralRuleset.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

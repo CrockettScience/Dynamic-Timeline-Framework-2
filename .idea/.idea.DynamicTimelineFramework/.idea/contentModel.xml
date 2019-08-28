@@ -26,10 +26,12 @@
           <e p="Universe.cs" t="Include" />
         </e>
         <e p="DynamicTimelineFramework.csproj" t="IncludeRecursive" />
+        <e p="Exception" t="Include">
+          <e p="DTFRulesetCompilerError.cs" t="Include" />
+        </e>
         <e p="obj" t="ExcludeRecursive" />
         <e p="Objects" t="Include">
           <e p="DTFObject.cs" t="Include" />
-          <e p="LeteralRuleset.cs" t="Include" />
         </e>
         <e p="packages.config" t="Include" />
         <e p="Properties" t="Include">
