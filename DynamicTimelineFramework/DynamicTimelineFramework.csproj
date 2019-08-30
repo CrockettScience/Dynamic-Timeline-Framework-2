@@ -33,10 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MathNet.Numerics, Version=4.8.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\MathNet.Numerics.4.8.1\lib\net461\MathNet.Numerics.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -45,36 +41,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\Continuity.cs" />
-    <Compile Include="Core\Diff.cs" />
-    <Compile Include="Core\Multiverse.cs" />
-    <Compile Include="Core\Position.cs" />
-    <Compile Include="Core\Tools\BitHacks.cs" />
-    <Compile Include="Core\Tools\IndexedStack.cs" />
-    <Compile Include="Core\Tools\Interfaces\IMap.cs" />
-    <Compile Include="Core\Tools\Interfaces\IPosition.cs" />
-    <Compile Include="Core\Tools\Interfaces\IProbabilityVectorComponent.cs" />
-    <Compile Include="Core\Tools\Interfaces\ISprig.cs" />
-    <Compile Include="Core\Tools\Map.cs" />
-    <Compile Include="Core\Tools\Sprig\SBranchNode.cs" />
-    <Compile Include="Core\Tools\Sprig\SHeadNode.cs" />
-    <Compile Include="Core\Tools\Sprig\Spine.cs" />
-    <Compile Include="Core\Tools\Sprig\SpineNode.cs" />
-    <Compile Include="Core\Tools\Sprig\Sprig.cs" />
-    <Compile Include="Core\Tools\Sprig\SprigNode.cs" />
-    <Compile Include="Core\Tools\Sprig\SprigVector.cs" />
-    <Compile Include="Core\Universe.cs" />
+    <Compile Include="Internal\BitHacks.cs" />
+    <Compile Include="Internal\IndexedStack.cs" />
+    <Compile Include="Internal\Interfaces\IMap.cs" />
+    <Compile Include="Internal\Interfaces\IPosition.cs" />
+    <Compile Include="Internal\Interfaces\ISprig.cs" />
+    <Compile Include="Internal\Map.cs" />
+    <Compile Include="Internal\Sprig\SBranchNode.cs" />
+    <Compile Include="Internal\Sprig\SHeadNode.cs" />
+    <Compile Include="Internal\Sprig\Spine.cs" />
+    <Compile Include="Internal\Sprig\SpineNode.cs" />
+    <Compile Include="Internal\Sprig\Sprig.cs" />
+    <Compile Include="Internal\Sprig\SprigNode.cs" />
+    <Compile Include="Internal\Sprig\SprigVector.cs" />
+    <Compile Include="Multiverse\Continuity.cs" />
+    <Compile Include="Multiverse\Diff.cs" />
+    <Compile Include="Multiverse\Multiverse.cs" />
+    <Compile Include="Multiverse\Position.cs" />
+    <Compile Include="Multiverse\Universe.cs" />
     <Compile Include="Exception\DTFObjectCompilerException.cs" />
+    <Compile Include="Exception\InvalidFlagSpaceFactor.cs" />
     <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />
-    <Compile Include="Objects\Attributes\ForwardProbabilityVectorAttribute.cs" />
+    <Compile Include="Objects\Attributes\ForwardPositionAttribute.cs" />
     <Compile Include="Objects\Attributes\LateralObjectAttribute.cs" />
-    <Compile Include="Objects\Attributes\LateralProbabilityVectorAttribute.cs" />
+    <Compile Include="Objects\Attributes\LateralPositionAttribute.cs" />
     <Compile Include="Objects\DTFObject.cs" />
-    <Compile Include="Objects\ProbabilityVectorComponent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

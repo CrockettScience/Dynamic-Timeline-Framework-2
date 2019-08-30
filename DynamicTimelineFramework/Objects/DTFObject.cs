@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using DynamicTimelineFramework.Core;
-using DynamicTimelineFramework.Core.Tools;
-using DynamicTimelineFramework.Core.Tools.Interfaces;
-using DynamicTimelineFramework.Core.Tools.Sprig;
 using DynamicTimelineFramework.Exception;
+using DynamicTimelineFramework.Internal;
+using DynamicTimelineFramework.Internal.Interfaces;
+using DynamicTimelineFramework.Internal.Sprig;
+using DynamicTimelineFramework.Multiverse;
 
 namespace DynamicTimelineFramework.Objects {
-    public abstract class DTFObject
-    {
-
+    public abstract class DTFObject {
+        
         private readonly IMap<Diff, ISprig<DTFObject>> _sprigs;
-
+        
         internal Sprig<T> GetSprig<T>(Diff diff) where T : DTFObject
         {
             return (Sprig<T>) _sprigs[diff];

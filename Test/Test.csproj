@@ -41,6 +41,7 @@
     <Compile Include="Galaxy.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Star.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicTimelineFramework\DynamicTimelineFramework.csproj">
