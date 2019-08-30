@@ -9,7 +9,7 @@ namespace DynamicTimelineFramework.Core.Tools.Sprig {
 
         public SpineNode this[Diff diff]
         {
-            get => _children[diff];
+            get { return _children[diff]; }
 
             set
             {

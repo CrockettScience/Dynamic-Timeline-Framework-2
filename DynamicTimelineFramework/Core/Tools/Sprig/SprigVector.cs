@@ -1,11 +1,12 @@
 using System;
+using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core.Tools.Sprig {
-    internal class SprigVector {
+    internal class SprigVector<T> where T : DTFObject {
 
-        private SprigNode _head;
+        private SprigNode<T> _head;
         
-        public Position this[ulong index] {
+        public Position<T> this[ulong index] {
             get {
                 var current = _head;
                 
@@ -17,16 +18,16 @@ namespace DynamicTimelineFramework.Core.Tools.Sprig {
             }
         }
 
-        public SprigVector(SprigNode head) {
+        public SprigVector(SprigNode<T> head) {
             _head = head;
         }
 
-        public static SprigVector operator &(SprigVector left, SprigVector right) {
+        public static SprigVector<T> operator &(SprigVector<T> left, SprigVector<T> right) {
             var currentLeft = left._head;
             var currentRight = right._head;
             
-            var currentNew = new SprigNode(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
-            var newSprigVector = new SprigVector(currentNew);
+            var currentNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+            var newSprigVector = new SprigVector<T>(currentNew);
 
             var leftGreaterPlaceholder = currentLeft.Index;
             
@@ -39,10 +40,10 @@ namespace DynamicTimelineFramework.Core.Tools.Sprig {
             while (currentNew.Index != 0)
             {
                 //AND the positions and set the index to the greater of the nodes
-                var newNode = new SprigNode(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                var newNode = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
                 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
-                if (newNode.Position == currentNew.Position)
+                if (newNode.Position.Equals(currentNew.Position))
                     currentNew.Index = newNode.Index;
 
                 else

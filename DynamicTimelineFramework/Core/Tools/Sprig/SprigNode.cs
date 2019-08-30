@@ -1,13 +1,15 @@
-namespace DynamicTimelineFramework.Core.Tools.Sprig {
-    internal class SprigNode {
+using DynamicTimelineFramework.Objects;
 
-        public SprigNode Last { get; set; }
+namespace DynamicTimelineFramework.Core.Tools.Sprig {
+    internal class SprigNode<T> where T : DTFObject {
+
+        public SprigNode<T> Last { get; set; }
 
         public ulong Index { get; set; }
 
-        public Position Position { get; }
+        public Position<T> Position { get; }
     
-        public SprigNode(SprigNode last, Position position, ulong i)
+        public SprigNode(SprigNode<T> last, Position<T> position, ulong i)
         {
             Last = last;
             Index = i;

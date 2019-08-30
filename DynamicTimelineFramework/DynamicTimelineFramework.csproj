@@ -11,6 +11,7 @@
     <AssemblyName>DynamicTimelineFramework</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,7 +49,13 @@
     <Compile Include="Core\Diff.cs" />
     <Compile Include="Core\Multiverse.cs" />
     <Compile Include="Core\Position.cs" />
+    <Compile Include="Core\Tools\BitHacks.cs" />
     <Compile Include="Core\Tools\IndexedStack.cs" />
+    <Compile Include="Core\Tools\Interfaces\IMap.cs" />
+    <Compile Include="Core\Tools\Interfaces\IPosition.cs" />
+    <Compile Include="Core\Tools\Interfaces\IProbabilityVectorComponent.cs" />
+    <Compile Include="Core\Tools\Interfaces\ISprig.cs" />
+    <Compile Include="Core\Tools\Map.cs" />
     <Compile Include="Core\Tools\Sprig\SBranchNode.cs" />
     <Compile Include="Core\Tools\Sprig\SHeadNode.cs" />
     <Compile Include="Core\Tools\Sprig\Spine.cs" />
@@ -58,7 +65,12 @@
     <Compile Include="Core\Tools\Sprig\SprigVector.cs" />
     <Compile Include="Core\Universe.cs" />
     <Compile Include="Exception\DTFObjectCompilerException.cs" />
+    <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />
+    <Compile Include="Objects\Attributes\ForwardProbabilityVectorAttribute.cs" />
+    <Compile Include="Objects\Attributes\LateralObjectAttribute.cs" />
+    <Compile Include="Objects\Attributes\LateralProbabilityVectorAttribute.cs" />
     <Compile Include="Objects\DTFObject.cs" />
+    <Compile Include="Objects\ProbabilityVectorComponent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

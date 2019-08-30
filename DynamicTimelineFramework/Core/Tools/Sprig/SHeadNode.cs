@@ -1,24 +1,26 @@
-namespace DynamicTimelineFramework.Core.Tools.Sprig {
-    internal class SHeadNode : SpineNode
-    {
-        public Sprig Owner { get; }
-        
-        public SprigNode SprigHead { get; }
+using DynamicTimelineFramework.Objects;
 
-        public SHeadNode(Sprig owner, SprigNode last, Position position, ulong i, Diff diff) : base(diff)
+namespace DynamicTimelineFramework.Core.Tools.Sprig {
+    internal class SHeadNode<T> : SpineNode where T : DTFObject
+    {
+        public Sprig<T> Owner { get; }
+        
+        public SprigNode<T> SprigHead { get; }
+
+        public SHeadNode(Sprig<T> owner, SprigNode<T> last, Position<T> position, ulong i, Diff diff) : base(diff)
         {
-            SprigHead = new SprigNode(last, position, i);
+            SprigHead = new SprigNode<T>(last, position, i);
             Owner = owner;
             Diff = diff;
         }
 
-        public SHeadNode(Sprig owner, SprigNode sprigHead, Diff diff) : base(diff) {
+        public SHeadNode(Sprig<T> owner, SprigNode<T> sprigHead, Diff diff) : base(diff) {
             SprigHead = sprigHead;
             Owner = owner;
             Diff = diff;
         }
 
-        public void AddBranch(SHeadNode newHead, ulong branchIndex)
+        public void AddBranch(SHeadNode<T> newHead, ulong branchIndex)
         {
             var current = Parent;
             var child = (SpineNode) this;

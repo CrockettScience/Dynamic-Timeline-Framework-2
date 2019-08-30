@@ -8,7 +8,10 @@ namespace DynamicTimelineFramework.Core
     {
         internal readonly Diff Diff;
 
-        public Universe Parent => Diff.Parent;
+        public Universe Parent
+        {
+            get { return Diff.Parent; }
+        }
 
         internal Universe(Diff diff)
         {
@@ -23,10 +26,13 @@ namespace DynamicTimelineFramework.Core
         /// </summary>
         internal Universe()
         {
-            Diff = new Diff(new Dictionary<DTFObject, Position>(), 0, null);
+            Diff = new Diff(0, null);
         }
         
-        public Continuity this[DTFObject dtfObject] => new Continuity(this, dtfObject);
+        public Continuity<T> GetContinuity<T> (T dtfObject) where T : DTFObject
+        {
+            return new Continuity<T>(this, dtfObject);
+        }
 
         public override bool Equals(object obj)
         {

@@ -7,13 +7,11 @@ namespace DynamicTimelineFramework.Core
 {  
     public class Diff
     {
-        internal Dictionary<DTFObject, Position> PositionDelta { get; }
         internal ulong Date { get; }
         internal Universe Parent { get; }
 
-        public Diff(Dictionary<DTFObject, Position> positionDelta, ulong date, Universe parent)
+        public Diff(ulong date, Universe parent)
         {
-            PositionDelta = positionDelta;
             Date = date;
             Parent = parent;
         }
@@ -34,22 +32,6 @@ namespace DynamicTimelineFramework.Core
             if (Parent != other.Parent)
                 return false;
 
-            //Unlikely, bt might be able to rule it out before the real work needs to happen
-            if (PositionDelta == other.PositionDelta) 
-                return true;
-                
-            //Check if they have the same number of deltas
-            if (PositionDelta.Count != other.PositionDelta.Count)
-                return false;
-
-            //Check if they are equal
-            foreach (var pair in PositionDelta)
-            {
-                if (!other.PositionDelta.ContainsKey(pair.Key) ||
-                    !other.PositionDelta[pair.Key].Equals(pair.Value))
-                    return false;
-            }
-
             return true;
 
         }
@@ -57,11 +39,6 @@ namespace DynamicTimelineFramework.Core
         public override int GetHashCode()
         {
             var deltaHash = int.MaxValue;
-
-            foreach (var pair in PositionDelta)
-            {
-                deltaHash ^= pair.Value.GetHashCode();
-            }
 
             return (Date.GetHashCode() * 397) ^ deltaHash;
         }

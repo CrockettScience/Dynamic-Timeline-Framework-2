@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\jcrockett\.Rider2019.2\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\jcrockett\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.1665773886.00" t="ExcludeRecursive" />
-    <e p="C:\Users\jcrockett\Documents\multiverseframework" t="IncludeFlat">
+    <e p="C:\Users\John\.Rider2019.2\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\John\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.-1968746815.00" t="ExcludeRecursive" />
+    <e p="C:\Users\John\Documents\DynamicTimelineFramework_2" t="IncludeFlat">
       <e p="DynamicTimelineFramework" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
         <e p="Core" t="Include">
@@ -12,7 +12,15 @@
           <e p="Multiverse.cs" t="Include" />
           <e p="Position.cs" t="Include" />
           <e p="Tools" t="Include">
+            <e p="BitHacks.cs" t="Include" />
             <e p="IndexedStack.cs" t="Include" />
+            <e p="Interfaces" t="Include">
+              <e p="IMap.cs" t="Include" />
+              <e p="IPosition.cs" t="Include" />
+              <e p="IProbabilityVectorComponent.cs" t="Include" />
+              <e p="ISprig.cs" t="Include" />
+            </e>
+            <e p="Map.cs" t="Include" />
             <e p="Sprig" t="Include">
               <e p="SBranchNode.cs" t="Include" />
               <e p="SHeadNode.cs" t="Include" />
@@ -31,7 +39,14 @@
         </e>
         <e p="obj" t="ExcludeRecursive" />
         <e p="Objects" t="Include">
+          <e p="Attributes" t="Include">
+            <e p="DTFObjectDefinitionAttribute.cs" t="Include" />
+            <e p="ForwardProbabilityVectorAttribute.cs" t="Include" />
+            <e p="LateralObjectAttribute.cs" t="Include" />
+            <e p="LateralProbabilityVectorAttribute.cs" t="Include" />
+          </e>
           <e p="DTFObject.cs" t="Include" />
+          <e p="ProbabilityVectorComponent.cs" t="Include" />
         </e>
         <e p="packages.config" t="Include" />
         <e p="Properties" t="Include">
@@ -40,6 +55,16 @@
       </e>
       <e p="DynamicTimelineFramework.sln" t="IncludeFlat" />
       <e p="packages" t="ExcludeRecursive" />
+      <e p="Test" t="IncludeRecursive">
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="Galaxy.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive" />
+        <e p="Program.cs" t="Include" />
+        <e p="Properties" t="Include">
+          <e p="AssemblyInfo.cs" t="Include" />
+        </e>
+        <e p="Test.csproj" t="IncludeRecursive" />
+      </e>
     </e>
   </component>
 </project>

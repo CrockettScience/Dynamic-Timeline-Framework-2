@@ -1,11 +1,14 @@
-namespace DynamicTimelineFramework.Core.Tools.Sprig {
-    internal class Sprig {
-        
-        public Spine Spine { get; }
-        
-        public SHeadNode SpineHead { get; }
+using DynamicTimelineFramework.Core.Tools.Interfaces;
+using DynamicTimelineFramework.Objects;
 
-        public Position this[ulong index] {
+namespace DynamicTimelineFramework.Core.Tools.Sprig {
+    internal class Sprig<T> : ISprig<T> where T : DTFObject {
+        
+        public Spine<T> Spine { get; }
+        
+        public SHeadNode<T> SpineHead { get; }
+
+        public IPosition<T> this[ulong index] {
             get {
                 var current = SpineHead.SprigHead;
                 
@@ -21,17 +24,17 @@ namespace DynamicTimelineFramework.Core.Tools.Sprig {
         
         public Sprig(Diff rootDiff)
         {
-            Spine = new Spine(this, new Position(), rootDiff);
-            SpineHead = (SHeadNode) Spine.Root;
+            Spine = new Spine<T>(this, new Position<T>(), rootDiff);
+            SpineHead = (SHeadNode<T>) Spine.Root;
         }
         
-        public Sprig(Position defaultPosition, Diff rootDiff)
+        public Sprig(Position<T> defaultPosition, Diff rootDiff)
         {
-            Spine = new Spine(this, defaultPosition, rootDiff);
-            SpineHead = (SHeadNode) Spine.Root;
+            Spine = new Spine<T>(this, defaultPosition, rootDiff);
+            SpineHead = (SHeadNode<T>) Spine.Root;
         }
 
-        public Sprig(Sprig branchFrom, Diff diff, Position defaultPosition) {
+        public Sprig(Sprig<T> branchFrom, Diff diff, Position<T> defaultPosition) {
             Spine = branchFrom.Spine;
             
             //Find the SprigNode to branch off of
@@ -41,16 +44,13 @@ namespace DynamicTimelineFramework.Core.Tools.Sprig {
                 current = current.Last;
             }
             
-            var sprigHead = new SprigNode(current, defaultPosition, diff.Date);
-            SpineHead = new SHeadNode(this, sprigHead, diff);
+            var sprigHead = new SprigNode<T>(current, defaultPosition, diff.Date);
+            SpineHead = new SHeadNode<T>(this, sprigHead, diff);
             
             //Splice the new SpineHead into the Spine
             branchFrom.SpineHead.AddBranch(SpineHead, diff.Date);
         }
         
         #endregion
-        
-        
-        
     }
 }

@@ -1,13 +1,15 @@
+using DynamicTimelineFramework.Objects;
+
 namespace DynamicTimelineFramework.Core.Tools.Sprig {
-    internal class Spine {
+    internal class Spine<T> where T : DTFObject {
         
         public SpineNode Root { get; }
 
-        public Spine(Sprig initialHeadOwner, Position initialPosition, Diff rootDiff)
+        public Spine(Sprig<T> initialHeadOwner, Position<T> initialPosition, Diff rootDiff)
         {
             Root = new SBranchNode(0, rootDiff)
             {
-                [rootDiff] = new SHeadNode(initialHeadOwner, null, initialPosition, 0, rootDiff)
+                [rootDiff] = new SHeadNode<T>(initialHeadOwner, null, initialPosition, 0, rootDiff)
             }; 
         }
     }
