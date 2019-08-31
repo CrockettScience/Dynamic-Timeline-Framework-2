@@ -36,7 +36,7 @@ namespace DynamicTimelineFramework.Multiverse
                 Flag = new long[((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor]
             };
             
-            long value = defaultValue ? long.MaxValue : long.MinValue;
+            var value = defaultValue ? long.MaxValue : long.MinValue;
 
             for (var i = 0; i < pos.Flag.Length; i++) {
                 pos.Flag[i] = value;

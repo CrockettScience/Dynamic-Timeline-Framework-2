@@ -1,3 +1,4 @@
+using System;
 using DynamicTimelineFramework.Internal;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
@@ -6,18 +7,11 @@ namespace DynamicTimelineFramework.Multiverse
 {
     public class Continuity<T> where T : DTFObject
     {
-        private Universe _universe;
-        private T _dtfObject;
+        private readonly Universe _universe;
+        private readonly T _dtfObject;
         private readonly Sprig<T> _sprig;
 
-        public Position<T> this[ulong date] {
-            get {
-                //TODO - For now, just return the raw position
-                //until a method is made that will check the 
-                //object's parent state.
-                return (Position<T>) _sprig[date];
-            }
-        }
+        public Position<T> this[ulong date] => _universe.Owner.Compiler.GetPosition(_dtfObject, date);
 
         /// <summary>
         /// Attempts to Collapse the position at date to pos. If the collapse results in a paradox
@@ -31,27 +25,34 @@ namespace DynamicTimelineFramework.Multiverse
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
         public bool Collapse(ulong date, Position<T> pos, out Diff outDiff) {
             var newPosition = this[date] & pos;
+            var sprigVector = _universe.Owner.Compiler.GetNormalizedVector(pos, date);
 
             if (newPosition.Uncertainty < 0) {
                 //Paradox has occured
-                var diffVector = new Map<DTFObject, SprigVector<T>>();
-                //Todo - we need to be able to create a sprig vector from a position and a date.
-                //Suggestion: Maybe the DTFObject compiler can pre-compute a MASTER SprigVector
-                //for every position defined for every DTFObject defined and keep a database.
-                //We only need to pull them, copy them, and them together and "shift" the collapsed
-                //band" left or right, based on the date it needs to line up with.
+                
+                var diffVector = new Map<DTFObject, SprigVector<T>>
+                {
+                    [_dtfObject] = sprigVector
+                };
                 
                 outDiff = new Diff(date, _universe, diffVector);
                 return false;
             }
-            
-            //todo - furnish a more valid sprig vector, see above
-            var sprigVector = new SprigVector<T>(null);
 
             _sprig.And(sprigVector);
             outDiff = null;
 
             return true;
+        }
+
+        /// <summary>
+        /// Collapses the position for the date to a random available set bit
+        /// </summary>
+        /// <param name="date">The date to collapse to the position at</param>
+        /// <param name="random">Random object to seed pick</param>
+        /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
+        public void Collapse(ulong date, Random random) {
+            //Todo - Collapse the position for the date to a random available set bit
         }
 
         internal Continuity(Universe universe, T dtfObject)

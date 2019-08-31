@@ -1,3 +1,4 @@
+using System;
 using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Multiverse;
 using DynamicTimelineFramework.Objects;
@@ -57,7 +58,42 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
 
         public void And(SprigVector<T> vector) {
-            //Todo - AND with vector in-place
+            var currentLeft = SpineHead.SprigHead;
+            var currentRight = vector.Head;
+            
+            var currentNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+
+            var leftGreaterPlaceholder = currentLeft.Index;
+            
+            if (currentLeft.Index >= currentRight.Index)
+                currentLeft = currentLeft.Last;
+            
+            if (currentRight.Index >= leftGreaterPlaceholder)
+                currentRight = currentRight.Last;
+
+            while (currentNew.Index != 0)
+            {
+                //AND the positions and set the index to the greater of the nodes
+                var newNode = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                
+                //If the new position is equal to the current node in the new list, then just update the start position of the new list
+                if (newNode.Position.Equals(currentNew.Position))
+                    currentNew.Index = newNode.Index;
+
+                else
+                    currentNew.Last = newNode;
+                
+                leftGreaterPlaceholder = currentLeft.Index;
+            
+                if (currentLeft.Index >= currentRight.Index)
+                    currentLeft = currentLeft.Last;
+            
+                if (currentRight.Index >= leftGreaterPlaceholder)
+                    currentRight = currentRight.Last;
+            }
+            
+            
+            //Todo - we need to take the new sprig and replace the current sprig, but preserve both the spine and the branching sprig nodes
         }
     }
 }

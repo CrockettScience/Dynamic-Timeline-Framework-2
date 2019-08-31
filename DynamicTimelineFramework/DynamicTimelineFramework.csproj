@@ -42,7 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Internal\BitHacks.cs" />
-    <Compile Include="Internal\IndexedStack.cs" />
     <Compile Include="Internal\Interfaces\IMap.cs" />
     <Compile Include="Internal\Interfaces\IPosition.cs" />
     <Compile Include="Internal\Interfaces\ISprig.cs" />

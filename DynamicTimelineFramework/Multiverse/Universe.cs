@@ -5,23 +5,27 @@ namespace DynamicTimelineFramework.Multiverse
     public class Universe
     {
         internal readonly Diff Diff;
+        
+        public Multiverse Owner { get; }
 
         public Universe Parent => Diff.Parent;
 
         internal Universe(Diff diff)
         {
             Diff = diff;
-            
-            // Now, force the positions given in the dictionary onto the new branched handles
-            
+            Owner = diff.Parent.Owner;
+
+            // Todo - force the positions given in the dictionary onto new branched sprigs
+
         }
 
         /// <summary>
         /// Only used once during initial universe creation
         /// </summary>
-        internal Universe()
+        internal Universe(Multiverse multiverse)
         {
             Diff = new Diff(0, null, null);
+            Owner = multiverse;
         }
         
         public Continuity<T> GetContinuity<T> (T dtfObject) where T : DTFObject

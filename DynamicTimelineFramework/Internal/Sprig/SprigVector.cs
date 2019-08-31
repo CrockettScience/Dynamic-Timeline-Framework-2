@@ -4,12 +4,11 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SprigVector<T> : ISprig<T> where T : DTFObject {
+        public SprigNode<T> Head { get; private set; }
 
-        private SprigNode<T> _head;
-        
         public IPosition<T> this[ulong index] {
             get {
-                var current = _head;
+                var current = Head;
                 
                 while (index < current.Index) {
                     current = current.Last;
@@ -20,12 +19,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
 
         public SprigVector(SprigNode<T> head) {
-            _head = head;
+            Head = head;
         }
 
         public static SprigVector<T> operator &(SprigVector<T> left, SprigVector<T> right) {
-            var currentLeft = left._head;
-            var currentRight = right._head;
+            var currentLeft = left.Head;
+            var currentRight = right.Head;
             
             var currentNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
             var newSprigVector = new SprigVector<T>(currentNew);
@@ -64,12 +63,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public void ShiftForward(ulong amount) {
             //Shift up all indices, and let the excess "fall off." Edge nodes are assumed to "stretch"
-            var current = _head;
+            var current = Head;
             
             while (ulong.MaxValue - current.Index < amount) {
                 
                 current = current.Last;
-                _head = current;
+                Head = current;
             }
 
             while (current.Last != null) {
@@ -81,7 +80,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public void ShiftBackward(ulong amount) {
             //Shift down all indices, and let the excess "fall off". Edge nodes are assumed to "stretch"
-            var current = _head;
+            var current = Head;
 
             if (current.Index < amount)
                 return;
