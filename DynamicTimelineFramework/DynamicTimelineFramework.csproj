@@ -41,7 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exception\ParadoxException.cs" />
     <Compile Include="Internal\BitHacks.cs" />
+    <Compile Include="Internal\Interfaces\IMetaData.cs" />
+    <Compile Include="Internal\ObjectNode.cs" />
     <Compile Include="Internal\Interfaces\IMap.cs" />
     <Compile Include="Internal\Interfaces\IPosition.cs" />
     <Compile Include="Internal\Interfaces\ISprig.cs" />

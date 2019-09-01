@@ -3,7 +3,8 @@ using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace Test {
-    [DTFObjectDefinition(1, "TEST")]
+    //Period Length: 10 million years
+    [DTFObjectDefinition(1, 3_600_000_000, "TEST")]
     public class Star : DTFObject {
         internal const long PRE_EXISTENT     = 1;
         internal const long PROTO            = 1 << 1;
@@ -22,43 +23,43 @@ namespace Test {
         public Galaxy Galaxy { get; }
         
         [ForwardPosition(PROTO | PRE_EXISTENT)]
-        [LateralPosition(GALAXY_KEY, Galaxy.PRE_EXISTENT | Galaxy.FORMED | Galaxy.PROTO_GALAXY)]
+        [LateralPosition(GALAXY_KEY, Galaxy.PRE_EXISTENT | Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
         public static Position<Star> PreExistence     = Position<Star>.Alloc(PRE_EXISTENT    );
         
         [ForwardPosition(MAIN_SEQUENCE | MASSIVE)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED | Galaxy.PROTO_GALAXY)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
         public static Position<Star> Proto            = Position<Star>.Alloc(PROTO           );
         
         [ForwardPosition(RED_GIANT)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
         public static Position<Star> MainSequence     = Position<Star>.Alloc(MAIN_SEQUENCE   );
         
         [ForwardPosition(RED_SUPER_GIANT)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
         public static Position<Star> Massive          = Position<Star>.Alloc(MASSIVE         );
         
         [ForwardPosition(PLANETARY_NEBULA)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
         public static Position<Star> RedGiant         = Position<Star>.Alloc(RED_GIANT       );
         
         [ForwardPosition(NEUTRON | BLACK_HOLE)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
         public static Position<Star> RedSuperGiant    = Position<Star>.Alloc(RED_SUPER_GIANT );
         
         [ForwardPosition(WHITE_DWARF)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
         public static Position<Star> PlanetaryNebula  = Position<Star>.Alloc(WHITE_DWARF     );
         
         [ForwardPosition(WHITE_DWARF)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED | Galaxy.DEGENERATE)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
         public static Position<Star> WhiteDwarf       = Position<Star>.Alloc(NEUTRON         );
         
         [ForwardPosition(NEUTRON)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED | Galaxy.DEGENERATE)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
         public static Position<Star> Neutron          = Position<Star>.Alloc(BLACK_HOLE      );
         
         [ForwardPosition(BLACK_HOLE)]
-        [LateralPosition(GALAXY_KEY, Galaxy.FORMED | Galaxy.DEGENERATE)]
+        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
         public static Position<Star> BlackHole        = Position<Star>.Alloc(PLANETARY_NEBULA);
 
         public Star(Galaxy galaxy) {

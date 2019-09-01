@@ -16,5 +16,22 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             Index = i;
             Position = position;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is SprigNode<T> other)) return false;
+            
+            if (!Position.Equals(other.Position) || Index != other.Index)
+                return false;
+                
+            //Recursive until last is null
+            if (Last != null)
+            {
+                return other.Last != null && Last.Equals(other.Last);
+            }
+
+            return other.Last == null;
+
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Multiverse;
 using DynamicTimelineFramework.Objects;
@@ -55,13 +56,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         #endregion
 
-
-
-        public void And(SprigVector<T> vector) {
+        public bool And(SprigVector<T> vector) {
             var currentLeft = SpineHead.SprigHead;
             var currentRight = vector.Head;
             
-            var currentNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+            var headNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+            var currentNew = headNew;
+            
+            if(headNew.Position.Uncertainty == -1)
+                throw new ParadoxException(typeof(T));
 
             var leftGreaterPlaceholder = currentLeft.Index;
             
@@ -75,6 +78,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             {
                 //AND the positions and set the index to the greater of the nodes
                 var newNode = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                
+                if(newNode.Position.Uncertainty == -1)
+                    throw new ParadoxException(typeof(T));
                 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
                 if (newNode.Position.Equals(currentNew.Position))
@@ -91,9 +97,33 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 if (currentRight.Index >= leftGreaterPlaceholder)
                     currentRight = currentRight.Last;
             }
-            
+
+            if (headNew.Equals(SpineHead.SprigHead))
+            {
+                //No need to replace the structure, we can return false
+                return false;
+            }
             
             //Todo - we need to take the new sprig and replace the current sprig, but preserve both the spine and the branching sprig nodes
+            return true;
+        }
+
+        public SprigVector<T> ToVector()
+        {
+            var current = SpineHead.SprigHead;
+            var currentVec = new SprigNode<T>(null, current.Position, current.Index);
+            var vector = new SprigVector<T>(current);
+
+            while (current.Last != null)
+            {
+                current = current.Last;
+                        
+                currentVec.Last = new SprigNode<T>(null, current.Position, current.Index);
+
+                currentVec = currentVec.Last;
+            }
+
+            return vector;
         }
     }
 }

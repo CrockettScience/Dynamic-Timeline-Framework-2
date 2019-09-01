@@ -1,5 +1,7 @@
 using System;
+using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Interfaces;
+using DynamicTimelineFramework.Multiverse;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
@@ -21,6 +23,10 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public SprigVector(SprigNode<T> head) {
             Head = head;
         }
+        
+        public SprigVector() {
+            Head = new SprigNode<T>(null, Position<T>.Alloc(), 0);
+        }
 
         public static SprigVector<T> operator &(SprigVector<T> left, SprigVector<T> right) {
             var currentLeft = left.Head;
@@ -28,6 +34,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             var currentNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
             var newSprigVector = new SprigVector<T>(currentNew);
+            
+            if(currentNew.Position.Uncertainty == -1)
+                throw new ParadoxException(typeof(T));
 
             var leftGreaterPlaceholder = currentLeft.Index;
             
@@ -41,6 +50,54 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             {
                 //AND the positions and set the index to the greater of the nodes
                 var newNode = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                
+                if(newNode.Position.Uncertainty == -1)
+                    throw new ParadoxException(typeof(T));
+                
+                //If the new position is equal to the current node in the new list, then just update the start position of the new list
+                if (newNode.Position.Equals(currentNew.Position))
+                    currentNew.Index = newNode.Index;
+
+                else
+                    currentNew.Last = newNode;
+                
+                leftGreaterPlaceholder = currentLeft.Index;
+            
+                if (currentLeft.Index >= currentRight.Index)
+                    currentLeft = currentLeft.Last;
+            
+                if (currentRight.Index >= leftGreaterPlaceholder)
+                    currentRight = currentRight.Last;
+            }
+
+            return newSprigVector;
+        }
+        
+        public static SprigVector<T> operator |(SprigVector<T> left, SprigVector<T> right) {
+            var currentLeft = left.Head;
+            var currentRight = right.Head;
+            
+            var currentNew = new SprigNode<T>(null, currentLeft.Position | currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+            var newSprigVector = new SprigVector<T>(currentNew);
+            
+            if(currentNew.Position.Uncertainty == -1)
+                throw new ParadoxException(typeof(T));
+
+            var leftGreaterPlaceholder = currentLeft.Index;
+            
+            if (currentLeft.Index >= currentRight.Index)
+                currentLeft = currentLeft.Last;
+            
+            if (currentRight.Index >= leftGreaterPlaceholder)
+                currentRight = currentRight.Last;
+
+            while (currentNew.Index != 0)
+            {
+                //AND the positions and set the index to the greater of the nodes
+                var newNode = new SprigNode<T>(null, currentLeft.Position | currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                
+                if(newNode.Position.Uncertainty == -1)
+                    throw new ParadoxException(typeof(T));
                 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
                 if (newNode.Position.Equals(currentNew.Position))

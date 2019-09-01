@@ -1,3 +1,4 @@
+using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Interfaces

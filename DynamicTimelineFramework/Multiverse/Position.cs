@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal;
@@ -10,7 +12,6 @@ namespace DynamicTimelineFramework.Multiverse
 {
     public struct Position<T> : IPosition<T> where T : DTFObject
     {
-        //Todo - consider using an immutable array to keep struct instance immutable
         public static Position<T> Alloc(params long[] flag)
         {
             
@@ -49,9 +50,24 @@ namespace DynamicTimelineFramework.Multiverse
         {
             pos.Flag = new long[((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor];
         }
-        
-        public long[] Flag { get; private set; }
-        
+
+        private long[] _flag;
+
+        public long[] Flag
+        {
+            get
+            {
+                //Make a copy and return. This will prevent modification of the struct from outside it's scope
+                var copy = new long[_flag.Length];
+                
+                Array.Copy(_flag, copy, copy.Length);
+
+                return copy;
+            }
+
+            private set { _flag = value; }
+        }
+
         public int Uncertainty
         {
             get
@@ -65,6 +81,21 @@ namespace DynamicTimelineFramework.Multiverse
 
                 return hammingWeight - 1;
             }
+        }
+
+        /// <summary>
+        /// Returns an array of positions such that each position has 0 uncertainty and all positions OR'd together
+        /// equals the current position. In other words:
+        ///
+        /// anyPosition.Equals(anyPosition.GetEigenValues().Aggregate(anyPosition, (i, p) => i | p) is always TRUE;
+        /// </summary>
+        /// <returns></returns>
+        public List<Position<T>> GetEigenValues()
+        {
+            //Todo - Use a "sliding" mask to construct the collection
+            var eigenValues = new List<Position<T>>();
+
+            return eigenValues;
         }
 
         public override string ToString()
@@ -104,6 +135,7 @@ namespace DynamicTimelineFramework.Multiverse
 
             return hash;
         }
+        
         
         public static Position<T> operator &(Position<T> lhs, Position<T> rhs)
         {
