@@ -1,4 +1,5 @@
-using DynamicTimelineFramework.Internal.Interfaces;
+using DynamicTimelineFramework.Internal;
+using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Multiverse
@@ -7,9 +8,9 @@ namespace DynamicTimelineFramework.Multiverse
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        internal  IMap<DTFObject, ISprig<DTFObject>> SprigVectors { get; }
+        internal  Map<DTFObject, SprigVector> SprigVectors { get; }
 
-        internal Diff(ulong date, Universe parent, IMap<DTFObject, ISprig<DTFObject>> sprigVectors)
+        internal Diff(ulong date, Universe parent, Map<DTFObject, SprigVector> sprigVectors)
         {
             Date = date;
             Parent = parent;

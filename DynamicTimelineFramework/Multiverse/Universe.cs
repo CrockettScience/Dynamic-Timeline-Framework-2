@@ -28,9 +28,9 @@ namespace DynamicTimelineFramework.Multiverse
             Owner = multiverse;
         }
         
-        public Continuity<T> GetContinuity<T> (T dtfObject) where T : DTFObject
+        public Continuity GetContinuity (DTFObject dtfObject)
         {
-            return new Continuity<T>(this, dtfObject);
+            return new Continuity(this, dtfObject);
         }
 
         public override bool Equals(object obj)

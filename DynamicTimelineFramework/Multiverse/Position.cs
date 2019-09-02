@@ -1,24 +1,49 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal;
-using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Multiverse
 {
-    public struct Position<T> : IPosition<T> where T : DTFObject
+    public class Position
     {
-        public static Position<T> Alloc(params long[] flag)
+        public Type Type { get; }
+
+        public static Position Alloc(Type type, params long[] flag)
         {
             
-            var pos = new Position<T>
-            {
-                Flag = new long[((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor]
-            };
+            var pos = new Position(((DTFObjectDefinitionAttribute) type.GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, type);
+            
+            if(flag.Length != pos.Flag.Length)
+                throw new InvalidFlagSpaceFactorException(type, pos.Flag.Length, flag.Length);
+            
+            for (var i = 0; i < pos.Flag.Length; i++) {
+                pos.Flag[i] = flag[i];
+            }
+
+            return pos;
+        }
+        
+        public static Position Alloc(Type type, bool defaultValue = false)
+        {
+            var pos = new Position(((DTFObjectDefinitionAttribute) type.GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, type);
+            
+            var value = defaultValue ? long.MaxValue : long.MinValue;
+
+            for (var i = 0; i < pos.Flag.Length; i++) {
+                pos._flag[i] = value;
+            }
+            
+            return pos;
+        }
+        
+        public static Position Alloc<T>(params long[] flag) where T : DTFObject
+        {
+            
+            var pos = new Position(((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, typeof(T));
             
             if(flag.Length != pos.Flag.Length)
                 throw new InvalidFlagSpaceFactorException(typeof(T), pos.Flag.Length, flag.Length);
@@ -30,25 +55,22 @@ namespace DynamicTimelineFramework.Multiverse
             return pos;
         }
         
-        public static Position<T> Alloc(bool defaultValue = false)
+        public static Position Alloc<T>(bool defaultValue = false) where T : DTFObject
         {
-            var pos = new Position<T>
-            {
-                Flag = new long[((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor]
-            };
+            var pos = new Position(((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, typeof(T));
             
             var value = defaultValue ? long.MaxValue : long.MinValue;
 
             for (var i = 0; i < pos.Flag.Length; i++) {
-                pos.Flag[i] = value;
+                pos._flag[i] = value;
             }
             
             return pos;
         }
         
-        public static void ReAlloc(Position<T> pos)
+        public static void ReAlloc(Position pos)
         {
-            pos.Flag = new long[((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor];
+            pos._flag = new long[pos._flag.Length];
         }
 
         private long[] _flag;
@@ -64,8 +86,6 @@ namespace DynamicTimelineFramework.Multiverse
 
                 return copy;
             }
-
-            private set { _flag = value; }
         }
 
         public int Uncertainty
@@ -83,6 +103,18 @@ namespace DynamicTimelineFramework.Multiverse
             }
         }
 
+        private Position(int length, Type type)
+        {
+            Type = type;
+            _flag = new long[length];
+        }
+
+        private Position(long[] flag, Type type)
+        {
+            Type = type;
+            _flag = flag;
+        }
+
         /// <summary>
         /// Returns an array of positions such that each position has 0 uncertainty and all positions OR'd together
         /// equals the current position. In other words:
@@ -90,10 +122,28 @@ namespace DynamicTimelineFramework.Multiverse
         /// anyPosition.Equals(anyPosition.GetEigenValues().Aggregate(anyPosition, (i, p) => i | p) is always TRUE;
         /// </summary>
         /// <returns></returns>
-        public List<Position<T>> GetEigenValues()
+        public List<Position> GetEigenValues()
         {
-            //Todo - Use a "sliding" mask to construct the collection
-            var eigenValues = new List<Position<T>>();
+            //Use a "sliding" mask to construct the collection
+            var eigenValues = new List<Position>();
+
+            //Get the first flag
+            var flag = new long[_flag.Length];
+            flag[0] = 1;
+            
+            var mask = new Position(flag, Type);
+
+            for (var i = 0; i < flag.Length; i++)
+            {
+                //Mask and add a position if a value exists
+                var eigenValue = mask & this;
+                
+                if(eigenValue.Uncertainty == 0)
+                    eigenValues.Add(eigenValue);
+
+                mask.ShiftLeftByOne();
+
+            }
 
             return eigenValues;
         }
@@ -112,7 +162,9 @@ namespace DynamicTimelineFramework.Multiverse
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Position<T> pos)) return false;
+            if (!(obj is Position pos)) return false;
+
+            if (_flag.Length != pos._flag.Length) return false;
             
             for (var i = 0; i < Flag.Length; i++)
             {
@@ -137,9 +189,12 @@ namespace DynamicTimelineFramework.Multiverse
         }
         
         
-        public static Position<T> operator &(Position<T> lhs, Position<T> rhs)
+        public static Position operator &(Position lhs, Position rhs)
         {
-            var newPos = new Position<T>();
+            if(lhs._flag.Length != rhs._flag.Length)
+                throw new InvalidOperationException("Positions given are made for two different types");
+            
+            var newPos = new Position(lhs._flag.Length, lhs.Type);
             
             for (var i = 0; i < lhs.Flag.Length; i++)
             {
@@ -149,9 +204,12 @@ namespace DynamicTimelineFramework.Multiverse
             return newPos;
         }
         
-        public static Position<T> operator |(Position<T> lhs, Position<T> rhs)
+        public static Position operator |(Position lhs, Position rhs)
         {
-            var newPos = new Position<T>();
+            if(lhs._flag.Length != rhs._flag.Length)
+                throw new InvalidOperationException("Positions given are made for two different types");
+            
+            var newPos = new Position(lhs._flag.Length, lhs.Type);
             
             for (var i = 0; i < lhs.Flag.Length; i++)
             {
@@ -161,12 +219,21 @@ namespace DynamicTimelineFramework.Multiverse
             return newPos;
         }
         
-        public static implicit operator Position<T>(long[] rhs) {
-            return Alloc(rhs);
-        }
-        
-        public static implicit operator long[](Position<T> rhs) {
-            return rhs.Flag;
+        private void ShiftLeftByOne()
+        {
+            var curFlag = Flag;
+            
+            for (var i = _flag.Length - 1; i >= 0; i--)
+            {
+                //Shift the flag
+                _flag[i] = curFlag[i] << 1;
+
+                if (i > 0)
+                {
+                    //Compute the carryover
+                    _flag[i - 1] |= curFlag[i - 1] >> 63;
+                }
+            }
         }
     }
 }

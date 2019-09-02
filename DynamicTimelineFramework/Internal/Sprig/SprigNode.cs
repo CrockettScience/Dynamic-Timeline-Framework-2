@@ -2,15 +2,15 @@ using DynamicTimelineFramework.Multiverse;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class SprigNode<T> where T : DTFObject {
+    internal class SprigNode {
 
-        public SprigNode<T> Last { get; set; }
+        public SprigNode Last { get; set; }
 
         public ulong Index { get; set; }
 
-        public Position<T> Position { get; }
+        public Position Position { get; }
     
-        public SprigNode(SprigNode<T> last, Position<T> position, ulong i)
+        public SprigNode(SprigNode last, Position position, ulong i)
         {
             Last = last;
             Index = i;
@@ -19,7 +19,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public override bool Equals(object obj)
         {
-            if (!(obj is SprigNode<T> other)) return false;
+            if (!(obj is SprigNode other)) return false;
             
             if (!Position.Equals(other.Position) || Index != other.Index)
                 return false;

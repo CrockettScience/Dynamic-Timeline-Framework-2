@@ -1,14 +1,12 @@
 using System;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Multiverse;
-using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class SprigVector<T> : ISprig<T> where T : DTFObject {
-        public SprigNode<T> Head { get; private set; }
+    internal class SprigVector{
+        public SprigNode Head { get; private set; }
 
-        public IPosition<T> this[ulong index] {
+        public Position this[ulong index] {
             get {
                 var current = Head;
                 
@@ -20,23 +18,23 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
-        public SprigVector(SprigNode<T> head) {
+        public SprigVector(SprigNode head) {
             Head = head;
         }
         
-        public SprigVector() {
-            Head = new SprigNode<T>(null, Position<T>.Alloc(), 0);
+        public SprigVector(Type type) {
+            Head = new SprigNode(null, Position.Alloc(type), 0);
         }
 
-        public static SprigVector<T> operator &(SprigVector<T> left, SprigVector<T> right) {
+        public static SprigVector operator &(SprigVector left, SprigVector right) {
             var currentLeft = left.Head;
             var currentRight = right.Head;
             
-            var currentNew = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
-            var newSprigVector = new SprigVector<T>(currentNew);
+            var currentNew = new SprigNode(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+            var newSprigVector = new SprigVector(currentNew);
             
             if(currentNew.Position.Uncertainty == -1)
-                throw new ParadoxException(typeof(T));
+                throw new ParadoxException();
 
             var leftGreaterPlaceholder = currentLeft.Index;
             
@@ -49,10 +47,10 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             while (currentNew.Index != 0)
             {
                 //AND the positions and set the index to the greater of the nodes
-                var newNode = new SprigNode<T>(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                var newNode = new SprigNode(null, currentLeft.Position & currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
                 
                 if(newNode.Position.Uncertainty == -1)
-                    throw new ParadoxException(typeof(T));
+                    throw new ParadoxException();
                 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
                 if (newNode.Position.Equals(currentNew.Position))
@@ -73,15 +71,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return newSprigVector;
         }
         
-        public static SprigVector<T> operator |(SprigVector<T> left, SprigVector<T> right) {
+        public static SprigVector operator |(SprigVector left, SprigVector right) {
             var currentLeft = left.Head;
             var currentRight = right.Head;
             
-            var currentNew = new SprigNode<T>(null, currentLeft.Position | currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
-            var newSprigVector = new SprigVector<T>(currentNew);
+            var currentNew = new SprigNode(null, currentLeft.Position | currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+            var newSprigVector = new SprigVector(currentNew);
             
             if(currentNew.Position.Uncertainty == -1)
-                throw new ParadoxException(typeof(T));
+                throw new ParadoxException();
 
             var leftGreaterPlaceholder = currentLeft.Index;
             
@@ -94,10 +92,10 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             while (currentNew.Index != 0)
             {
                 //AND the positions and set the index to the greater of the nodes
-                var newNode = new SprigNode<T>(null, currentLeft.Position | currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
+                var newNode = new SprigNode(null, currentLeft.Position | currentRight.Position, Math.Max(currentLeft.Index, currentRight.Index));
                 
                 if(newNode.Position.Uncertainty == -1)
-                    throw new ParadoxException(typeof(T));
+                    throw new ParadoxException();
                 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
                 if (newNode.Position.Equals(currentNew.Position))

@@ -24,43 +24,43 @@ namespace Test {
         
         [ForwardPosition(PROTO | PRE_EXISTENT)]
         [LateralPosition(GALAXY_KEY, Galaxy.PRE_EXISTENT | Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
-        public static Position<Star> PreExistence     = Position<Star>.Alloc(PRE_EXISTENT    );
+        public static Position PreExistence     = Position.Alloc<Star>(PRE_EXISTENT    );
         
         [ForwardPosition(MAIN_SEQUENCE | MASSIVE)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
-        public static Position<Star> Proto            = Position<Star>.Alloc(PROTO           );
+        public static Position Proto            = Position.Alloc<Star>(PROTO           );
         
         [ForwardPosition(RED_GIANT)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position<Star> MainSequence     = Position<Star>.Alloc(MAIN_SEQUENCE   );
+        public static Position MainSequence     = Position.Alloc<Star>(MAIN_SEQUENCE   );
         
         [ForwardPosition(RED_SUPER_GIANT)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position<Star> Massive          = Position<Star>.Alloc(MASSIVE         );
+        public static Position Massive          = Position.Alloc<Star>(MASSIVE         );
         
         [ForwardPosition(PLANETARY_NEBULA)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position<Star> RedGiant         = Position<Star>.Alloc(RED_GIANT       );
+        public static Position RedGiant         = Position.Alloc<Star>(RED_GIANT       );
         
         [ForwardPosition(NEUTRON | BLACK_HOLE)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position<Star> RedSuperGiant    = Position<Star>.Alloc(RED_SUPER_GIANT );
+        public static Position RedSuperGiant    = Position.Alloc<Star>(RED_SUPER_GIANT );
         
         [ForwardPosition(WHITE_DWARF)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position<Star> PlanetaryNebula  = Position<Star>.Alloc(WHITE_DWARF     );
+        public static Position PlanetaryNebula  = Position.Alloc<Star>(WHITE_DWARF     );
         
         [ForwardPosition(WHITE_DWARF)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static Position<Star> WhiteDwarf       = Position<Star>.Alloc(NEUTRON         );
+        public static Position WhiteDwarf       = Position.Alloc<Star>(NEUTRON         );
         
         [ForwardPosition(NEUTRON)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static Position<Star> Neutron          = Position<Star>.Alloc(BLACK_HOLE      );
+        public static Position Neutron          = Position.Alloc<Star>(BLACK_HOLE      );
         
         [ForwardPosition(BLACK_HOLE)]
         [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static Position<Star> BlackHole        = Position<Star>.Alloc(PLANETARY_NEBULA);
+        public static Position BlackHole        = Position.Alloc<Star>(PLANETARY_NEBULA);
 
         public Star(Galaxy galaxy) {
             Galaxy = galaxy;

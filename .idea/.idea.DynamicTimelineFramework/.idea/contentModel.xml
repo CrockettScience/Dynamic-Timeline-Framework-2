@@ -14,14 +14,7 @@
         </e>
         <e p="Internal" t="Include">
           <e p="BitHacks.cs" t="Include" />
-          <e p="Interfaces" t="Include">
-            <e p="IMap.cs" t="Include" />
-            <e p="IMetaData.cs" t="Include" />
-            <e p="IPosition.cs" t="Include" />
-            <e p="ISprig.cs" t="Include" />
-          </e>
           <e p="Map.cs" t="Include" />
-          <e p="ObjectNode.cs" t="Include" />
           <e p="Sprig" t="Include">
             <e p="SBranchNode.cs" t="Include" />
             <e p="SHeadNode.cs" t="Include" />

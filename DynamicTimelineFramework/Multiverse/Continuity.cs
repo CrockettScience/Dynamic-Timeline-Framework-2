@@ -5,13 +5,13 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Multiverse
 {
-    public class Continuity<T> where T : DTFObject
+    public class Continuity
     {
         private readonly Universe _universe;
-        private readonly T _dtfObject;
-        private readonly Sprig<T> _sprig;
+        private readonly DTFObject _dtfObject;
+        private readonly Sprig _sprig;
 
-        public Position<T> this[ulong date]
+        public Position this[ulong date]
         {
             get
             {
@@ -21,7 +21,7 @@ namespace DynamicTimelineFramework.Multiverse
                 objectCompiler.PullConstraints(_dtfObject, _universe.Diff);
                 
                 //Now we can return the correct position
-                return (Position<T>) _dtfObject.GetSprig<T>(_universe.Diff)[date];
+                return _dtfObject.GetSprig(_universe.Diff)[date];
             }
         }
 
@@ -35,7 +35,7 @@ namespace DynamicTimelineFramework.Multiverse
         /// <param name="pos">The position to collapse to</param>
         /// <param name="outDiff">The resultant diff if the attempted collapse should return a paradox</param>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
-        public bool Collapse(ulong date, Position<T> pos, out Diff outDiff) 
+        public bool Collapse(ulong date, Position pos, out Diff outDiff) 
         {
             //First, pull constraints to get the correct value
             var compiler = _universe.Owner.Compiler;
@@ -43,13 +43,13 @@ namespace DynamicTimelineFramework.Multiverse
             
             //Proceed with the mask
             var newPosition = this[date] & pos;
-            var sprigVector = _universe.Owner.Compiler.GetNormalizedVector(pos, date);
+            var sprigVector = _universe.Owner.Compiler.GetNormalizedVector(_dtfObject.GetType(), pos, date);
 
             //Check for a paradox
             if (newPosition.Uncertainty < 0) {
                 //Paradox has occured
                 
-                var diffVector = new Map<DTFObject, SprigVector<T>>
+                var diffVector = new Map<DTFObject, SprigVector>
                 {
                     [_dtfObject] = sprigVector
                 };
@@ -88,11 +88,11 @@ namespace DynamicTimelineFramework.Multiverse
             Collapse(date, eigenValues[random.Next(eigenValues.Count)], out _);
         }
 
-        internal Continuity(Universe universe, T dtfObject)
+        internal Continuity(Universe universe, DTFObject dtfObject)
         {
             _universe = universe;
             _dtfObject = dtfObject;
-            _sprig = dtfObject.GetSprig<T>(universe.Diff);
+            _sprig = dtfObject.GetSprig(universe.Diff);
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal;
-using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
@@ -67,37 +66,65 @@ namespace DynamicTimelineFramework.Multiverse
             //2^63
             public const ulong SPRIG_CENTER = 9_223_372_036_854_775_808;
 
-            private readonly Map<Type, IMetaData<DTFObject>> _objectMetaData = new Map<Type, IMetaData<DTFObject>>();
+            private readonly Map<Type, MetaData> _objectMetaData = new Map<Type, MetaData>();
             
             public ObjectCompiler(string mvIdentifierKey, Assembly callingAssembly)
             {
-                var types = callingAssembly.GetTypes();
+                var firstPassTypes = callingAssembly.GetTypes();
+                var secondPassTypes = new List<Type>();
+
+                string parentKey = null;
                 
-                //Go through the types and only work with the types we care about
-                foreach (var type in types)
+                //Go through the types and create their metadata
+                foreach (var type in firstPassTypes)
                 {
+                    
                     if (!type.IsAssignableFrom(typeof(DTFObject))) continue;
 
                     if (!(type.GetCustomAttribute(DTFObjectDefAttr) is DTFObjectDefinitionAttribute definitionAttr))
                         throw new DTFObjectCompilerException(type.Name + " is assignable from " + DTFObjectType.Name + " but does not have a " + DTFObjectDefAttr.Name + " defined.");
-
-                    if (definitionAttr.MvIdentifierKey != mvIdentifierKey) continue;
                     
-                    //This is a type we are looking for. Now iterate though each field and build the database
+                    if (definitionAttr.MvIdentifierKey != mvIdentifierKey) continue;
+
+                    parentKey = CompileObjectTypeFirstPass(mvIdentifierKey, type);
+                    
+                    //Set up for second pass
+                    secondPassTypes.Add(type);
+                }
+                
+                //Modify and link the metadata
+                foreach (var type in secondPassTypes)
+                {
+
+                    CompileObjectTypeSecondPass(type, parentKey);
+                }
+            }
+            
+            private string CompileObjectTypeFirstPass(string mvIdentifierKey, Type type) 
+            {
+                    string parentKey = null;
+                    
+                    //This is a type we are looking for. Now iterate though each field and build the metadata
+                    var lateralFields = new Map<string, FieldInfo>();
+                    var lateralKeys = new HashSet<string>();
+                    var lateralTranslation = new Map<string, Map<Position, Position>>();
+                    var preComputedSprigs = new Map<Position, SprigVector>();
                     
                     //This position type represents the run time type of a position from this DTFObject
-                    var positionType = typeof(Position<>).MakeGenericType(type);
+                    var positionType = typeof(Position);
+                    
                     foreach (var field in type.GetFields())
                     {
                         var forwardPositionAttribute = field.GetCustomAttribute(ForwardPositionAttr) as ForwardPositionAttribute;
-                        var lateralPositionAttributes = field.GetCustomAttributes(LateralPositionAttr) as LateralPositionAttribute[];
                         var lateralObjectAttribute = field.GetCustomAttribute(LateralObjectAttr) as LateralObjectAttribute;
 
-                        //Perform a series of run time checks, then add them to some preliminary structures
+                        //Perform a series of run time checks, and add to some preliminary structures
                         var fieldType = field.FieldType;
                         
                         if (lateralObjectAttribute != null)
                         {
+                            #region CHECKS
+                            
                             //"PARENT" is a reserved lateral key
                             if(lateralObjectAttribute.LateralKey == PARENT_KEY)
                                 throw new DTFObjectCompilerException(type.Name + " uses off-limits lateral key \"" + PARENT_KEY + "\"");
@@ -118,15 +145,34 @@ namespace DynamicTimelineFramework.Multiverse
                             if(lateralAttr.MvIdentifierKey != mvIdentifierKey)
                                 throw new DTFObjectCompilerException(type.Name + " references a " + fieldType.Name + " as a lateral object, but identifier key \"" + lateralAttr.MvIdentifierKey + "\" does not math identifier key \"" + mvIdentifierKey + "\"");
 
-                            //Todo - key in the object
-                            
-                        }
+                            #endregion
 
-                        else if (lateralPositionAttributes != null)
+                            string key;
+                            
+                            //Add a key for the object
+                            if (lateralObjectAttribute.Parent)
+                            {
+                                //Cannot contain two parents
+                                if(lateralKeys.Contains(PARENT_KEY))
+                                    throw new DTFObjectCompilerException(type.Name + " can only have 1 lateral object designated as a parent");
+                                
+                                key = PARENT_KEY;
+                                parentKey = lateralObjectAttribute.LateralKey;
+                            }
+                            
+                            else
+                                key = lateralObjectAttribute.LateralKey;
+
+                            lateralKeys.Add(key);
+                            
+                            //Add the fieldInfo for the type
+                            lateralFields[key] = field;
+
+                        }
+                        
+                        if (forwardPositionAttribute != null)
                         {
-                            //"PARENT" is a reserved lateral key
-                            //if(lateralPositionAttributes.LateralKey == PARENT_KEY)
-                                //throw new DTFObjectCompilerException(type.Name + " uses off-limits lateral key \"" + PARENT_KEY + "\"");
+                            #region CHECKS
                             
                             //The field must be static
                             if (!field.IsStatic)
@@ -135,35 +181,91 @@ namespace DynamicTimelineFramework.Multiverse
                             //The field must be assignable from Position<Type>
                             if (!fieldType.IsAssignableFrom(positionType))
                                 throw new DTFObjectCompilerException(fieldType.Name + " is not assignable from " + positionType.Name + ", and cannot be attributed as a position by " + type.Name);
-
-                            //If it has a lateralPositionAttribute, then it must have a forwardPositionAttribute as well
-                            if (forwardPositionAttribute == null)
-                                throw new DTFObjectCompilerException(field.Name + " of type " + type.Name + " does not have a ForwardPositionAttribute");
-
-                            //Todo - key in the Position to both the associated lateral object and the forward object
+                            
+                            #endregion
+                            
+                            //Todo - Use the forward mapping to compute the sprigVector for the field position as an eigenvalue
                         }
+                    }
+                    
+                    _objectMetaData[type] = new MetaData(lateralFields, lateralKeys, lateralTranslation, preComputedSprigs);
+
+                    return parentKey;
+            }
+            
+            private void CompileObjectTypeSecondPass(Type type, string parentKey)
+            {
+                
+                //This position type represents the run time type of a position from this DTFObject
+                var positionType = typeof(Position);
+                
+                //Get the meta object
+                var meta = _objectMetaData[type];
+                
+                foreach (var field in type.GetFields())
+                {
+                    var forwardPositionAttribute = field.GetCustomAttribute(ForwardPositionAttr) as ForwardPositionAttribute;
+                    var lateralPositionAttributes = field.GetCustomAttributes(LateralPositionAttr) as LateralPositionAttribute[];
+
+                    if (lateralPositionAttributes != null)
+                    {
+                        var fieldType = field.FieldType;
                         
-                        else if (forwardPositionAttribute != null)
+                        #region CHECKS
+                        
+                        //The field must be static
+                        if (!field.IsStatic)
+                            throw new DTFObjectCompilerException("All of " + fieldType.Name + "\'s attributed positions must be static");
+                        
+                        //The field must be assignable from Position<Type>
+                        if (!fieldType.IsAssignableFrom(positionType))
+                            throw new DTFObjectCompilerException(fieldType.Name + " is not assignable from " + positionType.Name + ", and cannot be attributed as a position by " + type.Name);
+
+                        //If it has a lateralPositionAttribute, then it must have a forwardPositionAttribute as well
+                        if (forwardPositionAttribute == null)
+                            throw new DTFObjectCompilerException(field.Name + " of type " + type.Name + " does not have a ForwardPositionAttribute");
+                        
+                        #endregion
+
+                        var fieldValue = (Position) field.GetValue(null);
+
+                        foreach (var attribute in lateralPositionAttributes)
                         {
-                            //The field must be static+
-                            if (!field.IsStatic)
-                                throw new DTFObjectCompilerException("All of " + fieldType.Name + "\'s attributed positions must be static");
+                            //"PARENT" is a reserved lateral key
+                            if (attribute.LateralKey == PARENT_KEY)
+                                throw new DTFObjectCompilerException(
+                                    type.Name + " uses off-limits lateral key \"" + PARENT_KEY + "\"");
+
+                            var key = attribute.LateralKey == parentKey ? PARENT_KEY : attribute.LateralKey;
                             
-                            //The field must be assignable from Position<Type>
-                            if (!fieldType.IsAssignableFrom(positionType))
-                                throw new DTFObjectCompilerException(fieldType.Name + " is not assignable from " + positionType.Name + ", and cannot be attributed as a position by " + type.Name);
+                            if(!meta.LateralTranslation.ContainsKey(key))
+                                meta.LateralTranslation[key] = new Map<Position, Position>();
+
+                            var lateralTranslation = meta.LateralTranslation[key];
                             
-                            //Todo - key in the position to the forward object
+                            //Map the positions
+                            var attrValue = Position.Alloc(type, attribute.Flag);
+
+                            lateralTranslation[fieldValue] = attrValue;
+                            
+                            //Map the reverse positions
+                            var otherType = meta.LateralFields[key];
+                            
+                            //We'll need to check to make sure the structure is okay
+                            bool hasBackField;
+                            
+                            //Todo - Might need to refine the way we link objects.
+
                         }
-                        
-                        
                     }
                 }
             }
 
-            internal SprigVector<T> GetNormalizedVector<T>(Position<T> position, ulong date) where T : DTFObject
+            #region FUNCTIONS
+
+            internal SprigVector GetNormalizedVector(Type type, Position position, ulong date) 
             {
-                var vector = ((MetaData<T>) _objectMetaData[typeof(T)]).GetSprigVector(position);
+                var vector = _objectMetaData[type].GetSprigVector(position);
                     
                 //All precomputed sprigVectors are centered at SPRIG_CENTER. We need to shift the values to the correct date
                 //We have to dance around straight subtraction for the sake of avoiding overflow
@@ -180,10 +282,10 @@ namespace DynamicTimelineFramework.Multiverse
                 return vector;
             }
 
-            internal void PushConstraints<T>(T dtfObj, Diff diff) where T : DTFObject
+            internal void PushConstraints(DTFObject dtfObj, Diff diff)
             {
                 //Get the metadata object
-                var meta = (MetaData<T>) _objectMetaData[typeof(T)];
+                var meta = _objectMetaData[dtfObj.GetType()];
                 
                 //Iterate through each key and recursively constrain
                 foreach (var key in meta.LateralKeys)
@@ -195,58 +297,47 @@ namespace DynamicTimelineFramework.Multiverse
                     //Get the generic method for the field's type
                     var field = meta.LateralFields[key];
                         
-                    var fieldType = field.FieldType;
-                    var typeSpecificPushConstrain = typeof(ObjectCompiler).GetMethod("PushConstraints").MakeGenericMethod(fieldType);
-                        
                     //Get the field object
-                    var otherObject = field.GetValue(dtfObj);
-                        
-                    //Execute the method
-                    typeSpecificPushConstrain.Invoke(this, new[] {otherObject, diff});
+                    var otherObject = (DTFObject) field.GetValue(dtfObj);
+                    
+                    PushConstraints(otherObject, diff);
                 }
                 
             }
 
-            internal void PullConstraints<T>(T dtfObj, Diff diff) where T : DTFObject
+            internal void PullConstraints(DTFObject dtfObj, Diff diff)
             {
                 
                 //Get the metadata object
-                var meta = (MetaData<T>) _objectMetaData[typeof(T)];
+                var meta = _objectMetaData[dtfObj.GetType()];
                 
-                var parentNode = meta.Graph[PARENT_KEY];
-
-                
-                if (parentNode == null)
+                if (meta.LateralKeys.Contains(PARENT_KEY))
                     //It has no parents, no need to pull any constraints
                     return;
                 
                 //It has a parent, so pull its parent's constraints
                 
-                //Get the generic method for the field's type
+                //Get field
                 var field = meta.LateralFields[PARENT_KEY];
                         
                 var fieldType = field.FieldType;
-                var typeSpecificPullConstrain = typeof(ObjectCompiler).GetMethod("PullConstraints").MakeGenericMethod(fieldType);
                         
                 //Get the field object
-                var otherObject = field.GetValue(dtfObj);
+                var otherObject = (DTFObject) field.GetValue(dtfObj);
 
-                typeSpecificPullConstrain.Invoke(this, new[] {otherObject, diff});
+                PullConstraints(otherObject, diff);
                 
                 //Now that we know, after some amount of recursion, that the parent object
                 //is fully constrained, we can constrain by it
-                
-                //Get the generic constrain method
-                var typeSpecificConstrain = typeof(ObjectCompiler).GetMethod("Constraint").MakeGenericMethod(fieldType);
                 
                 //Get the meta object for the other object
                 var otherMeta = _objectMetaData[fieldType];
                 
                 //Constrain
-                typeSpecificConstrain.Invoke(null, new[] {otherObject, PARENT_KEY, otherMeta, diff});
+                Constrain(otherObject, PARENT_KEY, otherMeta, diff);
             }
 
-            private static bool Constrain<T>(T source, string key, MetaData<T> meta, Diff diff) where T : DTFObject
+            private static bool Constrain<T>(T source, string key, MetaData meta, Diff diff) where T : DTFObject
             {
                 
                 //Get the field that holds the object
@@ -256,62 +347,44 @@ namespace DynamicTimelineFramework.Multiverse
                 //Get the object to push the constraint to
                 var dest = (DTFObject) field.GetValue(source);
                 
-                //Get the correct generic method for getting the sprig
-                var getSprigMethod = fieldType.GetMethod("GetSprig").MakeGenericMethod(fieldType);
-                
-                //Get the correct generic method for translate
-                var translateMethod = meta.GetTranslateGenericMethod.MakeGenericMethod(fieldType);
-                
                 //Get the sprig
-                var sprig = getSprigMethod.Invoke(dest, new object[]{diff});
-                
-                //Get the correct generic method to AND the sprigs together
-                var andMethod = sprig.GetType().GetMethod("And");
+                var sprig = dest.GetSprig(diff);
                 
                 //Get the translation vector
-                var translationVector = translateMethod.Invoke(meta, new object[]{key, source.GetSprig<T>(diff).ToVector()});
+                var translationVector = meta.Translate(key, source.GetSprig(diff).ToVector());
                 
                 //AND the sprigs together and check if there was a change
-                return (bool) andMethod.Invoke(sprig, new [] {translationVector});
+                return sprig.And(translationVector);
             }
-            
 
-            private class MetaData<T> : IMetaData<T> where T : DTFObject
+            #endregion
+
+            private class MetaData
             {
-                public ObjectNode Graph { get; }
+
                 public Map<string, FieldInfo> LateralFields { get; }
                 
-                public List<string> LateralKeys { get; }
-
-                public MethodInfo GetTranslateGenericMethod
+                public HashSet<string> LateralKeys { get; }
+                
+                public Map<string, Map<Position, Position>> LateralTranslation { get; }
+                
+                public Map<Position, SprigVector> PreComputedSprigs { get; }
+                
+                public MetaData(Map<string, FieldInfo> lateralFields, HashSet<string> lateralKeys, Map<string, Map<Position, Position>> lateralTranslation, Map<Position, SprigVector> preComputedSprigs)
                 {
-                    get
-                    {
-                        return GetType().GetMethod("Translate", new []{typeof(string), typeof(SprigVector<T>)});
-                        
-                    }
-                }
-                
-                private Map<Position<T>, SprigVector<T>> PreComputedSprigs { get; }
-                
-                private IMap<string, IMap<Position<T>, IPosition<DTFObject>>> LateralTranslation { get; }
-                
-                public MetaData(ObjectNode graph, Map<string, FieldInfo> lateralFields, List<string> lateralKeys, IMap<string, IMap<Position<T>, IPosition<DTFObject>>> lateralTranslation, Map<Position<T>, SprigVector<T>> preComputedSprigs)
-                {
-                    Graph = graph;
                     LateralFields = lateralFields;
                     LateralKeys = lateralKeys;
                     LateralTranslation = lateralTranslation;
                     PreComputedSprigs = preComputedSprigs;
                 }
 
-                public Position<TOut> Translate<TOut>(string key, Position<T> input) where TOut : DTFObject
+                public Position Translate(string key, Position input)
                 {
-                    Position<TOut> output;
+                    Position output;
 
                     try
                     {
-                        output = (Position<TOut>) LateralTranslation[key][input];
+                        output = LateralTranslation[key][input];
                     }
                     catch (InvalidCastException)
                     {
@@ -322,17 +395,17 @@ namespace DynamicTimelineFramework.Multiverse
                     return output;
                 }
 
-                public SprigVector<TOut> Translate<TOut>(string key, SprigVector<T> input) where TOut : DTFObject
+                public SprigVector Translate(string key, SprigVector input)
                 {
                     var currentIn = input.Head;
-                    var currentOut = new SprigNode<TOut>(null, Translate<TOut>(key, currentIn.Position), currentIn.Index);
-                    var output = new SprigVector<TOut>(currentOut);
+                    var currentOut = new SprigNode(null, Translate(key, currentIn.Position), currentIn.Index);
+                    var output = new SprigVector(currentOut);
 
                     while (currentIn.Last != null)
                     {
                         currentIn = currentIn.Last;
                         
-                        currentOut.Last = new SprigNode<TOut>(null, Translate<TOut>(key, currentIn.Position), currentIn.Index);
+                        currentOut.Last = new SprigNode(null, Translate(key, currentIn.Position), currentIn.Index);
 
                         currentOut = currentOut.Last;
                     }
@@ -341,10 +414,10 @@ namespace DynamicTimelineFramework.Multiverse
 
                 }
 
-                public SprigVector<T> GetSprigVector(Position<T> position)
+                public SprigVector GetSprigVector(Position position)
                 {
                     var eigenValues = position.GetEigenValues();
-                    var vector = new SprigVector<T>();
+                    var vector = new SprigVector(position.Type);
 
                     return eigenValues.Aggregate(vector, (current, eigenValue) => current | PreComputedSprigs[eigenValue]);
                 }

@@ -16,21 +16,21 @@ namespace Test
         internal const long DEGENERATE =       1 << 31;
         
         [ForwardPosition(PRE_EXISTENT | PROTO_GALAXY)]
-        public static readonly Position<Galaxy> PreExistent = Position<Galaxy>.Alloc(PRE_EXISTENT);
+        public static readonly Position PreExistent = Position.Alloc<Galaxy>(PRE_EXISTENT);
         
         [ForwardPosition(YOUNG)]
-        public static Position<Galaxy> ProtoGalaxy = Position<Galaxy>.Alloc(PROTO_GALAXY);
+        public static readonly Position ProtoGalaxy = Position.Alloc<Galaxy>(PROTO_GALAXY);
         
         [ForwardPosition(MIDDLE)]
-        public static Position<Galaxy> Young =      Position<Galaxy>.Alloc(YOUNG);
+        public static readonly Position Young =      Position.Alloc<Galaxy>(YOUNG);
         
         [ForwardPosition(OLD)]
-        public static Position<Galaxy> Middle =      Position<Galaxy>.Alloc(MIDDLE);
+        public static readonly Position Middle =      Position.Alloc<Galaxy>(MIDDLE);
         
         [ForwardPosition(DEGENERATE)]
-        public static Position<Galaxy> Old =      Position<Galaxy>.Alloc(OLD);
+        public static readonly Position Old =      Position.Alloc<Galaxy>(OLD);
         
         [ForwardPosition(DEGENERATE)]
-        public static Position<Galaxy> Degenerate =  Position<Galaxy>.Alloc(DEGENERATE);
+        public static readonly Position Degenerate =  Position.Alloc<Galaxy>(DEGENERATE);
     }
 }

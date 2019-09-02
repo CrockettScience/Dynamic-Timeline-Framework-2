@@ -1,9 +1,8 @@
 using System;
-using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Internal
 {
-    internal class Map<TKey, TValue> : IMap<TKey, TValue> {
+    internal class Map<TKey, TValue> {
         private const int DEFAULT_TABLE_SIZE = 101;
 
         private MapEntry<TKey, TValue>[] _mapTable;

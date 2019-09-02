@@ -6,9 +6,12 @@ namespace DynamicTimelineFramework.Objects.Attributes
     public class LateralObjectAttribute : Attribute 
     {
         public string LateralKey { get; }
+        public bool Parent { get; }
 
-        public LateralObjectAttribute(string lateralKey, bool parent = false) {
+        public LateralObjectAttribute(string lateralKey, bool parent = false)
+        {
             LateralKey = lateralKey;
+            Parent = parent;
         }
     }
 }
