@@ -103,7 +103,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 return false;
             }
             
-            //Todo - we need to take the new sprig and replace the current sprig, but preserve both the spine and the branching sprig nodes
+            //Todo - We need to take the new sprig and replace the current sprig, but preserve both the spine and the branching sprig nodes
+            //Todo - We need to figure out a function that can recompute a sprig vector representation of the reduction in certainty on other branched paths
             return true;
         }
 

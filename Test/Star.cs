@@ -20,47 +20,47 @@ namespace Test {
         private const string GALAXY_KEY = "Galaxy";
         
         [ForwardPosition(PROTO | PRE_EXISTENT)]
-        [LateralPosition(GALAXY_KEY, Galaxy.PRE_EXISTENT | Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
-        public static Position PreExistence     = Position.Alloc<Star>(PRE_EXISTENT    );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.PRE_EXISTENT | Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
+        public static Position PreExistence     = Position.Alloc<Star>(PRE_EXISTENT);
         
         [ForwardPosition(MAIN_SEQUENCE | MASSIVE)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
-        public static Position Proto            = Position.Alloc<Star>(PROTO           );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
+        public static Position Proto            = Position.Alloc<Star>(PROTO);
         
         [ForwardPosition(RED_GIANT)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position MainSequence     = Position.Alloc<Star>(MAIN_SEQUENCE   );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
+        public static Position MainSequence     = Position.Alloc<Star>(MAIN_SEQUENCE);
         
         [ForwardPosition(RED_SUPER_GIANT)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position Massive          = Position.Alloc<Star>(MASSIVE         );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
+        public static Position Massive          = Position.Alloc<Star>(MASSIVE);
         
         [ForwardPosition(PLANETARY_NEBULA)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position RedGiant         = Position.Alloc<Star>(RED_GIANT       );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
+        public static Position RedGiant         = Position.Alloc<Star>(RED_GIANT);
         
         [ForwardPosition(NEUTRON | BLACK_HOLE)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position RedSuperGiant    = Position.Alloc<Star>(RED_SUPER_GIANT );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
+        public static Position RedSuperGiant    = Position.Alloc<Star>(RED_SUPER_GIANT);
         
         [ForwardPosition(WHITE_DWARF)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static Position PlanetaryNebula  = Position.Alloc<Star>(WHITE_DWARF     );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
+        public static Position PlanetaryNebula  = Position.Alloc<Star>(WHITE_DWARF);
         
         [ForwardPosition(WHITE_DWARF)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static Position WhiteDwarf       = Position.Alloc<Star>(NEUTRON         );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
+        public static Position WhiteDwarf       = Position.Alloc<Star>(NEUTRON);
         
         [ForwardPosition(NEUTRON)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static Position Neutron          = Position.Alloc<Star>(BLACK_HOLE      );
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
+        public static Position Neutron          = Position.Alloc<Star>(BLACK_HOLE);
         
         [ForwardPosition(BLACK_HOLE)]
-        [LateralPosition(GALAXY_KEY, Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
+        [LateralPosition(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
         public static Position BlackHole        = Position.Alloc<Star>(PLANETARY_NEBULA);
 
         public Star(Galaxy galaxy) {
-            AddParent(galaxy);
+            SetParent(GALAXY_KEY, galaxy);
         }
     }
 }

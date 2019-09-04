@@ -15,7 +15,7 @@ namespace DynamicTimelineFramework.Multiverse
             Diff = diff;
             Owner = diff.Parent.Owner;
 
-            // Todo - force the positions given in the dictionary onto new branched sprigs
+            //Todo - Force the positions given in the dictionary onto new branched sprigs
 
         }
 

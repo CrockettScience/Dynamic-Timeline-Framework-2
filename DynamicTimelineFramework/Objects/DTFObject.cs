@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal;
 using DynamicTimelineFramework.Internal.Sprig;
@@ -9,7 +10,8 @@ namespace DynamicTimelineFramework.Objects {
         
         private readonly Map<Diff, Sprig> _sprigs;
         private readonly Map<string, DTFObject> _lateralDirectory;
-        private DTFObject _parent;
+        private readonly List<string> _lateralKeys;
+        private string _parentKey;
         
         internal Sprig GetSprig(Diff diff)
         {
@@ -17,9 +19,9 @@ namespace DynamicTimelineFramework.Objects {
         }
             
         protected DTFObject() {
+            _lateralKeys = new List<string>();
             _lateralDirectory = new Map<string, DTFObject>();
             _sprigs = new Map<Diff, Sprig>();
-            _parent = null;
         }
 
         protected void AddObject(string key, DTFObject obj) {
@@ -27,24 +29,36 @@ namespace DynamicTimelineFramework.Objects {
                 throw new DTFObjectDefinitionException(GetType() + " attempted to add an object to key " + key + "twice");
             
             _lateralDirectory[key] = obj;
+            _lateralKeys.Add(key);
             
             //Subscribe to the other objects directory
-            obj._lateralDirectory[key + ToString()] = this;
+            obj._lateralDirectory[key + "-BACK_REFERENCE-" + GetType().GetHashCode()] = this;
+            obj._lateralKeys.Add(key + "-BACK_REFERENCE-" + GetType().GetHashCode());
         }
         
-        protected void AddParent(DTFObject obj) {
-            if(_parent != null)
+        protected void SetParent(string key, DTFObject obj) {
+            if(HasParent())
                 throw new DTFObjectDefinitionException(GetType() + " can only have 1 parent");
             
-            _parent = obj;
+            _lateralDirectory[key] = obj;
+            _parentKey = key;
+        }
+        
+        internal bool HasParent() {
+            return _parentKey != null;
         }
 
         internal DTFObject GetLateralObject(string key) {
             return _lateralDirectory[key];
         }
         
-        internal DTFObject GetParent() {
-            return _parent;
+        internal string GetParentKey() {
+            return _parentKey;
+        }
+
+        internal List<string> GetLateralKeys()
+        {
+            return _lateralKeys;
         }
     }
 }

@@ -5,7 +5,7 @@ namespace DynamicTimelineFramework.Objects.Attributes
     [AttributeUsage(AttributeTargets.Field)]
     public class ForwardPositionAttribute : Attribute
     {
-        public long[] Flag;
+        internal long[] Flag { get; }
 
         public ForwardPositionAttribute(params long[] flag) {
             Flag = flag;
