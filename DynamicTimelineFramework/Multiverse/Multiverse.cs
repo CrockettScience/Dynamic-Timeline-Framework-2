@@ -58,10 +58,7 @@ namespace DynamicTimelineFramework.Multiverse
             
             private static readonly Type DTFObjectDefAttr = typeof(DTFObjectDefinitionAttribute);
             private static readonly Type ForwardPositionAttr = typeof(ForwardPositionAttribute);
-            private static readonly Type LateralObjectAttr = typeof(LateralObjectAttribute);
             private static readonly Type LateralPositionAttr = typeof(LateralPositionAttribute);
-
-            private const string PARENT_KEY = "PARENT";
             
             //2^63
             public const ulong SPRIG_CENTER = 9_223_372_036_854_775_808;
@@ -115,8 +112,9 @@ namespace DynamicTimelineFramework.Multiverse
                     
                     foreach (var field in type.GetFields())
                     {
+                        //Todo - Refactor to account new refactored way to access lateral objects
+                        
                         var forwardPositionAttribute = field.GetCustomAttribute(ForwardPositionAttr) as ForwardPositionAttribute;
-                        var lateralObjectAttribute = field.GetCustomAttribute(LateralObjectAttr) as LateralObjectAttribute;
 
                         //Perform a series of run time checks, and add to some preliminary structures
                         var fieldType = field.FieldType;
@@ -124,10 +122,6 @@ namespace DynamicTimelineFramework.Multiverse
                         if (lateralObjectAttribute != null)
                         {
                             #region CHECKS
-                            
-                            //"PARENT" is a reserved lateral key
-                            if(lateralObjectAttribute.LateralKey == PARENT_KEY)
-                                throw new DTFObjectCompilerException(type.Name + " uses off-limits lateral key \"" + PARENT_KEY + "\"");
                             
                             //The field must not be static
                             if (field.IsStatic)
@@ -152,10 +146,6 @@ namespace DynamicTimelineFramework.Multiverse
                             //Add a key for the object
                             if (lateralObjectAttribute.Parent)
                             {
-                                //Cannot contain two parents
-                                if(lateralKeys.Contains(PARENT_KEY))
-                                    throw new DTFObjectCompilerException(type.Name + " can only have 1 lateral object designated as a parent");
-                                
                                 key = PARENT_KEY;
                                 parentKey = lateralObjectAttribute.LateralKey;
                             }
@@ -231,11 +221,6 @@ namespace DynamicTimelineFramework.Multiverse
 
                         foreach (var attribute in lateralPositionAttributes)
                         {
-                            //"PARENT" is a reserved lateral key
-                            if (attribute.LateralKey == PARENT_KEY)
-                                throw new DTFObjectCompilerException(
-                                    type.Name + " uses off-limits lateral key \"" + PARENT_KEY + "\"");
-
                             var key = attribute.LateralKey == parentKey ? PARENT_KEY : attribute.LateralKey;
                             
                             if(!meta.LateralTranslation.ContainsKey(key))
@@ -253,8 +238,6 @@ namespace DynamicTimelineFramework.Multiverse
                             
                             //We'll need to check to make sure the structure is okay
                             bool hasBackField;
-                            
-                            //Todo - Might need to refine the way we link objects.
 
                         }
                     }
@@ -288,19 +271,13 @@ namespace DynamicTimelineFramework.Multiverse
                 var meta = _objectMetaData[dtfObj.GetType()];
                 
                 //Iterate through each key and recursively constrain
-                foreach (var key in meta.LateralKeys)
-                {
-                    if (!Constrain(dtfObj, key, meta, diff)) continue;
+                foreach (var key in meta.LateralKeys) {
+                    var dest = dtfObj.GetLateralObject(key);
+                    if (!Constrain(dtfObj, dest, meta, diff)) continue;
                     
-                    //If the constraint results in change, then push it's constraints
+                    //If the constraint results in change, then push it's constraints as well
                     
-                    //Get the generic method for the field's type
-                    var field = meta.LateralFields[key];
-                        
-                    //Get the field object
-                    var otherObject = (DTFObject) field.GetValue(dtfObj);
-                    
-                    PushConstraints(otherObject, diff);
+                    PushConstraints(dest, diff);
                 }
                 
             }
@@ -308,49 +285,34 @@ namespace DynamicTimelineFramework.Multiverse
             internal void PullConstraints(DTFObject dtfObj, Diff diff)
             {
                 
-                //Get the metadata object
-                var meta = _objectMetaData[dtfObj.GetType()];
-                
-                if (meta.LateralKeys.Contains(PARENT_KEY))
+                if (dtfObj.GetParent() == null)
                     //It has no parents, no need to pull any constraints
                     return;
                 
                 //It has a parent, so pull its parent's constraints
-                
-                //Get field
-                var field = meta.LateralFields[PARENT_KEY];
                         
-                var fieldType = field.FieldType;
-                        
-                //Get the field object
-                var otherObject = (DTFObject) field.GetValue(dtfObj);
+                //Get the parent object
+                var parent = dtfObj.GetParent();
 
-                PullConstraints(otherObject, diff);
+                PullConstraints(parent, diff);
                 
                 //Now that we know, after some amount of recursion, that the parent object
                 //is fully constrained, we can constrain by it
                 
                 //Get the meta object for the other object
-                var otherMeta = _objectMetaData[fieldType];
+                var otherMeta = _objectMetaData[parent.GetType()];
                 
                 //Constrain
-                Constrain(otherObject, PARENT_KEY, otherMeta, diff);
+                Constrain(parent, dtfObj, otherMeta, diff);
             }
 
-            private static bool Constrain<T>(T source, string key, MetaData meta, Diff diff) where T : DTFObject
+            private static bool Constrain(DTFObject source, DTFObject dest, MetaData meta, Diff diff)
             {
-                
-                //Get the field that holds the object
-                var field = meta.LateralFields[key];
-                var fieldType = field.FieldType;
-                
-                //Get the object to push the constraint to
-                var dest = (DTFObject) field.GetValue(source);
-                
                 //Get the sprig
                 var sprig = dest.GetSprig(diff);
                 
                 //Get the translation vector
+                //Todo - Refactor to access parent without key
                 var translationVector = meta.Translate(key, source.GetSprig(diff).ToVector());
                 
                 //AND the sprigs together and check if there was a change
@@ -361,18 +323,14 @@ namespace DynamicTimelineFramework.Multiverse
 
             private class MetaData
             {
-
-                public Map<string, FieldInfo> LateralFields { get; }
-                
                 public HashSet<string> LateralKeys { get; }
                 
                 public Map<string, Map<Position, Position>> LateralTranslation { get; }
                 
                 public Map<Position, SprigVector> PreComputedSprigs { get; }
                 
-                public MetaData(Map<string, FieldInfo> lateralFields, HashSet<string> lateralKeys, Map<string, Map<Position, Position>> lateralTranslation, Map<Position, SprigVector> preComputedSprigs)
+                public MetaData(HashSet<string> lateralKeys, Map<string, Map<Position, Position>> lateralTranslation, Map<Position, SprigVector> preComputedSprigs)
                 {
-                    LateralFields = lateralFields;
                     LateralKeys = lateralKeys;
                     LateralTranslation = lateralTranslation;
                     PreComputedSprigs = preComputedSprigs;

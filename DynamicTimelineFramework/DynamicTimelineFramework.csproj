@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exception\DTFObjectDefinitionException.cs" />
     <Compile Include="Exception\ParadoxException.cs" />
     <Compile Include="Internal\BitHacks.cs" />
     <Compile Include="Internal\Map.cs" />
@@ -60,7 +61,6 @@
     <Compile Include="Exception\InvalidFlagSpaceFactor.cs" />
     <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />
     <Compile Include="Objects\Attributes\ForwardPositionAttribute.cs" />
-    <Compile Include="Objects\Attributes\LateralObjectAttribute.cs" />
     <Compile Include="Objects\Attributes\LateralPositionAttribute.cs" />
     <Compile Include="Objects\DTFObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

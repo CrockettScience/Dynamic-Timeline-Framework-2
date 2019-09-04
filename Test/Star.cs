@@ -18,9 +18,6 @@ namespace Test {
         internal const long PLANETARY_NEBULA = 1 << 9;
 
         private const string GALAXY_KEY = "Galaxy";
-
-        [LateralObject(GALAXY_KEY, true)]
-        public Galaxy Galaxy { get; }
         
         [ForwardPosition(PROTO | PRE_EXISTENT)]
         [LateralPosition(GALAXY_KEY, Galaxy.PRE_EXISTENT | Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
@@ -63,7 +60,7 @@ namespace Test {
         public static Position BlackHole        = Position.Alloc<Star>(PLANETARY_NEBULA);
 
         public Star(Galaxy galaxy) {
-            Galaxy = galaxy;
+            AddParent(galaxy);
         }
     }
 }
