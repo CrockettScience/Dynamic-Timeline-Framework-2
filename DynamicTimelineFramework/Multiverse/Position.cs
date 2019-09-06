@@ -219,6 +219,25 @@ namespace DynamicTimelineFramework.Multiverse
             return newPos;
         }
         
+        public static Position operator ^(Position lhs, Position rhs)
+        {
+            if(lhs._flag.Length != rhs._flag.Length)
+                throw new InvalidOperationException("Positions given are made for two different types");
+            
+            var newPos = new Position(lhs._flag.Length, lhs.Type);
+            
+            for (var i = 0; i < lhs.Flag.Length; i++)
+            {
+                newPos.Flag[i] = lhs.Flag[i] ^ rhs.Flag[i];
+            }
+
+            return newPos;
+        }
+        
+        public static implicit operator long[](Position position) {
+            return position._flag;
+        }
+        
         private void ShiftLeftByOne()
         {
             var curFlag = Flag;

@@ -7,12 +7,10 @@ namespace DynamicTimelineFramework.Objects.Attributes
     {
         internal string MvIdentifierKey { get; }
         internal int BitSpaceFactor { get; }
-        internal ulong DatePeriodLength { get; }
 
-        public DTFObjectDefinitionAttribute(int bitSpaceFactor, ulong datePeriodLength, string mvIdentifierKey) {
+        public DTFObjectDefinitionAttribute(int bitSpaceFactor, string mvIdentifierKey) {
             MvIdentifierKey = mvIdentifierKey;
             BitSpaceFactor = bitSpaceFactor;
-            DatePeriodLength = datePeriodLength;
         }
     }
 }

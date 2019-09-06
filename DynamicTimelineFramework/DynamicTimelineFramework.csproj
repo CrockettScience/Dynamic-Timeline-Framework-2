@@ -60,7 +60,7 @@
     <Compile Include="Exception\DTFObjectCompilerException.cs" />
     <Compile Include="Exception\InvalidFlagSpaceFactor.cs" />
     <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />
-    <Compile Include="Objects\Attributes\ForwardPositionAttribute.cs" />
+    <Compile Include="Objects\Attributes\PositionAttribute.cs" />
     <Compile Include="Objects\Attributes\LateralPositionAttribute.cs" />
     <Compile Include="Objects\DTFObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

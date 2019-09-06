@@ -60,5 +60,10 @@ namespace DynamicTimelineFramework.Objects {
         {
             return _lateralKeys;
         }
+
+        public abstract Position InitialSuperPosition();
+        public abstract Position TerminalSuperPosition();
+
+        
     }
 }

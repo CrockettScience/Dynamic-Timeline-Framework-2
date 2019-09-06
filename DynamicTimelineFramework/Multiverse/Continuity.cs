@@ -26,7 +26,7 @@ namespace DynamicTimelineFramework.Multiverse
         }
 
         /// <summary>
-        /// Attempts to Collapse the position at date to pos. If the collapse results in a paradox
+        /// Attempts to Constrain the position at date to pos. If the constraint results in a paradox
         /// (that is, the resultant position's Uncertainty property returns -1), It will create and
         /// assign a Diff object to outDiff that can be used to instantiate a universe branch where
         /// the object's position at date is collapsed to Pos.
@@ -35,7 +35,7 @@ namespace DynamicTimelineFramework.Multiverse
         /// <param name="pos">The position to collapse to</param>
         /// <param name="outDiff">The resultant diff if the attempted collapse should return a paradox</param>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
-        public bool Collapse(ulong date, Position pos, out Diff outDiff) 
+        public bool Constrain(ulong date, Position pos, out Diff outDiff) 
         {
             //First, pull constraints to get the correct value
             var compiler = _universe.Owner.Compiler;
@@ -74,7 +74,7 @@ namespace DynamicTimelineFramework.Multiverse
         /// <param name="date">The date to collapse to the position at</param>
         /// <param name="random">Random object to seed pick</param>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
-        public void Collapse(ulong date, Random random)
+        public void Constrain(ulong date, Random random)
         {
             //First, pull constraints to get the correct value
             var compiler = _universe.Owner.Compiler;
@@ -85,7 +85,7 @@ namespace DynamicTimelineFramework.Multiverse
             var eigenValues = position.GetEigenValues();
 
             //The out diff will never be used in this call because we picked the state from an available eigen value
-            Collapse(date, eigenValues[random.Next(eigenValues.Count)], out _);
+            Constrain(date, eigenValues[random.Next(eigenValues.Count)], out _);
         }
 
         internal Continuity(Universe universe, DTFObject dtfObject)

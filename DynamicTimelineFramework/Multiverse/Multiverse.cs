@@ -57,7 +57,7 @@ namespace DynamicTimelineFramework.Multiverse
             private static readonly Type DTFObjectType = typeof(DTFObject);
             
             private static readonly Type DTFObjectDefAttr = typeof(DTFObjectDefinitionAttribute);
-            private static readonly Type ForwardPositionAttr = typeof(ForwardPositionAttribute);
+            private static readonly Type ForwardPositionAttr = typeof(PositionAttribute);
             private static readonly Type LateralPositionAttr = typeof(LateralPositionAttribute);
             
             //2^63
@@ -102,14 +102,18 @@ namespace DynamicTimelineFramework.Multiverse
 
                     foreach (var field in type.GetFields())
                     {
-                        if(field.GetCustomAttribute(ForwardPositionAttr) is ForwardPositionAttribute)
+                        if(field.GetCustomAttribute(ForwardPositionAttr) is PositionAttribute)
                             typeFields.Add(field);
                     }
+
+                    var forwardMap = new Map<Position, Position>();
+                    var backwardMap = new Map<Position, Position>();
+                    var lengthMap = new Map<Position, ulong>();
                     
                     foreach (var field in typeFields)
                     {
                         
-                        var forwardPositionAttribute = field.GetCustomAttribute(ForwardPositionAttr) as ForwardPositionAttribute;
+                        var positionAttribute = (PositionAttribute) field.GetCustomAttribute(ForwardPositionAttr);
                         var lateralPositionAttributes = field.GetCustomAttributes(LateralPositionAttr) as LateralPositionAttribute[];
 
                         //Perform a series of run time checks, and add to some preliminary structures
@@ -127,28 +131,30 @@ namespace DynamicTimelineFramework.Multiverse
                             
                         #endregion
                             
-                        //Todo - Use the forward mapping to compute the sprigVector for the field position as an eigen value
+                        //Use the position attribute to precompute a sprig vector about the position
+                        var fieldValue = (Position) field.GetValue(null);
+                        lengthMap[fieldValue] = positionAttribute.Length;
+                        
+                        //Store the forward map
+                        var forwardMask = Position.Alloc(type, positionAttribute.ForwardPosition);
+                        forwardMap[fieldValue] = forwardMask;
+                        
+                        //Store the reverse forward map
+                        foreach (var innerField in typeFields) {
+                            var innerPos = (Position) innerField.GetValue(null);
+                            
+                            if(!backwardMap.ContainsKey(innerPos))
+                                backwardMap[innerPos] = Position.Alloc(type);
+                            
+                            //If the outer field contains innerfield in it's forward mask, that
+                            //makes the outer field part of the inner field's backward mask
+                            if ((forwardMask & innerPos).Uncertainty >= 0)
+                                backwardMap[innerPos] |= fieldValue;
+                        }
                         
                         //Compute and store the cross type translation
                         if (lateralPositionAttributes != null)
                         {
-                            #region CHECKS
-                            
-                            //The field must be static
-                            if (!field.IsStatic)
-                                throw new DTFObjectCompilerException("All of " + fieldType.Name + "\'s attributed positions must be static");
-                            
-                            //The field must be assignable from Position<Type>
-                            if (!fieldType.IsAssignableFrom(positionType))
-                                throw new DTFObjectCompilerException(fieldType.Name + " is not assignable from " + positionType.Name + ", and cannot be attributed as a position by " + type.Name);
-
-                            //If it has a lateralPositionAttribute, then it must have a forwardPositionAttribute as well
-                            if (forwardPositionAttribute == null)
-                                throw new DTFObjectCompilerException(field.Name + " of type " + type.Name + " does not have a ForwardPositionAttribute");
-                            
-                            #endregion
-
-                            var fieldValue = (Position) field.GetValue(null);
 
                             foreach (var attribute in lateralPositionAttributes)
                             {
@@ -172,7 +178,7 @@ namespace DynamicTimelineFramework.Multiverse
                                 var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation;
                                 foreach (var otherField in attribute.Type.GetFields())
                                 {
-                                    if (otherField.GetCustomAttribute(ForwardPositionAttr) is ForwardPositionAttribute)
+                                    if (otherField.GetCustomAttribute(ForwardPositionAttr) is PositionAttribute)
                                     {
                                         if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()))
                                             otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()] = new Map<Position, Position>();
@@ -198,6 +204,95 @@ namespace DynamicTimelineFramework.Multiverse
                             }
                         }
                     }
+                    
+                    //Todo - Use the forward and backward map to compute the SprigVector
+                    
+                    //When we collapse to a position, the collapsed-to date can be anywhere from
+                    //the beginning of the positions length or the end. So, we can compute the
+                    //vector as if the collapsed position is at the "beginning" of the length, then
+                    //copy it and shift the copy to the LEFT by the length value, then OR the
+                    //vector and it's copy together to get the complete breadth of possibilities
+                    foreach (var positionField in typeFields) {
+                        var current = (Position) positionField.GetValue(null);
+
+                        var currentStart = SPRIG_CENTER;
+                        var centerNode = new SprigNode(null, current, currentStart);
+                        var currentNode = centerNode;
+
+                        //Compute backward half
+                        //alias for reduced lengths
+                        var lengthAlias = new Map<Position, ulong>();
+                        
+                        //This is to save out superpositions whose span goes beyond the current span
+                        var last = Position.Alloc(type);
+                        var currentEdge = Position.Alloc(type, current.Flag);
+                        
+                        //Something's not right...
+                        while (currentStart > 0) {
+
+                            foreach (var eigenValue in currentEdge.GetEigenValues()) {
+                                last |= backwardMap[eigenValue];
+                            }
+                            
+                            //If the position is identical to the last, we have reached an initial
+                            //superposition, which will continue to the beginning.
+                            if (current.Equals(last)) {
+                                currentNode.Index = 0;
+                                break;
+                            }
+
+                            current = last;
+                            
+                            //Find the LOWEST length
+                            var eigenValues = last.GetEigenValues();
+
+                            var length = ulong.MaxValue;
+                            
+                            foreach (var eigenValue in eigenValues) {
+                                ulong trueLength;
+                                if (lengthAlias.ContainsKey(eigenValue)) {
+                                    trueLength = lengthAlias[eigenValue];
+                                    
+                                }
+
+                                else {
+                                    trueLength = lengthMap[eigenValue];
+                                    lengthAlias[eigenValue] = trueLength;
+                                }
+                                
+                                if (length > trueLength)
+                                    length = lengthMap[eigenValue];
+                            }
+
+                            currentStart -= length;
+                            
+                            var lastNode = new SprigNode(null, current, currentStart);
+                            
+                            currentNode.Last = lastNode;
+                            currentNode = currentNode.Last;
+                            
+                            //Finally, mask out the positions whose length is equal to the shortest
+                            //length, 
+                            currentEdge = Position.Alloc(type);
+                            foreach (var eigenValue in eigenValues) {
+                                if (lengthMap[eigenValue] == length) {
+                                    last ^= eigenValue;
+                                    currentEdge |= eigenValue;
+                                    //Remove from the length Alias
+                                    lengthAlias.Remove(eigenValue);
+                                }
+                            }
+                        }
+                        
+                        //Compute forward states
+                        
+                        //Make a left shifted copy
+                        
+                        //OR together
+                        
+                        //Save
+                    }
+
                 }
             }
 
