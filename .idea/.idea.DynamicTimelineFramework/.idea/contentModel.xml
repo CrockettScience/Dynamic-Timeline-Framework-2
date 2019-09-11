@@ -37,7 +37,8 @@
         <e p="Objects" t="Include">
           <e p="Attributes" t="Include">
             <e p="DTFObjectDefinitionAttribute.cs" t="Include" />
-            <e p="LateralPositionAttribute.cs" t="Include" />
+            <e p="ForwardTransitionAttribute.cs" t="Include" />
+            <e p="LateralConstraintAttribute.cs" t="Include" />
             <e p="PositionAttribute.cs" t="Include" />
           </e>
           <e p="DTFObject.cs" t="Include" />

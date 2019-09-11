@@ -15,12 +15,17 @@ namespace DynamicTimelineFramework.Multiverse
         {
             get
             {
-                //Pull proper constraints
-                var objectCompiler = _universe.Owner.Compiler;
+                //First, pull constraints to get the correct value
+                var compiler = _universe.Owner.Compiler;
+                compiler.PullConstraints(_dtfObject, _universe.Diff);
+            
+                //Proceed with the eigenvalue selection
+                var position = GetSuperposition(date);
+                var eigenValues = position.GetEigenValues();
+
+                //The out diff will never be used in this call because we picked the state from an available eigen value
+                Constrain(date, eigenValues[new Random().Next(eigenValues.Count)], out _);
                 
-                objectCompiler.PullConstraints(_dtfObject, _universe.Diff);
-                
-                //Now we can return the correct position
                 return _dtfObject.GetSprig(_universe.Diff)[date];
             }
         }
@@ -68,24 +73,14 @@ namespace DynamicTimelineFramework.Multiverse
             return true;
         }
 
-        /// <summary>
-        /// Collapses the position for the date to a random available eigen value.
-        /// </summary>
-        /// <param name="date">The date to collapse to the position at</param>
-        /// <param name="random">Random object to seed pick</param>
-        /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
-        public void Constrain(ulong date, Random random)
-        {
-            //First, pull constraints to get the correct value
-            var compiler = _universe.Owner.Compiler;
-            compiler.PullConstraints(_dtfObject, _universe.Diff);
-            
-            //Proceed with the eigenvalue selection
-            var position = this[date];
-            var eigenValues = position.GetEigenValues();
-
-            //The out diff will never be used in this call because we picked the state from an available eigen value
-            Constrain(date, eigenValues[random.Next(eigenValues.Count)], out _);
+        public Position GetSuperposition(ulong date) {
+            //Pull proper constraints
+            var objectCompiler = _universe.Owner.Compiler;
+                
+            objectCompiler.PullConstraints(_dtfObject, _universe.Diff);
+                
+            //Now we can return the correct position
+            return _dtfObject.GetSprig(_universe.Diff)[date];
         }
 
         internal Continuity(Universe universe, DTFObject dtfObject)

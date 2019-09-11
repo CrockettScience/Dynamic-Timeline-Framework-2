@@ -5,11 +5,11 @@ namespace DynamicTimelineFramework.Objects.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public class DTFObjectDefinitionAttribute : Attribute
     {
-        internal string MvIdentifierKey { get; }
+        internal string MvID { get; }
         internal int BitSpaceFactor { get; }
 
-        public DTFObjectDefinitionAttribute(int bitSpaceFactor, string mvIdentifierKey) {
-            MvIdentifierKey = mvIdentifierKey;
+        public DTFObjectDefinitionAttribute(int bitSpaceFactor, string mvId) {
+            MvID = mvId;
             BitSpaceFactor = bitSpaceFactor;
         }
     }

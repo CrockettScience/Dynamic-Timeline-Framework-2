@@ -22,8 +22,8 @@ namespace DynamicTimelineFramework.Multiverse
         /// Instantiates a new multiverse with a blank base universe and compiles the system of objects
         /// the share the identifier key in the DTFObjectDefinition attribute
         /// </summary>
-        /// <param name="identifierKey">The key to identify objects the object compiler will look for</param>
-        public Multiverse(string identifierKey)
+        /// <param name="id">The key to identify objects the object compiler will look for</param>
+        public Multiverse(string id)
         {
             // Set up the big bang date node
             BaseUniverse = new Universe(this);
@@ -34,7 +34,7 @@ namespace DynamicTimelineFramework.Multiverse
             };
             
             //Run the Compiler
-            Compiler = new ObjectCompiler(identifierKey, Assembly.GetCallingAssembly());
+            Compiler = new ObjectCompiler(id, Assembly.GetCallingAssembly());
             
         }
 
@@ -57,15 +57,15 @@ namespace DynamicTimelineFramework.Multiverse
             private static readonly Type DTFObjectType = typeof(DTFObject);
             
             private static readonly Type DTFObjectDefAttr = typeof(DTFObjectDefinitionAttribute);
-            private static readonly Type ForwardPositionAttr = typeof(PositionAttribute);
-            private static readonly Type LateralPositionAttr = typeof(LateralPositionAttribute);
+            private static readonly Type ForwardPositionAttr = typeof(ForwardTransitionAttribute);
+            private static readonly Type LateralPositionAttr = typeof(LateralConstraintAttribute);
             
             //2^63
             public const ulong SPRIG_CENTER = 9_223_372_036_854_775_808;
 
             private readonly Map<Type, MetaData> _objectMetaData = new Map<Type, MetaData>(); 
             
-            public ObjectCompiler(string mvIdentifierKey, Assembly callingAssembly)
+            public ObjectCompiler(string mvID, Assembly callingAssembly)
             {
                 var types = callingAssembly.GetTypes();
                 
@@ -81,7 +81,7 @@ namespace DynamicTimelineFramework.Multiverse
                                                              " but does not have a " + DTFObjectDefAttr.Name +
                                                              " defined.");
 
-                    if (definitionAttr.MvIdentifierKey == mvIdentifierKey)
+                    if (definitionAttr.MvID == mvID)
                     {
                         dtfTypes.Add(type);
                         _objectMetaData[type] = new MetaData();
@@ -102,7 +102,7 @@ namespace DynamicTimelineFramework.Multiverse
 
                     foreach (var field in type.GetFields())
                     {
-                        if(field.GetCustomAttribute(ForwardPositionAttr) is PositionAttribute)
+                        if(field.GetCustomAttribute(ForwardPositionAttr) is ForwardTransitionAttribute)
                             typeFields.Add(field);
                     }
 
@@ -113,8 +113,8 @@ namespace DynamicTimelineFramework.Multiverse
                     foreach (var field in typeFields)
                     {
                         
-                        var positionAttribute = (PositionAttribute) field.GetCustomAttribute(ForwardPositionAttr);
-                        var lateralPositionAttributes = field.GetCustomAttributes(LateralPositionAttr) as LateralPositionAttribute[];
+                        var positionAttribute = (ForwardTransitionAttribute) field.GetCustomAttribute(ForwardPositionAttr);
+                        var lateralPositionAttributes = field.GetCustomAttributes(LateralPositionAttr) as LateralConstraintAttribute[];
 
                         //Perform a series of run time checks, and add to some preliminary structures
                         var fieldType = field.FieldType;
@@ -173,12 +173,12 @@ namespace DynamicTimelineFramework.Multiverse
                                 //isn't the one that was given.
                                 
                                 if(!_objectMetaData.ContainsKey(attribute.Type))
-                                    throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name + " and the DTFObjectDefinitionAttribute has mvIdentifierKey '" + mvIdentifierKey + "'");
+                                    throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name + " and the DTFObjectDefinitionAttribute has mvIdentifierKey '" + mvID + "'");
                                 
                                 var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation;
                                 foreach (var otherField in attribute.Type.GetFields())
                                 {
-                                    if (otherField.GetCustomAttribute(ForwardPositionAttr) is PositionAttribute)
+                                    if (otherField.GetCustomAttribute(ForwardPositionAttr) is ForwardTransitionAttribute)
                                     {
                                         if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()))
                                             otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()] = new Map<Position, Position>();
