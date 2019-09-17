@@ -41,6 +41,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             else
             {
                 //Make a new branchNode to replace the connection to last, whose index is the branch index passed into the method
+                //Todo - Somehow compute the "crumple lengths"
                 var newBranchNode = new SBranchNode(branchIndex, child.Diff);
                 current[child.Diff] = newBranchNode;
                 

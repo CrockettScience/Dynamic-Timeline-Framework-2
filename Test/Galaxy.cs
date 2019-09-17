@@ -15,28 +15,22 @@ namespace Test
         internal const long OLD =              1 << 4;
         internal const long DEGENERATE =       1 << 31;
         
-        [Position]
-        [ForwardTransition(1_250_000_000_000, PRE_EXISTENT | PROTO_GALAXY)]
+        [Position(1_250_000_000_000, PRE_EXISTENT | PROTO_GALAXY)]
         public static readonly Position PreExistent = Position.Alloc<Galaxy>(PRE_EXISTENT);
         
-        [Position]
-        [ForwardTransition(1_250_000_000_000, YOUNG)]
+        [Position(1_250_000_000_000, YOUNG)]
         public static readonly Position ProtoGalaxy = Position.Alloc<Galaxy>(PROTO_GALAXY);
         
-        [Position]
-        [ForwardTransition(1_250_000_000_000, MIDDLE)]
+        [Position(1_250_000_000_000, MIDDLE)]
         public static readonly Position Young =      Position.Alloc<Galaxy>(YOUNG);
         
-        [Position]
-        [ForwardTransition(1_250_000_000_000, OLD)]
+        [Position(1_250_000_000_000, OLD)]
         public static readonly Position Middle =      Position.Alloc<Galaxy>(MIDDLE);
         
-        [Position]
-        [ForwardTransition(1_250_000_000_000, DEGENERATE)]
+        [Position(1_250_000_000_000, DEGENERATE)]
         public static readonly Position Old =      Position.Alloc<Galaxy>(OLD);
         
-        [Position]
-        [ForwardTransition(1_250_000_000_000, DEGENERATE)]
+        [Position(1_250_000_000_000, DEGENERATE)]
         public static readonly Position Degenerate =  Position.Alloc<Galaxy>(DEGENERATE);
 
         public override Position InitialSuperPosition() {

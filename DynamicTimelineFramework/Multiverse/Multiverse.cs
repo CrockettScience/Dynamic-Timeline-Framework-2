@@ -57,8 +57,8 @@ namespace DynamicTimelineFramework.Multiverse
             private static readonly Type DTFObjectType = typeof(DTFObject);
             
             private static readonly Type DTFObjectDefAttr = typeof(DTFObjectDefinitionAttribute);
-            private static readonly Type ForwardPositionAttr = typeof(ForwardTransitionAttribute);
-            private static readonly Type LateralPositionAttr = typeof(LateralConstraintAttribute);
+            private static readonly Type PositionAttr = typeof(PositionAttribute);
+            private static readonly Type LateralConstraintAttr = typeof(LateralConstraintAttribute);
             
             //2^63
             public const ulong SPRIG_CENTER = 9_223_372_036_854_775_808;
@@ -98,23 +98,15 @@ namespace DynamicTimelineFramework.Multiverse
                     var positionType = typeof(Position);
                     
                     //Collect all fields that have a ForwardPositionAttribute
-                    var typeFields = new List<FieldInfo>();
-
-                    foreach (var field in type.GetFields())
-                    {
-                        if(field.GetCustomAttribute(ForwardPositionAttr) is ForwardTransitionAttribute)
-                            typeFields.Add(field);
-                    }
+                    var typeFields = type.GetFields().Where(field => field.GetCustomAttribute(PositionAttr) is PositionAttribute).ToList();
 
                     var forwardMap = new Map<Position, Position>();
                     var backwardMap = new Map<Position, Position>();
-                    var lengthMap = new Map<Position, ulong>();
                     
                     foreach (var field in typeFields)
                     {
-                        
-                        var positionAttribute = (ForwardTransitionAttribute) field.GetCustomAttribute(ForwardPositionAttr);
-                        var lateralPositionAttributes = field.GetCustomAttributes(LateralPositionAttr) as LateralConstraintAttribute[];
+                        var forwardTransitionAttribute = (PositionAttribute) field.GetCustomAttribute(PositionAttr);
+                        var lateralConstraintAttributes = field.GetCustomAttributes(LateralConstraintAttr) as LateralConstraintAttribute[];
 
                         //Perform a series of run time checks, and add to some preliminary structures
                         var fieldType = field.FieldType;
@@ -133,13 +125,12 @@ namespace DynamicTimelineFramework.Multiverse
                             
                         //Use the position attribute to precompute a sprig vector about the position
                         var fieldValue = (Position) field.GetValue(null);
-                        lengthMap[fieldValue] = positionAttribute.Length;
                         
                         //Store the forward map
-                        var forwardMask = Position.Alloc(type, positionAttribute.ForwardPosition);
+                        var forwardMask = Position.Alloc(type, forwardTransitionAttribute.ForwardTransition);
                         forwardMap[fieldValue] = forwardMask;
                         
-                        //Store the reverse forward map
+                        //Store the reverse map
                         foreach (var innerField in typeFields) {
                             var innerPos = (Position) innerField.GetValue(null);
                             
@@ -153,10 +144,10 @@ namespace DynamicTimelineFramework.Multiverse
                         }
                         
                         //Compute and store the cross type translation
-                        if (lateralPositionAttributes != null)
+                        if (lateralConstraintAttributes != null)
                         {
 
-                            foreach (var attribute in lateralPositionAttributes)
+                            foreach (var attribute in lateralConstraintAttributes)
                             {
                                 //Make sure the structure exists
                                 if (!lateralTranslation.ContainsKey(attribute.LateralKey))
@@ -178,7 +169,7 @@ namespace DynamicTimelineFramework.Multiverse
                                 var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation;
                                 foreach (var otherField in attribute.Type.GetFields())
                                 {
-                                    if (otherField.GetCustomAttribute(ForwardPositionAttr) is ForwardTransitionAttribute)
+                                    if (otherField.GetCustomAttribute(PositionAttr) is PositionAttribute)
                                     {
                                         if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()))
                                             otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()] = new Map<Position, Position>();
@@ -213,82 +204,10 @@ namespace DynamicTimelineFramework.Multiverse
                     //copy it and shift the copy to the LEFT by the length value, then OR the
                     //vector and it's copy together to get the complete breadth of possibilities
                     foreach (var positionField in typeFields) {
-                        var current = (Position) positionField.GetValue(null);
-
-                        var currentStart = SPRIG_CENTER;
-                        var centerNode = new SprigNode(null, current, currentStart);
-                        var currentNode = centerNode;
 
                         //Compute backward half
-                        //alias for reduced lengths
-                        var lengthAlias = new Map<Position, ulong>();
-                        
-                        //This is to save out superpositions whose span goes beyond the current span
-                        var last = Position.Alloc(type);
-                        var currentEdge = Position.Alloc(type, current.Flag);
-                        
-                        //Something's not right...
-                        while (currentStart > 0) {
-
-                            foreach (var eigenValue in currentEdge.GetEigenValues()) {
-                                last |= backwardMap[eigenValue];
-                            }
-                            
-                            //If the position is identical to the last, we have reached an initial
-                            //superposition, which will continue to the beginning.
-                            if (current.Equals(last)) {
-                                currentNode.Index = 0;
-                                break;
-                            }
-
-                            current = last;
-                            
-                            //Find the LOWEST length
-                            var eigenValues = last.GetEigenValues();
-
-                            var length = ulong.MaxValue;
-                            
-                            foreach (var eigenValue in eigenValues) {
-                                ulong trueLength;
-                                if (lengthAlias.ContainsKey(eigenValue)) {
-                                    trueLength = lengthAlias[eigenValue];
-                                    
-                                }
-
-                                else {
-                                    trueLength = lengthMap[eigenValue];
-                                    lengthAlias[eigenValue] = trueLength;
-                                }
-                                
-                                if (length > trueLength)
-                                    length = lengthMap[eigenValue];
-                            }
-
-                            currentStart -= length;
-                            
-                            var lastNode = new SprigNode(null, current, currentStart);
-                            
-                            currentNode.Last = lastNode;
-                            currentNode = currentNode.Last;
-                            
-                            //Finally, mask out the positions whose length is equal to the shortest
-                            //length, 
-                            currentEdge = Position.Alloc(type);
-                            foreach (var eigenValue in eigenValues) {
-                                if (lengthMap[eigenValue] == length) {
-                                    last ^= eigenValue;
-                                    currentEdge |= eigenValue;
-                                    //Remove from the length Alias
-                                    lengthAlias.Remove(eigenValue);
-                                }
-                            }
-                        }
                         
                         //Compute forward states
-                        
-                        //Make a left shifted copy
-                        
-                        //OR together
                         
                         //Save
                     }
@@ -300,7 +219,7 @@ namespace DynamicTimelineFramework.Multiverse
 
             internal SprigVector GetNormalizedVector(Type type, Position position, ulong date) 
             {
-                var vector = _objectMetaData[type].GetSprigVector(position);
+                var vector = _objectMetaData[type].GetPossibilityBreadth(position);
                     
                 //All precomputed sprigVectors are centered at SPRIG_CENTER. We need to shift the values to the correct date
                 //We have to dance around straight subtraction for the sake of avoiding overflow
@@ -381,15 +300,16 @@ namespace DynamicTimelineFramework.Multiverse
 
             private class MetaData
             {
-                
                 public Map<string, Map<Position, Position>> LateralTranslation { get; }
                 
                 public Map<Position, SprigVector> PreComputedSprigs { get; }
+                public Map<Position, ulong> Length { get; }
                 
                 public MetaData()
                 {
                     LateralTranslation = new Map<string, Map<Position, Position>>();
                     PreComputedSprigs = new Map<Position, SprigVector>();
+                    Length = new Map<Position, ulong>();
                 }
 
                 public Position Translate(string key, Position input)
@@ -428,12 +348,19 @@ namespace DynamicTimelineFramework.Multiverse
 
                 }
 
-                public SprigVector GetSprigVector(Position position)
+                public SprigVector GetPossibilityBreadth(Position position)
                 {
                     var eigenValues = position.GetEigenValues();
                     var vector = new SprigVector(position.Type);
 
-                    return eigenValues.Aggregate(vector, (current, eigenValue) => current | PreComputedSprigs[eigenValue]);
+                    foreach (var eigenValue in eigenValues) {
+                        var backwardBreadth = PreComputedSprigs[eigenValue].Copy();
+                        backwardBreadth.ShiftBackward(Length[eigenValue]);
+                        
+                        vector |= PreComputedSprigs[eigenValue] | backwardBreadth;
+                    }
+
+                    return vector;
                 }
             }
         }

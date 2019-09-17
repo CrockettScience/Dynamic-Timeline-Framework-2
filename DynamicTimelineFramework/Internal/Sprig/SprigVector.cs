@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Multiverse;
 
@@ -24,6 +25,23 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public SprigVector(Type type) {
             Head = new SprigNode(null, Position.Alloc(type), 0);
+        }
+
+        public SprigVector Copy() {
+            var copyHead = new SprigNode(null, Head.Position, Head.Index);
+            
+            var current = Head.Last;
+            var copyNext = copyHead;
+
+            while (current != null) {
+                copyNext.Last = new SprigNode(null, current.Position, copyNext.Index);
+
+                current = current.Last;
+                copyNext = copyNext.Last;
+            }
+            
+            return new SprigVector(copyHead);
+            
         }
 
         public static SprigVector operator &(SprigVector left, SprigVector right) {
@@ -137,15 +155,35 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             //Shift down all indices, and let the excess "fall off". Edge nodes are assumed to "stretch"
             var current = Head;
 
-            if (current.Index < amount)
-                return;
-
             while (current.Last != null) {
-                current.Index -= amount;
+                current.Index = current.Index <= amount ? 0 : current.Index - amount;
 
-                if (current.Last.Index < amount) {
+                if (current.Index == 0) {
                     current.Last = null;
                     return;
+                }
+
+                current = current.Last;
+            }
+        }
+
+        public void Crumple(ulong index, ulong amount) {
+            //Crumple the nodes from index back by the amount, removing the nodes in between
+
+            var crumpleZoneStart = index - amount;
+            var current = Head;
+
+            while (current != null) {
+                if (current.Index < index) {
+                    if (current.Index >= crumpleZoneStart) {
+                        
+                        //Remove the node altogether
+                        current.Last = current.Last.Last;
+                    }
+                    
+                    else if(current.Index > 0){
+                        current.Index += amount;
+                    }
                 }
 
                 current = current.Last;

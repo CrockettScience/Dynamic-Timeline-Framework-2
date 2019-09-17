@@ -5,6 +5,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SBranchNode : SpineNode
     {
         public ulong BranchIndex { get; }
+        
+        //Todo - There needs to be some sort of maintenence procedure that updates the crumple lengths as certainty increases
+        public ulong[] CrumpleLengths { get; set; }
 
         private readonly Dictionary<Diff, SpineNode> _children = new Dictionary<Diff, SpineNode>();
 
@@ -24,9 +27,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
-        public SBranchNode(ulong index, Diff diff) : base(diff)
-        {
+        public SBranchNode(ulong index, Diff diff, params ulong[] crumpleLengths) : base(diff) {
             BranchIndex = index;
+            CrumpleLengths = crumpleLengths;
         }
     }
 }

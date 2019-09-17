@@ -15,12 +15,13 @@ namespace DynamicTimelineFramework.Multiverse
         {
             get
             {
-                //First, pull constraints to get the correct value
-                var compiler = _universe.Owner.Compiler;
-                compiler.PullConstraints(_dtfObject, _universe.Diff);
-            
-                //Proceed with the eigenvalue selection
                 var position = GetSuperposition(date);
+                
+                //Return the position, or collapse if the state is still uncertain
+                if (position.Uncertainty == 0)
+                    return position;
+                
+                //Proceed with the eigenvalue selection
                 var eigenValues = position.GetEigenValues();
 
                 //The out diff will never be used in this call because we picked the state from an available eigen value
@@ -32,9 +33,11 @@ namespace DynamicTimelineFramework.Multiverse
 
         /// <summary>
         /// Attempts to Constrain the position at date to pos. If the constraint results in a paradox
-        /// (that is, the resultant position's Uncertainty property returns -1), It will create and
-        /// assign a Diff object to outDiff that can be used to instantiate a universe branch where
-        /// the object's position at date is collapsed to Pos.
+        /// (that is, the resultant position's Uncertainty property returns -1), but is transitionable
+        /// (the position at date - 1 has at least 1 eigenvalue that defines pos as an eigenvalue or
+        /// set of eigenvalues in it's forward transition), It will create and assign a Diff object
+        /// to outDiff that can be used to instantiate a universe branch where the object's position
+        /// at date is collapsed to Pos.
         /// </summary>
         /// <param name="date">The date to collapse to the position at</param>
         /// <param name="pos">The position to collapse to</param>
@@ -63,6 +66,7 @@ namespace DynamicTimelineFramework.Multiverse
                 return false;
             }
 
+            //Todo - Use the spine structure to correctly crumple the sprigVector
             _sprig.And(sprigVector);
             
             //Push the constraints to the keyed objects
