@@ -16,6 +16,11 @@
         <e p="Internal" t="Include">
           <e p="BitHacks.cs" t="Include" />
           <e p="Map.cs" t="Include" />
+          <e p="Position" t="Include">
+            <e p="PositionBuffer.cs" t="Include" />
+            <e p="Stake.cs" t="Include" />
+            <e p="SuperPosition.cs" t="Include" />
+          </e>
           <e p="Sprig" t="Include">
             <e p="SBranchNode.cs" t="Include" />
             <e p="SHeadNode.cs" t="Include" />

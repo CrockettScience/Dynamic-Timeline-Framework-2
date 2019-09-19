@@ -3,25 +3,28 @@ using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal;
+using DynamicTimelineFramework.Internal.State;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Multiverse
 {
-    public class Position
+    public class Position : SuperPosition
     {
-        public Type Type { get; }
 
-        public static Position Alloc(Type type, params long[] flag)
+        #region STATIC
+
+        public static Position Alloc(Type type, params int[] setBits)
         {
+            //Make a new Buffer
+            var buffer = new PositionBuffer();
             
-            var pos = new Position(((DTFObjectDefinitionAttribute) type.GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, type);
+            //Make a position out of the buffer
+            var pos = buffer.AllocatePosition(type, false);
             
-            if(flag.Length != pos.Flag.Length)
-                throw new InvalidFlagSpaceFactorException(type, pos.Flag.Length, flag.Length);
-            
-            for (var i = 0; i < pos.Flag.Length; i++) {
-                pos.Flag[i] = flag[i];
+            //Set appropriate bits
+            foreach (var setBit in setBits) {
+                pos[setBit] = true;
             }
 
             return pos;
@@ -29,90 +32,67 @@ namespace DynamicTimelineFramework.Multiverse
         
         public static Position Alloc(Type type, bool defaultValue = false)
         {
-            var pos = new Position(((DTFObjectDefinitionAttribute) type.GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, type);
-            
-            var value = defaultValue ? long.MaxValue : long.MinValue;
-
-            for (var i = 0; i < pos.Flag.Length; i++) {
-                pos._flag[i] = value;
-            }
-            
-            return pos;
+            throw new NotImplementedException();
         }
         
-        public static Position Alloc<T>(params long[] flag) where T : DTFObject
+        public static Position Alloc<T>(params int[] flag) where T : DTFObject
         {
-            
-            var pos = new Position(((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, typeof(T));
-            
-            if(flag.Length != pos.Flag.Length)
-                throw new InvalidFlagSpaceFactorException(typeof(T), pos.Flag.Length, flag.Length);
-            
-            for (var i = 0; i < pos.Flag.Length; i++) {
-                pos.Flag[i] = flag[i];
-            }
+            throw new NotImplementedException();
+        }
 
-            return pos;
+        public static Position operator &(Position lhs, Position rhs)
+        {
+            throw new NotImplementedException();
         }
         
-        public static Position Alloc<T>(bool defaultValue = false) where T : DTFObject
+        public static Position operator |(Position lhs, Position rhs)
         {
-            var pos = new Position(((DTFObjectDefinitionAttribute) typeof(T).GetCustomAttribute(typeof(DTFObjectDefinitionAttribute))).BitSpaceFactor, typeof(T));
-            
-            var value = defaultValue ? long.MaxValue : long.MinValue;
-
-            for (var i = 0; i < pos.Flag.Length; i++) {
-                pos._flag[i] = value;
-            }
-            
-            return pos;
+            throw new NotImplementedException();
         }
         
-        public static void ReAlloc(Position pos)
+        public static Position operator ^(Position lhs, Position rhs)
         {
-            pos._flag = new long[pos._flag.Length];
+            throw new NotImplementedException();
+        }
+        
+        public static implicit operator long[](Position position) {
+            
+            throw new NotImplementedException();
         }
 
-        private long[] _flag;
+        #endregion
 
-        public long[] Flag
-        {
-            get
-            {
-                //Make a copy and return. This will prevent modification of the struct from outside it's scope
-                var copy = new long[_flag.Length];
-                
-                Array.Copy(_flag, copy, copy.Length);
+        private readonly Stake _stake;
 
-                return copy;
-            }
-        }
+        public int Space => _stake.RightBound - _stake.LeftBound;
+
+        public Type Type { get; }
 
         public int Uncertainty
         {
-            get
-            {
-                var hammingWeight = 0;
+            get {
+                var flag = _stake.Buffer.Flag;
 
-                foreach (var i in Flag)
-                {
-                    hammingWeight += BitHacks.NumberOfSetBits(i);
+                var lb = _stake.LeftBound;
+                var rb = _stake.RightBound;
+                
+                //Count the number of set bits in the bitArray
+                var hWeight = 0;
+
+                for (var i = lb; i < rb; i++) {
+                    if (flag[i])
+                        hWeight++;
                 }
-
-                return hammingWeight - 1;
+                
+                //Uncertainty is the Hamming Weight of the bits minus one
+                return hWeight - 1;
             }
         }
 
-        private Position(int length, Type type)
+        internal Position(Type type, Stake stake)
         {
             Type = type;
-            _flag = new long[length];
-        }
-
-        private Position(long[] flag, Type type)
-        {
-            Type = type;
-            _flag = flag;
+            _stake = stake;
         }
 
         /// <summary>
@@ -124,134 +104,51 @@ namespace DynamicTimelineFramework.Multiverse
         /// <returns></returns>
         public List<Position> GetEigenValues()
         {
-            //Use a "sliding" mask to construct the collection
-            var eigenValues = new List<Position>();
-
-            //Get the first flag
-            var flag = new long[_flag.Length];
-            flag[0] = 1;
             
-            var mask = new Position(flag, Type);
-
-            for (var i = 0; i < flag.Length; i++)
-            {
-                //Mask and add a position if a value exists
-                var eigenValue = mask & this;
-                
-                if(eigenValue.Uncertainty == 0)
-                    eigenValues.Add(eigenValue);
-
-                mask.ShiftLeftByOne();
-
-            }
-
-            return eigenValues;
-        }
-
-        public override string ToString()
-        {
-            var str = "";
-
-            foreach (var i in Flag)
-            {
-                str += Convert.ToString(i, 2);
-            }
-
-            return str;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Position pos)) return false;
-
-            if (_flag.Length != pos._flag.Length) return false;
+            //Create a buffer to hold all the eigenvalues.
+            var buffer = new PositionBuffer();
             
-            for (var i = 0; i < Flag.Length; i++)
-            {
-                if (Flag[i] != pos.Flag[i])
-                    return false;
-            }
+            //Iterate through and make positions for each set bit
+            var flag = _stake.Buffer.Flag;
 
-            return true;
+            var lb = _stake.LeftBound;
+            var rb = _stake.RightBound;
 
-        }
-
-        public override int GetHashCode()
-        {
-            var hash = int.MaxValue;
-
-            foreach (var i in Flag)
-            {
-                hash ^= (int) i * 367;
-            }
-
-            return hash;
-        }
-        
-        
-        public static Position operator &(Position lhs, Position rhs)
-        {
-            if(lhs._flag.Length != rhs._flag.Length)
-                throw new InvalidOperationException("Positions given are made for two different types");
+            var eigenVals = new List<Position>();
             
-            var newPos = new Position(lhs._flag.Length, lhs.Type);
-            
-            for (var i = 0; i < lhs.Flag.Length; i++)
-            {
-                newPos.Flag[i] = lhs.Flag[i] & rhs.Flag[i];
-            }
-
-            return newPos;
-        }
-        
-        public static Position operator |(Position lhs, Position rhs)
-        {
-            if(lhs._flag.Length != rhs._flag.Length)
-                throw new InvalidOperationException("Positions given are made for two different types");
-            
-            var newPos = new Position(lhs._flag.Length, lhs.Type);
-            
-            for (var i = 0; i < lhs.Flag.Length; i++)
-            {
-                newPos.Flag[i] = lhs.Flag[i] | rhs.Flag[i];
-            }
-
-            return newPos;
-        }
-        
-        public static Position operator ^(Position lhs, Position rhs)
-        {
-            if(lhs._flag.Length != rhs._flag.Length)
-                throw new InvalidOperationException("Positions given are made for two different types");
-            
-            var newPos = new Position(lhs._flag.Length, lhs.Type);
-            
-            for (var i = 0; i < lhs.Flag.Length; i++)
-            {
-                newPos.Flag[i] = lhs.Flag[i] ^ rhs.Flag[i];
-            }
-
-            return newPos;
-        }
-        
-        public static implicit operator long[](Position position) {
-            return position._flag;
-        }
-        
-        private void ShiftLeftByOne()
-        {
-            var curFlag = Flag;
-            
-            for (var i = _flag.Length - 1; i >= 0; i--)
-            {
-                //Shift the flag
-                _flag[i] = curFlag[i] << 1;
-
-                if (i > 0)
-                {
-                    //Compute the carryover
-                    _flag[i - 1] |= curFlag[i - 1] >> 63;
+            for (var i = lb; i < rb; i++) {
+                if (flag[i]) {
+                    var eigenVal = buffer.AllocatePosition(Type, false);
+                    eigenVal[i - lb] = true;
+                    eigenVals.Add(eigenVal);
                 }
+            }
+
+            return eigenVals;
+        }
+
+        public override bool Equals(object obj) {
+            if (!(obj is Position other)) return false;
+
+            return other._stake.Equals(_stake);
+        }
+
+        public override int GetHashCode() {
+            return _stake.GetHashCode();
+        }
+
+        public bool this[int index] {
+            get {
+                if(index >= Space)
+                    throw new IndexOutOfRangeException();
+                
+                return _stake.Buffer[_stake.LeftBound + index];
+            }
+            set {
+                if(index >= Space)
+                    throw new IndexOutOfRangeException();
+                
+                _stake.Buffer[_stake.LeftBound + index] = value;
             }
         }
     }

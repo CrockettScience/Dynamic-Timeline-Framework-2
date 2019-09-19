@@ -3,66 +3,54 @@ using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace Test {
-    //Period Length: 10 million years
-    [DTFObjectDefinition(1, "TEST")]
+    [DTFObjectDefinition(11, "TEST")]
     public class Star : DTFObject {
-        internal const long PRE_EXISTENT     = 1;
-        internal const long PROTO            = 1 << 1;
-        internal const long MAIN_SEQUENCE    = 1 << 2;
-        internal const long MASSIVE          = 1 << 3;
-        internal const long RED_GIANT        = 1 << 4;
-        internal const long RED_SUPER_GIANT  = 1 << 5;
-        internal const long WHITE_DWARF      = 1 << 6;
-        internal const long NEUTRON          = 1 << 7;
-        internal const long BLACK_HOLE       = 1 << 8;
-        internal const long PLANETARY_NEBULA = 1 << 9;
-        internal const long SUPERNOVA        = 1 << 10;
 
         private const string GALAXY_KEY = "Galaxy";
         
-        [Position(3_600_000_000, PROTO | PRE_EXISTENT)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.PRE_EXISTENT | Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
-        public static readonly Position PreExistence     = Position.Alloc<Star>(PRE_EXISTENT);
+        [Position(3_600_000_000, (int) Stage.Proto, (int) Stage.PreExistent)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.PRE_EXISTENT, (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD, (int) Galaxy.Stage.PROTO_GALAXY)]
+        public static readonly Position PreExistence     = Position.Alloc<Star>((int) Stage.PreExistent);
         
-        [Position(3_600_000_000, MAIN_SEQUENCE | MASSIVE)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.PROTO_GALAXY)]
-        public static readonly Position Proto            = Position.Alloc<Star>(PROTO);
+        [Position(3_600_000_000, (int) Stage.MainSequence, (int) Stage.Massive)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD, (int) Galaxy.Stage.PROTO_GALAXY)]
+        public static readonly Position Proto            = Position.Alloc<Star>((int) Stage.Proto);
         
-        [Position(3_600_000_000, RED_GIANT)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static readonly Position MainSequence     = Position.Alloc<Star>(MAIN_SEQUENCE);
+        [Position(3_600_000_000, (int) Stage.RedGiant)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD)]
+        public static readonly Position MainSequence     = Position.Alloc<Star>((int) Stage.MainSequence);
         
-        [Position(3_600_000_000, RED_SUPER_GIANT)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static readonly Position Massive          = Position.Alloc<Star>(MASSIVE);
+        [Position(3_600_000_000, (int) Stage.RedSuperGiant)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD)]
+        public static readonly Position Massive          = Position.Alloc<Star>((int) Stage.Massive);
         
-        [Position(3_600_000_000, PLANETARY_NEBULA)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static readonly Position RedGiant         = Position.Alloc<Star>(RED_GIANT);
+        [Position(3_600_000_000, (int) Stage.PlanetaryNebula)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD)]
+        public static readonly Position RedGiant         = Position.Alloc<Star>((int) Stage.RedGiant);
         
-        [Position(3_600_000_000, SUPERNOVA)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static readonly Position RedSuperGiant    = Position.Alloc<Star>(RED_SUPER_GIANT);
+        [Position(3_600_000_000, (int) Stage.Supernova)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD)]
+        public static readonly Position RedSuperGiant    = Position.Alloc<Star>((int) Stage.RedSuperGiant);
         
-        [Position(3_600_000_000, WHITE_DWARF)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static readonly Position PlanetaryNebula  = Position.Alloc<Star>(PLANETARY_NEBULA);
+        [Position(3_600_000_000, (int) Stage.WhiteDwarf)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD)]
+        public static readonly Position PlanetaryNebula  = Position.Alloc<Star>((int) Stage.PlanetaryNebula);
         
-        [Position(3_600_000_000, WHITE_DWARF)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static readonly Position WhiteDwarf       = Position.Alloc<Star>(WHITE_DWARF);
+        [Position(3_600_000_000, (int) Stage.WhiteDwarf)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD, (int) Galaxy.Stage.DEGENERATE)]
+        public static readonly Position WhiteDwarf       = Position.Alloc<Star>((int) Stage.WhiteDwarf);
         
-        [Position(350, NEUTRON | BLACK_HOLE)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD)]
-        public static readonly Position Supernova    = Position.Alloc<Star>(SUPERNOVA);
+        [Position(350, (int) Stage.Neutron, (int) Stage.BlackHole)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD)]
+        public static readonly Position Supernova    = Position.Alloc<Star>((int) Stage.Supernova);
         
-        [Position(3_599_999_650, NEUTRON)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static readonly Position Neutron          = Position.Alloc<Star>(NEUTRON);
+        [Position(3_599_999_650, (int) Stage.Neutron)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD, (int) Galaxy.Stage.DEGENERATE)]
+        public static readonly Position Neutron          = Position.Alloc<Star>((int) Stage.Neutron);
         
-        [Position(3_599_999_650, BLACK_HOLE)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), Galaxy.YOUNG | Galaxy.MIDDLE | Galaxy.OLD | Galaxy.DEGENERATE)]
-        public static readonly Position BlackHole        = Position.Alloc<Star>(BLACK_HOLE);
+        [Position(3_599_999_650, (int) Stage.BlackHole)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD, (int) Galaxy.Stage.DEGENERATE)]
+        public static readonly Position BlackHole        = Position.Alloc<Star>((int) Stage.BlackHole);
 
         public Star(Galaxy galaxy) {
             SetParent(GALAXY_KEY, galaxy);
@@ -74,6 +62,22 @@ namespace Test {
 
         public override Position TerminalSuperPosition() {
             return WhiteDwarf | Neutron | BlackHole;
+        }
+
+        public enum Stage {
+            PreExistent,
+            Proto,
+            MainSequence,
+            Massive,
+            RedGiant,
+            RedSuperGiant,
+            WhiteDwarf,
+            Neutron,
+            BlackHole,
+            PlanetaryNebula,
+            Supernova       
+            
+            
         }
     }
 }

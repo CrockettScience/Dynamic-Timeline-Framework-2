@@ -1,16 +1,14 @@
 using System;
 
-namespace DynamicTimelineFramework.Objects.Attributes
-{
+namespace DynamicTimelineFramework.Objects.Attributes {
     [AttributeUsage(AttributeTargets.Class)]
-    public class DTFObjectDefinitionAttribute : Attribute
-    {
+    public class DTFObjectDefinitionAttribute : Attribute {
         internal string MvID { get; }
-        internal int BitSpaceFactor { get; }
+        internal int positionSpace { get; }
 
-        public DTFObjectDefinitionAttribute(int bitSpaceFactor, string mvId) {
+        public DTFObjectDefinitionAttribute(int positionSpace, string mvId) {
             MvID = mvId;
-            BitSpaceFactor = bitSpaceFactor;
+            this.positionSpace = positionSpace;
         }
     }
 }

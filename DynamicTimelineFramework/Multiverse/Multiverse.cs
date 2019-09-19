@@ -127,7 +127,7 @@ namespace DynamicTimelineFramework.Multiverse
                         var fieldValue = (Position) field.GetValue(null);
                         
                         //Store the forward map
-                        var forwardMask = Position.Alloc(type, forwardTransitionAttribute.ForwardTransition);
+                        var forwardMask = Position.Alloc(type, forwardTransitionAttribute.ForwardTransitionSetBits);
                         forwardMap[fieldValue] = forwardMask;
                         
                         //Store the reverse map
@@ -154,7 +154,7 @@ namespace DynamicTimelineFramework.Multiverse
                                     lateralTranslation[attribute.LateralKey] = new Map<Position, Position>();
                                 
                                 //Store the translation
-                                var translation = Position.Alloc(attribute.Type, attribute.Flag);
+                                var translation = Position.Alloc(attribute.Type, attribute.ConstraintSetBits);
                                 lateralTranslation[attribute.LateralKey][fieldValue] = translation;
                                 
                                 //Store the reverse translation using a confirmation mask

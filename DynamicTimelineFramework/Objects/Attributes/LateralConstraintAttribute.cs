@@ -6,13 +6,13 @@ namespace DynamicTimelineFramework.Objects.Attributes
     public class LateralConstraintAttribute : Attribute 
     {
         internal string LateralKey { get; }
-        internal long[] Flag { get; }
+        internal int[] ConstraintSetBits { get; }
         internal Type Type { get; }
 
-        public LateralConstraintAttribute(string lateralKey, Type type, params long[] flag) {
+        public LateralConstraintAttribute(string lateralKey, Type type, params int[] constraintSetBits) {
             LateralKey = lateralKey;
             Type = type;
-            Flag = flag;
+            ConstraintSetBits = constraintSetBits;
 
         }
     }

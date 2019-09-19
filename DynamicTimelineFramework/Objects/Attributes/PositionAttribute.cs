@@ -6,11 +6,11 @@ namespace DynamicTimelineFramework.Objects.Attributes
     public class PositionAttribute : Attribute
     {
         internal ulong Length { get; }
-        internal long[] ForwardTransition { get; }
+        internal int[] ForwardTransitionSetBits { get; }
 
-        public PositionAttribute(ulong length, params long[] forwardTransition) {
+        public PositionAttribute(ulong length, params int[] forwardTransitionSetBits) {
             Length = length;
-            ForwardTransition = forwardTransition;
+            ForwardTransitionSetBits = forwardTransitionSetBits;
         }
     }
 }

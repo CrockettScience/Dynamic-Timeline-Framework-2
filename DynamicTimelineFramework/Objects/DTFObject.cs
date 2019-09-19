@@ -63,7 +63,5 @@ namespace DynamicTimelineFramework.Objects {
 
         public abstract Position InitialSuperPosition();
         public abstract Position TerminalSuperPosition();
-
-        
     }
 }
