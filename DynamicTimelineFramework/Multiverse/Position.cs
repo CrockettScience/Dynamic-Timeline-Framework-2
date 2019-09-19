@@ -16,11 +16,8 @@ namespace DynamicTimelineFramework.Multiverse
 
         public static Position Alloc(Type type, params int[] setBits)
         {
-            //Make a new Buffer
-            var buffer = new PositionBuffer();
-            
-            //Make a position out of the buffer
-            var pos = buffer.AllocatePosition(type, false);
+            //Make a position
+            var pos = Alloc(type);
             
             //Set appropriate bits
             foreach (var setBit in setBits) {
@@ -32,32 +29,71 @@ namespace DynamicTimelineFramework.Multiverse
         
         public static Position Alloc(Type type, bool defaultValue = false)
         {
-            throw new NotImplementedException();
+            //Make a new Buffer
+            var buffer = new PositionBuffer();
+            
+            //Make a position out of the buffer
+            var pos = buffer.AllocatePosition(type, defaultValue);
+
+            return pos;
         }
         
-        public static Position Alloc<T>(params int[] flag) where T : DTFObject
+        public static Position Alloc<T>(params int[] setBits) where T : DTFObject
         {
-            throw new NotImplementedException();
+            //Make a position
+            var pos = Alloc(typeof(T));
+            
+            //Set appropriate bits
+            foreach (var setBit in setBits) {
+                pos[setBit] = true;
+            }
+
+            return pos;
         }
 
         public static Position operator &(Position lhs, Position rhs)
         {
-            throw new NotImplementedException();
+            var pos = Alloc(lhs.Type);
+            
+            if(lhs.Type != rhs.Type)
+                throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
+
+            for (var i = 0; i < lhs.Space; i++)
+            {
+                pos[i] = lhs[i] && rhs[i];
+            }
+
+            return pos;
         }
         
         public static Position operator |(Position lhs, Position rhs)
         {
-            throw new NotImplementedException();
+            var pos = Alloc(lhs.Type);
+            
+            if(lhs.Type != rhs.Type)
+                throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
+
+            for (var i = 0; i < lhs.Space; i++)
+            {
+                pos[i] = lhs[i] || rhs[i];
+            }
+
+            return pos;
         }
         
         public static Position operator ^(Position lhs, Position rhs)
         {
-            throw new NotImplementedException();
-        }
-        
-        public static implicit operator long[](Position position) {
+            var pos = Alloc(lhs.Type);
             
-            throw new NotImplementedException();
+            if(lhs.Type != rhs.Type)
+                throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
+
+            for (var i = 0; i < lhs.Space; i++)
+            {
+                pos[i] = lhs[i] ^ rhs[i];
+            }
+
+            return pos;
         }
 
         #endregion

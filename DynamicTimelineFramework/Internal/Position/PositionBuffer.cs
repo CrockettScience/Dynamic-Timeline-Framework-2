@@ -5,7 +5,8 @@ using DynamicTimelineFramework.Multiverse;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Internal.State {
-    internal class PositionBuffer : SuperPosition{
+    internal class PositionBuffer : SuperPosition
+    {
 
         public BitArray Flag { get; }
 
