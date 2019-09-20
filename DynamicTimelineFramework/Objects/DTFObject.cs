@@ -8,20 +8,13 @@ using DynamicTimelineFramework.Multiverse;
 namespace DynamicTimelineFramework.Objects {
     public abstract class DTFObject {
         
-        private readonly Map<Diff, Sprig> _sprigs;
         private readonly Map<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
         private string _parentKey;
-        
-        internal Sprig GetSprig(Diff diff)
-        {
-            return _sprigs[diff];
-        }
             
         protected DTFObject() {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Map<string, DTFObject>();
-            _sprigs = new Map<Diff, Sprig>();
         }
 
         protected void AddObject(string key, DTFObject obj) {

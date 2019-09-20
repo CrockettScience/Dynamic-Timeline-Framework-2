@@ -220,17 +220,19 @@ namespace DynamicTimelineFramework.Multiverse
             internal SprigVector GetNormalizedVector(Type type, Position position, ulong date) 
             {
                 var vector = _objectMetaData[type].GetPossibilityBreadth(position);
+                
+                throw new NotImplementedException();
                     
                 //All precomputed sprigVectors are centered at SPRIG_CENTER. We need to shift the values to the correct date
                 //We have to dance around straight subtraction for the sake of avoiding overflow
                 if (date < SPRIG_CENTER)
                 {
-                    vector.ShiftBackward(SPRIG_CENTER - date);
+                    //vector.ShiftBackward(SPRIG_CENTER - date);
                 }
 
                 if (date > SPRIG_CENTER)
                 {
-                    vector.ShiftForward(date - SPRIG_CENTER);
+                    //vector.ShiftForward(date - SPRIG_CENTER);
                 }
 
                 return vector;
@@ -286,14 +288,15 @@ namespace DynamicTimelineFramework.Multiverse
                 //Get the destination object
                 var dest = source.GetLateralObject(key);
                 
-                //Get the sprig
-                var sprig = dest.GetSprig(diff);
+                //Todo - Get the sprig
+                
+                throw new NotImplementedException();
                 
                 //Get the translation vector
-                var translationVector = meta.Translate(key, source.GetSprig(diff).ToVector());
+                //var translationVector = meta.Translate(key, source.GetSprig(diff).ToVector());
                 
                 //AND the sprigs together and check if there was a change
-                return sprig.And(translationVector);
+                //return sprig.And(translationVector);
             }
 
             #endregion
@@ -331,6 +334,10 @@ namespace DynamicTimelineFramework.Multiverse
 
                 public SprigVector Translate(string key, SprigVector input)
                 {
+                    
+                    throw new NotImplementedException();
+                    /*
+                     
                     var currentIn = input.Head;
                     var currentOut = new SprigNode(null, Translate(key, currentIn.Position), currentIn.Index);
                     var output = new SprigVector(currentOut);
@@ -345,11 +352,17 @@ namespace DynamicTimelineFramework.Multiverse
                     }
 
                     return output;
+                    
+                    */
 
                 }
 
                 public SprigVector GetPossibilityBreadth(Position position)
                 {
+                    throw new NotImplementedException();
+                    
+                    /*
+                     
                     var eigenValues = position.GetEigenValues();
                     var vector = new SprigVector(position.Type);
 
@@ -361,6 +374,8 @@ namespace DynamicTimelineFramework.Multiverse
                     }
 
                     return vector;
+                    
+                    */
                 }
             }
         }

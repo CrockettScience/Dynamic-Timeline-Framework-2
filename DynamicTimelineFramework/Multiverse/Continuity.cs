@@ -9,25 +9,12 @@ namespace DynamicTimelineFramework.Multiverse
     {
         private readonly Universe _universe;
         private readonly DTFObject _dtfObject;
-        private readonly Sprig _sprig;
 
         public Position this[ulong date]
         {
             get
             {
-                var position = GetSuperposition(date);
-                
-                //Return the position, or collapse if the state is still uncertain
-                if (position.Uncertainty == 0)
-                    return position;
-                
-                //Proceed with the eigenvalue selection
-                var eigenValues = position.GetEigenValues();
-
-                //The out diff will never be used in this call because we picked the state from an available eigen value
-                Constrain(date, eigenValues[new Random().Next(eigenValues.Count)], out _);
-                
-                return _dtfObject.GetSprig(_universe.Diff)[date];
+                throw new NotImplementedException();
             }
         }
 
@@ -67,7 +54,7 @@ namespace DynamicTimelineFramework.Multiverse
             }
 
             //Todo - Use the spine structure to correctly crumple the sprigVector
-            _sprig.And(sprigVector);
+            //_sprig.And(sprigVector);
             
             //Push the constraints to the keyed objects
             compiler.PushConstraints(_dtfObject, _universe.Diff);
@@ -83,15 +70,19 @@ namespace DynamicTimelineFramework.Multiverse
                 
             objectCompiler.PullConstraints(_dtfObject, _universe.Diff);
                 
-            //Now we can return the correct position
-            return _dtfObject.GetSprig(_universe.Diff)[date];
+            //Todo - Now we can return the correct position
+            throw new NotImplementedException();
+            //return _dtfObject.GetSprig(_universe.Diff)[date];
         }
 
         internal Continuity(Universe universe, DTFObject dtfObject)
         {
             _universe = universe;
             _dtfObject = dtfObject;
-            _sprig = dtfObject.GetSprig(universe.Diff);
+            
+            throw new NotImplementedException();
+            
+            //_sprig = dtfObject.GetSprig(universe.Diff);
         }
     }
 }
