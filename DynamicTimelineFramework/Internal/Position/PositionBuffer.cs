@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Reflection;
-using DynamicTimelineFramework.Multiverse;
 using DynamicTimelineFramework.Objects.Attributes;
+using MVPosition = DynamicTimelineFramework.Multiverse.Position;
 
-namespace DynamicTimelineFramework.Internal.State {
+namespace DynamicTimelineFramework.Internal.Position {
     internal class PositionBuffer : SuperPosition
     {
 
@@ -14,7 +14,7 @@ namespace DynamicTimelineFramework.Internal.State {
             Flag = new BitArray(0);
         }
 
-        public Position AllocatePosition(Type type, bool defaultValue) {
+        public MVPosition AllocatePosition(Type type, bool defaultValue) {
 
             var objDef = (DTFObjectDefinitionAttribute) type.GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
             
@@ -27,7 +27,7 @@ namespace DynamicTimelineFramework.Internal.State {
                 Flag[Flag.Length - 1] = defaultValue;
             }
             
-            return new Position(type, new Stake(this, leftBound, targetSize));
+            return new MVPosition(type, new Slice(this, leftBound, targetSize));
         }
 
         public bool this[int index] {

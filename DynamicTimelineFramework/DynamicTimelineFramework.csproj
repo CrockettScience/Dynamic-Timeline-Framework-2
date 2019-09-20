@@ -45,13 +45,14 @@
     <Compile Include="Exception\ParadoxException.cs" />
     <Compile Include="Internal\BitHacks.cs" />
     <Compile Include="Internal\Map.cs" />
-    <Compile Include="Internal\Position\Stake.cs" />
+    <Compile Include="Internal\Position\Slice.cs" />
     <Compile Include="Internal\Position\SuperPosition.cs" />
-    <Compile Include="Internal\Sprig\SBranchNode.cs" />
-    <Compile Include="Internal\Sprig\SHeadNode.cs" />
+    <Compile Include="Internal\Sprig\SpineBranchNode.cs" />
+    <Compile Include="Internal\Sprig\SpineHeadNode.cs" />
     <Compile Include="Internal\Sprig\Spine.cs" />
     <Compile Include="Internal\Sprig\SpineNode.cs" />
     <Compile Include="Internal\Sprig\Sprig.cs" />
+    <Compile Include="Internal\Sprig\SprigBuilder.cs" />
     <Compile Include="Internal\Sprig\SprigNode.cs" />
     <Compile Include="Internal\Sprig\SprigVector.cs" />
     <Compile Include="Internal\Position\PositionBuffer.cs" />

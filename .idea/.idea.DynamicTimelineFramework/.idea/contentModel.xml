@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\John\.Rider2019.2\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\John\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.-1968746815.00" t="ExcludeRecursive" />
-    <e p="C:\Users\John\Documents\DynamicTimelineFramework_2" t="IncludeFlat">
+    <e p="C:\Users\jcrockett\.Rider2019.2\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\jcrockett\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.1665773886.00" t="ExcludeRecursive" />
+    <e p="C:\Users\jcrockett\Documents\multiverseframework" t="IncludeFlat">
       <e p="DynamicTimelineFramework" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
         <e p="DynamicTimelineFramework.csproj" t="IncludeRecursive" />
@@ -18,15 +18,16 @@
           <e p="Map.cs" t="Include" />
           <e p="Position" t="Include">
             <e p="PositionBuffer.cs" t="Include" />
-            <e p="Stake.cs" t="Include" />
+            <e p="Slice.cs" t="Include" />
             <e p="SuperPosition.cs" t="Include" />
           </e>
           <e p="Sprig" t="Include">
-            <e p="SBranchNode.cs" t="Include" />
-            <e p="SHeadNode.cs" t="Include" />
             <e p="Spine.cs" t="Include" />
+            <e p="SpineBranchNode.cs" t="Include" />
+            <e p="SpineHeadNode.cs" t="Include" />
             <e p="SpineNode.cs" t="Include" />
             <e p="Sprig.cs" t="Include" />
+            <e p="SprigBuilder.cs" t="Include" />
             <e p="SprigNode.cs" t="Include" />
             <e p="SprigVector.cs" t="Include" />
           </e>

@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal;
-using DynamicTimelineFramework.Internal.State;
+using DynamicTimelineFramework.Internal.Position;
 using DynamicTimelineFramework.Objects;
-using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Multiverse
 {
@@ -98,19 +94,19 @@ namespace DynamicTimelineFramework.Multiverse
 
         #endregion
 
-        private readonly Stake _stake;
+        private readonly Slice _slice;
 
-        public int Space => _stake.RightBound - _stake.LeftBound;
+        public int Space => _slice.RightBound - _slice.LeftBound;
 
         public Type Type { get; }
 
         public int Uncertainty
         {
             get {
-                var flag = _stake.Buffer.Flag;
+                var flag = _slice.Head.Flag;
 
-                var lb = _stake.LeftBound;
-                var rb = _stake.RightBound;
+                var lb = _slice.LeftBound;
+                var rb = _slice.RightBound;
                 
                 //Count the number of set bits in the bitArray
                 var hWeight = 0;
@@ -125,10 +121,10 @@ namespace DynamicTimelineFramework.Multiverse
             }
         }
 
-        internal Position(Type type, Stake stake)
+        internal Position(Type type, Slice slice)
         {
             Type = type;
-            _stake = stake;
+            _slice = slice;
         }
 
         /// <summary>
@@ -145,10 +141,10 @@ namespace DynamicTimelineFramework.Multiverse
             var buffer = new PositionBuffer();
             
             //Iterate through and make positions for each set bit
-            var flag = _stake.Buffer.Flag;
+            var flag = _slice.Head.Flag;
 
-            var lb = _stake.LeftBound;
-            var rb = _stake.RightBound;
+            var lb = _slice.LeftBound;
+            var rb = _slice.RightBound;
 
             var eigenVals = new List<Position>();
             
@@ -166,11 +162,11 @@ namespace DynamicTimelineFramework.Multiverse
         public override bool Equals(object obj) {
             if (!(obj is Position other)) return false;
 
-            return other._stake.Equals(_stake);
+            return other._slice.Equals(_slice);
         }
 
         public override int GetHashCode() {
-            return _stake.GetHashCode();
+            return _slice.GetHashCode();
         }
 
         public bool this[int index] {
@@ -178,13 +174,13 @@ namespace DynamicTimelineFramework.Multiverse
                 if(index >= Space)
                     throw new IndexOutOfRangeException();
                 
-                return _stake.Buffer[_stake.LeftBound + index];
+                return _slice.Head[_slice.LeftBound + index];
             }
             set {
                 if(index >= Space)
                     throw new IndexOutOfRangeException();
                 
-                _stake.Buffer[_stake.LeftBound + index] = value;
+                _slice.Head[_slice.LeftBound + index] = value;
             }
         }
     }

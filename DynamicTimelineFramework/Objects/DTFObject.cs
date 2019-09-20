@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal;
+using DynamicTimelineFramework.Internal.Position;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Multiverse;
 
@@ -10,11 +11,16 @@ namespace DynamicTimelineFramework.Objects {
         
         private readonly Map<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
+        
         private string _parentKey;
-            
+
+        internal Slice HeadlessSlice { get; }
+
         protected DTFObject() {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Map<string, DTFObject>();
+            
+            //Todo - Request whatever manages the timeline to construct a slice reference
         }
 
         protected void AddObject(string key, DTFObject obj) {
