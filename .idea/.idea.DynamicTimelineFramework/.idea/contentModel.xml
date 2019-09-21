@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\jcrockett\.Rider2019.2\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\jcrockett\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.1665773886.00" t="ExcludeRecursive" />
-    <e p="C:\Users\jcrockett\Documents\multiverseframework" t="IncludeFlat">
+    <e p="C:\Users\John\.Rider2019.2\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\John\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.-1968746815.00" t="ExcludeRecursive" />
+    <e p="C:\Users\John\Documents\DynamicTimelineFramework_2" t="IncludeFlat">
       <e p="DynamicTimelineFramework" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
+        <e p="Core" t="Include">
+          <e p="Continuity.cs" t="Include" />
+          <e p="Diff.cs" t="Include" />
+          <e p="Multiverse.cs" t="Include" />
+          <e p="Position.cs" t="Include" />
+          <e p="Universe.cs" t="Include" />
+        </e>
         <e p="DynamicTimelineFramework.csproj" t="IncludeRecursive" />
         <e p="Exception" t="Include">
           <e p="DTFObjectCompilerException.cs" t="Include" />
@@ -14,12 +21,10 @@
           <e p="ParadoxException.cs" t="Include" />
         </e>
         <e p="Internal" t="Include">
-          <e p="BitHacks.cs" t="Include" />
-          <e p="Map.cs" t="Include" />
-          <e p="Position" t="Include">
+          <e p="Buffer" t="Include">
+            <e p="ISuperPosition.cs" t="Include" />
             <e p="PositionBuffer.cs" t="Include" />
             <e p="Slice.cs" t="Include" />
-            <e p="SuperPosition.cs" t="Include" />
           </e>
           <e p="Sprig" t="Include">
             <e p="Spine.cs" t="Include" />
@@ -31,13 +36,6 @@
             <e p="SprigNode.cs" t="Include" />
             <e p="SprigVector.cs" t="Include" />
           </e>
-        </e>
-        <e p="Multiverse" t="Include">
-          <e p="Continuity.cs" t="Include" />
-          <e p="Diff.cs" t="Include" />
-          <e p="Multiverse.cs" t="Include" />
-          <e p="Position.cs" t="Include" />
-          <e p="Universe.cs" t="Include" />
         </e>
         <e p="obj" t="ExcludeRecursive" />
         <e p="Objects" t="Include">

@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
+using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal;
-using DynamicTimelineFramework.Internal.Position;
-using DynamicTimelineFramework.Internal.Sprig;
-using DynamicTimelineFramework.Multiverse;
+using DynamicTimelineFramework.Internal.Buffer;
 
 namespace DynamicTimelineFramework.Objects {
     public abstract class DTFObject {
         
-        private readonly Map<string, DTFObject> _lateralDirectory;
+        private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
         
         private string _parentKey;
 
         internal Slice HeadlessSlice { get; }
 
-        protected DTFObject() {
+        protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
-            _lateralDirectory = new Map<string, DTFObject>();
-            
-            //Todo - Request whatever manages the timeline to construct a slice reference
+            _lateralDirectory = new Dictionary<string, DTFObject>();
+
+            //Register object with the timeline
+            HeadlessSlice = owner.SprigBuilder.RegisterObject(this);
         }
 
         protected void AddObject(string key, DTFObject obj) {

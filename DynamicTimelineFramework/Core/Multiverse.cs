@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal;
+using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
-namespace DynamicTimelineFramework.Multiverse
+namespace DynamicTimelineFramework.Core
 {
     public class Multiverse
     {
         private readonly Dictionary<Diff, Universe> _multiverse;
+        
+        internal SprigBuilder SprigBuilder { get; }
         
         internal ObjectCompiler Compiler { get; }
         
@@ -23,10 +25,13 @@ namespace DynamicTimelineFramework.Multiverse
         /// the share the identifier key in the DTFObjectDefinition attribute
         /// </summary>
         /// <param name="id">The key to identify objects the object compiler will look for</param>
-        public Multiverse(string id)
+        public Multiverse()
         {
-            // Set up the big bang date node
+            // Set up the big bang diff
             BaseUniverse = new Universe(this);
+            
+            //Instantiate the multiverse timeline
+            SprigBuilder = new SprigBuilder(BaseUniverse.Diff);
 
             _multiverse = new Dictionary<Diff, Universe>()
             {
@@ -34,7 +39,7 @@ namespace DynamicTimelineFramework.Multiverse
             };
             
             //Run the Compiler
-            Compiler = new ObjectCompiler(id, Assembly.GetCallingAssembly());
+            Compiler = new ObjectCompiler(Assembly.GetCallingAssembly());
             
         }
 
@@ -63,9 +68,9 @@ namespace DynamicTimelineFramework.Multiverse
             //2^63
             public const ulong SPRIG_CENTER = 9_223_372_036_854_775_808;
 
-            private readonly Map<Type, MetaData> _objectMetaData = new Map<Type, MetaData>(); 
+            private readonly Dictionary<Type, MetaData> _objectMetaData = new Dictionary<Type, MetaData>(); 
             
-            public ObjectCompiler(string mvID, Assembly callingAssembly)
+            public ObjectCompiler(Assembly callingAssembly)
             {
                 var types = callingAssembly.GetTypes();
                 
@@ -80,12 +85,6 @@ namespace DynamicTimelineFramework.Multiverse
                         throw new DTFObjectCompilerException(type.Name + " is assignable from " + DTFObjectType.Name +
                                                              " but does not have a " + DTFObjectDefAttr.Name +
                                                              " defined.");
-
-                    if (definitionAttr.MvID == mvID)
-                    {
-                        dtfTypes.Add(type);
-                        _objectMetaData[type] = new MetaData();
-                    }
                 }
 
                 foreach (var type in dtfTypes)
@@ -100,8 +99,8 @@ namespace DynamicTimelineFramework.Multiverse
                     //Collect all fields that have a ForwardPositionAttribute
                     var typeFields = type.GetFields().Where(field => field.GetCustomAttribute(PositionAttr) is PositionAttribute).ToList();
 
-                    var forwardMap = new Map<Position, Position>();
-                    var backwardMap = new Map<Position, Position>();
+                    var forwardDictionary = new Dictionary<Position, Position>();
+                    var backwardDictionary = new Dictionary<Position, Position>();
                     
                     foreach (var field in typeFields)
                     {
@@ -126,21 +125,21 @@ namespace DynamicTimelineFramework.Multiverse
                         //Use the position attribute to precompute a sprig vector about the position
                         var fieldValue = (Position) field.GetValue(null);
                         
-                        //Store the forward map
+                        //Store the forward Dictionary
                         var forwardMask = Position.Alloc(type, forwardTransitionAttribute.ForwardTransitionSetBits);
-                        forwardMap[fieldValue] = forwardMask;
+                        forwardDictionary[fieldValue] = forwardMask;
                         
-                        //Store the reverse map
+                        //Store the reverse Dictionary
                         foreach (var innerField in typeFields) {
                             var innerPos = (Position) innerField.GetValue(null);
                             
-                            if(!backwardMap.ContainsKey(innerPos))
-                                backwardMap[innerPos] = Position.Alloc(type);
+                            if(!backwardDictionary.ContainsKey(innerPos))
+                                backwardDictionary[innerPos] = Position.Alloc(type);
                             
                             //If the outer field contains innerfield in it's forward mask, that
                             //makes the outer field part of the inner field's backward mask
                             if ((forwardMask & innerPos).Uncertainty >= 0)
-                                backwardMap[innerPos] |= fieldValue;
+                                backwardDictionary[innerPos] |= fieldValue;
                         }
                         
                         //Compute and store the cross type translation
@@ -151,7 +150,7 @@ namespace DynamicTimelineFramework.Multiverse
                             {
                                 //Make sure the structure exists
                                 if (!lateralTranslation.ContainsKey(attribute.LateralKey))
-                                    lateralTranslation[attribute.LateralKey] = new Map<Position, Position>();
+                                    lateralTranslation[attribute.LateralKey] = new Dictionary<Position, Position>();
                                 
                                 //Store the translation
                                 var translation = Position.Alloc(attribute.Type, attribute.ConstraintSetBits);
@@ -164,7 +163,7 @@ namespace DynamicTimelineFramework.Multiverse
                                 //isn't the one that was given.
                                 
                                 if(!_objectMetaData.ContainsKey(attribute.Type))
-                                    throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name + " and the DTFObjectDefinitionAttribute has mvIdentifierKey '" + mvID + "'");
+                                    throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name);
                                 
                                 var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation;
                                 foreach (var otherField in attribute.Type.GetFields())
@@ -172,7 +171,7 @@ namespace DynamicTimelineFramework.Multiverse
                                     if (otherField.GetCustomAttribute(PositionAttr) is PositionAttribute)
                                     {
                                         if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()))
-                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()] = new Map<Position, Position>();
+                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()] = new Dictionary<Position, Position>();
 
                                         var backTranslation = otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()];
                                         
@@ -181,7 +180,7 @@ namespace DynamicTimelineFramework.Multiverse
                                         if ((translation & otherPosition).Uncertainty >= 0)
                                         {
                                             //This means that the field we're looking at is part of the translation
-                                            //we mapped to earlier, we can "Add" the outer field's position to the other
+                                            //we Dictionaryped to earlier, we can "Add" the outer field's position to the other
                                             //object as a reverse translation. This fulfills the transitive property for
                                             //the relation.
                                             if (!backTranslation.ContainsKey(otherPosition))
@@ -196,7 +195,7 @@ namespace DynamicTimelineFramework.Multiverse
                         }
                     }
                     
-                    //Todo - Use the forward and backward map to compute the SprigVector
+                    //Todo - Use the forward and backward Dictionary to compute the SprigVector
                     
                     //When we collapse to a position, the collapsed-to date can be anywhere from
                     //the beginning of the positions length or the end. So, we can compute the
@@ -220,8 +219,6 @@ namespace DynamicTimelineFramework.Multiverse
             internal SprigVector GetNormalizedVector(Type type, Position position, ulong date) 
             {
                 var vector = _objectMetaData[type].GetPossibilityBreadth(position);
-                
-                throw new NotImplementedException();
                     
                 //All precomputed sprigVectors are centered at SPRIG_CENTER. We need to shift the values to the correct date
                 //We have to dance around straight subtraction for the sake of avoiding overflow
@@ -303,16 +300,16 @@ namespace DynamicTimelineFramework.Multiverse
 
             private class MetaData
             {
-                public Map<string, Map<Position, Position>> LateralTranslation { get; }
+                public Dictionary<string, Dictionary<Position, Position>> LateralTranslation { get; }
                 
-                public Map<Position, SprigVector> PreComputedSprigs { get; }
-                public Map<Position, ulong> Length { get; }
+                public Dictionary<Position, SprigVector> PreComputedSprigs { get; }
+                public Dictionary<Position, ulong> Length { get; }
                 
                 public MetaData()
                 {
-                    LateralTranslation = new Map<string, Map<Position, Position>>();
-                    PreComputedSprigs = new Map<Position, SprigVector>();
-                    Length = new Map<Position, ulong>();
+                    LateralTranslation = new Dictionary<string, Dictionary<Position, Position>>();
+                    PreComputedSprigs = new Dictionary<Position, SprigVector>();
+                    Length = new Dictionary<Position, ulong>();
                 }
 
                 public Position Translate(string key, Position input)
@@ -334,26 +331,21 @@ namespace DynamicTimelineFramework.Multiverse
 
                 public SprigVector Translate(string key, SprigVector input)
                 {
-                    
-                    throw new NotImplementedException();
-                    /*
                      
                     var currentIn = input.Head;
-                    var currentOut = new SprigNode(null, Translate(key, currentIn.Position), currentIn.Index);
-                    var output = new SprigVector(currentOut);
+                    var currentOut = new SprigNode<Position>(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
+                    var output = new SprigVector(input.Slice, currentOut);
 
                     while (currentIn.Last != null)
                     {
                         currentIn = currentIn.Last;
                         
-                        currentOut.Last = new SprigNode(null, Translate(key, currentIn.Position), currentIn.Index);
+                        currentOut.Last = new SprigNode<Position>(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
 
                         currentOut = currentOut.Last;
                     }
 
                     return output;
-                    
-                    */
 
                 }
 

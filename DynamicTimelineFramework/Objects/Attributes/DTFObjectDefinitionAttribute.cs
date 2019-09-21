@@ -3,12 +3,10 @@ using System;
 namespace DynamicTimelineFramework.Objects.Attributes {
     [AttributeUsage(AttributeTargets.Class)]
     public class DTFObjectDefinitionAttribute : Attribute {
-        internal string MvID { get; }
-        internal int positionSpace { get; }
+        internal int PositionCount { get; }
 
-        public DTFObjectDefinitionAttribute(int positionSpace, string mvId) {
-            MvID = mvId;
-            this.positionSpace = positionSpace;
+        public DTFObjectDefinitionAttribute(int positionCount) {
+            PositionCount = positionCount;
         }
     }
 }

@@ -1,9 +1,9 @@
-using DynamicTimelineFramework.Multiverse;
+using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace Test {
-    [DTFObjectDefinition(11, "TEST")]
+    [DTFObjectDefinition(11)]
     public class Star : DTFObject {
 
         private const string GALAXY_KEY = "Galaxy";
@@ -52,7 +52,7 @@ namespace Test {
         [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.YOUNG, (int) Galaxy.Stage.MIDDLE, (int) Galaxy.Stage.OLD, (int) Galaxy.Stage.DEGENERATE)]
         public static readonly Position BlackHole        = Position.Alloc<Star>((int) Stage.BlackHole);
 
-        public Star(Galaxy galaxy) {
+        public Star(Galaxy galaxy, Multiverse owner) : base(owner){
             SetParent(GALAXY_KEY, galaxy);
         }
 
@@ -65,19 +65,7 @@ namespace Test {
         }
 
         public enum Stage {
-            PreExistent,
-            Proto,
-            MainSequence,
-            Massive,
-            RedGiant,
-            RedSuperGiant,
-            WhiteDwarf,
-            Neutron,
-            BlackHole,
-            PlanetaryNebula,
-            Supernova       
-            
-            
+            PreExistent, Proto, MainSequence, Massive, RedGiant, RedSuperGiant, WhiteDwarf, Neutron, BlackHole, PlanetaryNebula, Supernova
         }
     }
 }

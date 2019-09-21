@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using DynamicTimelineFramework.Internal.Position;
+using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Objects;
 
-namespace DynamicTimelineFramework.Multiverse
+namespace DynamicTimelineFramework.Core
 {
-    public class Position : SuperPosition
+    public class Position : ISuperPosition
     {
 
         #region STATIC
@@ -29,7 +29,7 @@ namespace DynamicTimelineFramework.Multiverse
             var buffer = new PositionBuffer();
             
             //Make a position out of the buffer
-            var pos = buffer.AllocatePosition(type, defaultValue);
+            var pos = buffer.Alloc(type, defaultValue);
 
             return pos;
         }
@@ -54,7 +54,7 @@ namespace DynamicTimelineFramework.Multiverse
             if(lhs.Type != rhs.Type)
                 throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
 
-            for (var i = 0; i < lhs.Space; i++)
+            for (var i = 0; i < lhs.Length; i++)
             {
                 pos[i] = lhs[i] && rhs[i];
             }
@@ -69,7 +69,7 @@ namespace DynamicTimelineFramework.Multiverse
             if(lhs.Type != rhs.Type)
                 throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
 
-            for (var i = 0; i < lhs.Space; i++)
+            for (var i = 0; i < lhs.Length; i++)
             {
                 pos[i] = lhs[i] || rhs[i];
             }
@@ -84,7 +84,7 @@ namespace DynamicTimelineFramework.Multiverse
             if(lhs.Type != rhs.Type)
                 throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
 
-            for (var i = 0; i < lhs.Space; i++)
+            for (var i = 0; i < lhs.Length; i++)
             {
                 pos[i] = lhs[i] ^ rhs[i];
             }
@@ -94,19 +94,19 @@ namespace DynamicTimelineFramework.Multiverse
 
         #endregion
 
-        private readonly Slice _slice;
+        internal Slice Slice { get; }
 
-        public int Space => _slice.RightBound - _slice.LeftBound;
+        public int Length => Slice.RightBound - Slice.LeftBound;
 
         public Type Type { get; }
 
         public int Uncertainty
         {
             get {
-                var flag = _slice.Head.Flag;
+                var flag = Slice.Head.Flag;
 
-                var lb = _slice.LeftBound;
-                var rb = _slice.RightBound;
+                var lb = Slice.LeftBound;
+                var rb = Slice.RightBound;
                 
                 //Count the number of set bits in the bitArray
                 var hWeight = 0;
@@ -124,7 +124,7 @@ namespace DynamicTimelineFramework.Multiverse
         internal Position(Type type, Slice slice)
         {
             Type = type;
-            _slice = slice;
+            Slice = slice;
         }
 
         /// <summary>
@@ -141,16 +141,16 @@ namespace DynamicTimelineFramework.Multiverse
             var buffer = new PositionBuffer();
             
             //Iterate through and make positions for each set bit
-            var flag = _slice.Head.Flag;
+            var flag = Slice.Head.Flag;
 
-            var lb = _slice.LeftBound;
-            var rb = _slice.RightBound;
+            var lb = Slice.LeftBound;
+            var rb = Slice.RightBound;
 
             var eigenVals = new List<Position>();
             
             for (var i = lb; i < rb; i++) {
                 if (flag[i]) {
-                    var eigenVal = buffer.AllocatePosition(Type, false);
+                    var eigenVal = buffer.Alloc(Type);
                     eigenVal[i - lb] = true;
                     eigenVals.Add(eigenVal);
                 }
@@ -162,26 +162,38 @@ namespace DynamicTimelineFramework.Multiverse
         public override bool Equals(object obj) {
             if (!(obj is Position other)) return false;
 
-            return other._slice.Equals(_slice);
+            return other.Slice.Equals(Slice);
         }
 
         public override int GetHashCode() {
-            return _slice.GetHashCode();
+            return Slice.GetHashCode();
         }
 
         public bool this[int index] {
             get {
-                if(index >= Space)
+                if(index >= Length)
                     throw new IndexOutOfRangeException();
                 
-                return _slice.Head[_slice.LeftBound + index];
+                return Slice.Head[Slice.LeftBound + index];
             }
             set {
-                if(index >= Space)
+                if(index >= Length)
                     throw new IndexOutOfRangeException();
                 
-                _slice.Head[_slice.LeftBound + index] = value;
+                Slice.Head[Slice.LeftBound + index] = value;
             }
+        }
+
+        public ISuperPosition Copy()
+        {
+            var pos = Alloc(Type);
+
+            for (var i = 0; i < Length; i++)
+            {
+                pos[i] = this[i];
+            }
+
+            return pos;
         }
     }
 }

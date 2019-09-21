@@ -1,18 +1,28 @@
 using System;
 using System.Collections.Generic;
-using DynamicTimelineFramework.Multiverse;
+using DynamicTimelineFramework.Core;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SpineBranchNode : SpineNode
     {
-        private Map<Diff, SpineNode> _nexts = new Map<Diff, SpineNode>();
+        private Dictionary<Diff, SpineNode> _diffMap = new Dictionary<Diff, SpineNode>();
         
         public SpineNode GetNode(Diff diff) {
-            return _nexts[diff];
+            return _diffMap[diff];
         }
 
         public bool Contains(Diff diff) {
-            return _nexts.ContainsKey(diff);
+            return _diffMap.ContainsKey(diff);
+        }
+
+        public override void Alloc(int space, int startIndex)
+        {
+            var nexts = _diffMap.Values;
+            
+            foreach (var next in nexts)
+            {
+                next.Alloc(space, startIndex);
+            }
         }
     }
 }

@@ -43,10 +43,8 @@
   <ItemGroup>
     <Compile Include="Exception\DTFObjectDefinitionException.cs" />
     <Compile Include="Exception\ParadoxException.cs" />
-    <Compile Include="Internal\BitHacks.cs" />
-    <Compile Include="Internal\Map.cs" />
-    <Compile Include="Internal\Position\Slice.cs" />
-    <Compile Include="Internal\Position\SuperPosition.cs" />
+    <Compile Include="Internal\Buffer\Slice.cs" />
+    <Compile Include="Internal\Buffer\ISuperPosition.cs" />
     <Compile Include="Internal\Sprig\SpineBranchNode.cs" />
     <Compile Include="Internal\Sprig\SpineHeadNode.cs" />
     <Compile Include="Internal\Sprig\Spine.cs" />
@@ -55,12 +53,12 @@
     <Compile Include="Internal\Sprig\SprigBuilder.cs" />
     <Compile Include="Internal\Sprig\SprigNode.cs" />
     <Compile Include="Internal\Sprig\SprigVector.cs" />
-    <Compile Include="Internal\Position\PositionBuffer.cs" />
-    <Compile Include="Multiverse\Continuity.cs" />
-    <Compile Include="Multiverse\Diff.cs" />
-    <Compile Include="Multiverse\Multiverse.cs" />
-    <Compile Include="Multiverse\Position.cs" />
-    <Compile Include="Multiverse\Universe.cs" />
+    <Compile Include="Internal\Buffer\PositionBuffer.cs" />
+    <Compile Include="Core\Continuity.cs" />
+    <Compile Include="Core\Diff.cs" />
+    <Compile Include="Core\Multiverse.cs" />
+    <Compile Include="Core\Position.cs" />
+    <Compile Include="Core\Universe.cs" />
     <Compile Include="Exception\DTFObjectCompilerException.cs" />
     <Compile Include="Exception\InvalidFlagSpaceFactor.cs" />
     <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />

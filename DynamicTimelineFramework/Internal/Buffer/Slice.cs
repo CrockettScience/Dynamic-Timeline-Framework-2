@@ -1,4 +1,4 @@
-namespace DynamicTimelineFramework.Internal.Position {
+namespace DynamicTimelineFramework.Internal.Buffer {
     internal struct Slice {
         public readonly PositionBuffer Head;
         public readonly int LeftBound;

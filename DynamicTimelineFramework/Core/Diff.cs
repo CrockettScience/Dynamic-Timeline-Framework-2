@@ -1,16 +1,16 @@
-using DynamicTimelineFramework.Internal;
+using System.Collections.Generic;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
-namespace DynamicTimelineFramework.Multiverse
+namespace DynamicTimelineFramework.Core
 {  
     public class Diff
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        internal  Map<DTFObject, SprigVector> SprigVectors { get; }
+        internal Dictionary<DTFObject, SprigVector> SprigVectors { get; }
 
-        internal Diff(ulong date, Universe parent, Map<DTFObject, SprigVector> sprigVectors)
+        internal Diff(ulong date, Universe parent, Dictionary<DTFObject, SprigVector> sprigVectors)
         {
             Date = date;
             Parent = parent;

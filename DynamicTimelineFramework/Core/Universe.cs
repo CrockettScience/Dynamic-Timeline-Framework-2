@@ -1,22 +1,20 @@
+using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
-namespace DynamicTimelineFramework.Multiverse
+namespace DynamicTimelineFramework.Core
 {
     public class Universe
     {
         internal readonly Diff Diff;
-        
         public Multiverse Owner { get; }
-
         public Universe Parent => Diff.Parent;
+        internal Sprig Sprig { get; }
 
         internal Universe(Diff diff)
         {
             Diff = diff;
             Owner = diff.Parent.Owner;
-
-            //Todo - Force the positions given in the dictionary onto new branched sprigs
-
+            Sprig = Owner.SprigBuilder.RegisterDiff(diff);
         }
 
         /// <summary>

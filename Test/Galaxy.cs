@@ -1,11 +1,11 @@
-using DynamicTimelineFramework.Multiverse;
+using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace Test
 {
     //Lets say the period length is about 3.5 billion years
-    [DTFObjectDefinition(6, "TEST")]
+    [DTFObjectDefinition(6)]
     public class Galaxy : DTFObject {
         
         [Position(1_250_000_000_000, (int) Stage.PRE_EXISTENT, (int) Stage.PROTO_GALAXY)]
@@ -25,6 +25,9 @@ namespace Test
         
         [Position(1_250_000_000_000, (int) Stage.DEGENERATE)]
         public static readonly Position Degenerate =  Position.Alloc<Galaxy>((int) Stage.DEGENERATE);
+
+        public Galaxy(Multiverse owner) : base(owner)
+        {}
 
         public override Position InitialSuperPosition() {
             return PreExistent;

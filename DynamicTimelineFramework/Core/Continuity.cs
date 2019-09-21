@@ -1,21 +1,21 @@
 using System;
-using DynamicTimelineFramework.Internal;
+using System.Collections.Generic;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
-namespace DynamicTimelineFramework.Multiverse
+namespace DynamicTimelineFramework.Core
 {
     public class Continuity
     {
         private readonly Universe _universe;
         private readonly DTFObject _dtfObject;
 
-        public Position this[ulong date]
+        public Position this[ulong date] => _universe.Sprig.GetPosition(date, _dtfObject);
+
+        internal Continuity(Universe universe, DTFObject dtfObject)
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            _universe = universe;
+            _dtfObject = dtfObject;
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace DynamicTimelineFramework.Multiverse
             if (newPosition.Uncertainty < 0) {
                 //Paradox has occured
                 
-                var diffVector = new Map<DTFObject, SprigVector>
+                var diffVector = new Dictionary<DTFObject, SprigVector>
                 {
                     [_dtfObject] = sprigVector
                 };
@@ -70,19 +70,8 @@ namespace DynamicTimelineFramework.Multiverse
                 
             objectCompiler.PullConstraints(_dtfObject, _universe.Diff);
                 
-            //Todo - Now we can return the correct position
-            throw new NotImplementedException();
-            //return _dtfObject.GetSprig(_universe.Diff)[date];
-        }
-
-        internal Continuity(Universe universe, DTFObject dtfObject)
-        {
-            _universe = universe;
-            _dtfObject = dtfObject;
-            
-            throw new NotImplementedException();
-            
-            //_sprig = dtfObject.GetSprig(universe.Diff);
+            //Now we can return the correct position
+            return _universe.Sprig.GetPosition(date, _dtfObject);
         }
     }
 }
