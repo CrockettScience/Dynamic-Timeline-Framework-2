@@ -216,23 +216,25 @@ namespace DynamicTimelineFramework.Core
 
             #region FUNCTIONS
 
-            internal SprigVector GetNormalizedVector(Type type, Position position, ulong date) 
+            internal List<SprigVector> GetDeltaVectors(Type type, Position position, ulong date) 
             {
                 var vector = _objectMetaData[type].GetPossibilityBreadth(position);
+                
+                //todo - The compiler needs to produce ALL the deltas
                     
                 //All precomputed sprigVectors are centered at SPRIG_CENTER. We need to shift the values to the correct date
                 //We have to dance around straight subtraction for the sake of avoiding overflow
                 if (date < SPRIG_CENTER)
                 {
-                    //vector.ShiftBackward(SPRIG_CENTER - date);
+                    vector.ShiftBackward(SPRIG_CENTER - date);
                 }
 
                 if (date > SPRIG_CENTER)
                 {
-                    //vector.ShiftForward(date - SPRIG_CENTER);
+                    vector.ShiftForward(date - SPRIG_CENTER);
                 }
 
-                return vector;
+                throw new NotImplementedException();
             }
 
             internal void PushConstraints(DTFObject dtfObj, Diff diff)

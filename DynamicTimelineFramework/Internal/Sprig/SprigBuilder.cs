@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Internal.Buffer;
@@ -7,7 +8,7 @@ using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SprigBuilder {
-        private Spine _spine;
+        private readonly Spine _spine;
         private int _indexedSpace;
         public SprigBuilder(Diff rootDiff)
         {
@@ -33,6 +34,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             return new Slice(leftBound, _indexedSpace);
 
+        }
+
+        public void MaskDeltaVectors(Diff diff, List<SprigVector> delta)
+        {
+            throw new NotImplementedException();
         }
     }
 }

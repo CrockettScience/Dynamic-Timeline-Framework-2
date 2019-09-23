@@ -8,13 +8,13 @@ namespace DynamicTimelineFramework.Core
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        internal Dictionary<DTFObject, SprigVector> SprigVectors { get; }
+        internal List<SprigVector> Delta { get; }
 
-        internal Diff(ulong date, Universe parent, Dictionary<DTFObject, SprigVector> sprigVectors)
+        internal Diff(ulong date, Universe parent, List<SprigVector> delta)
         {
             Date = date;
             Parent = parent;
-            SprigVectors = sprigVectors;
+            Delta = delta;
         }
 
         public override bool Equals(object obj)
@@ -33,15 +33,20 @@ namespace DynamicTimelineFramework.Core
             if (Parent != other.Parent)
                 return false;
 
+            for (var i = 0; i < Delta.Count; i++)
+            {
+                if (!Delta[i].Equals(other.Delta[i]))
+                    return false;
+            }
+
             return true;
 
         }
 
         public override int GetHashCode()
         {
-            var deltaHash = int.MaxValue;
 
-            return (Date.GetHashCode() * 397) ^ deltaHash;
+            return (Date.GetHashCode() ^ Delta[0].Head.SuperPosition.GetHashCode() * 397);
         }
     }
 }

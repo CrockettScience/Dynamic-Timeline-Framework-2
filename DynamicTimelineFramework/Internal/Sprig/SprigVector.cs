@@ -7,6 +7,8 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SprigVector{
+        
+        #region STATIC
 
         public static SprigVector operator &(SprigVector left, SprigVector right) {
             var currentLeft = left.Head;
@@ -98,6 +100,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return newSprigVector;
         }
         
+        #endregion
+        
         public Slice Slice { get; }
         public SprigNode<Position> Head { get; set; }
         
@@ -150,6 +154,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
                 current = current.Last;
             }
+        }
+        
+#pragma warning disable 659
+        public override bool Equals(object obj)
+#pragma warning restore 659
+        {
+            if (!(obj is SprigVector other)) return false;
+
+            return Head.Equals(other.Head);
         }
     }
 }

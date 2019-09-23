@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
@@ -38,26 +35,18 @@ namespace DynamicTimelineFramework.Core
             
             //Proceed with the mask
             var newPosition = this[date] & pos;
-            var sprigVector = _universe.Owner.Compiler.GetNormalizedVector(_dtfObject.GetType(), pos, date);
+            var delta = _universe.Owner.Compiler.GetDeltaVectors(_dtfObject.GetType(), pos, date);
 
             //Check for a paradox
             if (newPosition.Uncertainty < 0) {
                 //Paradox has occured
                 
-                var diffVector = new Dictionary<DTFObject, SprigVector>
-                {
-                    [_dtfObject] = sprigVector
-                };
+                outDiff = new Diff(date, _universe, delta);
                 
-                outDiff = new Diff(date, _universe, diffVector);
                 return false;
             }
 
-            //Todo - Use the spine structure to correctly crumple the sprigVector
-            //_sprig.And(sprigVector);
-            
-            //Push the constraints to the keyed objects
-            compiler.PushConstraints(_dtfObject, _universe.Diff);
+            _universe.Owner.SprigBuilder.MaskDeltaVectors(_universe.Diff, delta);
             
             outDiff = null;
 
