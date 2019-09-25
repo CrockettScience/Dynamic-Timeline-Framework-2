@@ -8,9 +8,9 @@ namespace DynamicTimelineFramework.Core
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        internal List<SprigVector> Delta { get; }
+        internal List<SprigPositionVector> Delta { get; }
 
-        internal Diff(ulong date, Universe parent, List<SprigVector> delta)
+        internal Diff(ulong date, Universe parent, List<SprigPositionVector> delta)
         {
             Date = date;
             Parent = parent;

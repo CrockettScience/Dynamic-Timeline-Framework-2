@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Internal.Buffer;
+using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
 {
-    public class Position : ISuperPosition
+    public class Position : BinaryPosition
     {
 
         #region STATIC
@@ -46,35 +47,14 @@ namespace DynamicTimelineFramework.Core
 
             return pos;
         }
-
-        public static Position operator &(Position lhs, Position rhs)
+        
+        public static Position operator &(Position left, Position right)
         {
-            var pos = Alloc(lhs.Type);
-            
-            if(lhs.Type != rhs.Type)
-                throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
-
-            for (var i = 0; i < lhs.Length; i++)
-            {
-                pos[i] = lhs[i] && rhs[i];
-            }
-
-            return pos;
+            return (Position) left.And(right);
         }
         
-        public static Position operator |(Position lhs, Position rhs)
-        {
-            var pos = Alloc(lhs.Type);
-            
-            if(lhs.Type != rhs.Type)
-                throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
-
-            for (var i = 0; i < lhs.Length; i++)
-            {
-                pos[i] = lhs[i] || rhs[i];
-            }
-
-            return pos;
+        public static Position operator |(Position left, Position right) {
+            return (Position) left.Or(right);
         }
         
         public static Position operator ^(Position lhs, Position rhs)
@@ -93,10 +73,14 @@ namespace DynamicTimelineFramework.Core
         }
 
         #endregion
+        
+        internal IOperativeSliceProvider OperativeSliceProvider { private get; set; }
 
         internal Slice Slice { get; }
 
-        public int Length => Slice.RightBound - Slice.LeftBound;
+        internal Slice OperativeSlice => OperativeSliceProvider.OperativeSlice;
+
+        public override int Length => Slice.RightBound - Slice.LeftBound;
 
         public Type Type { get; }
 
@@ -169,7 +153,7 @@ namespace DynamicTimelineFramework.Core
             return Slice.GetHashCode();
         }
 
-        public bool this[int index] {
+        public override bool this[int index] {
             get {
                 if(index >= Length)
                     throw new IndexOutOfRangeException();
@@ -184,13 +168,87 @@ namespace DynamicTimelineFramework.Core
             }
         }
 
-        public ISuperPosition Copy()
+        public override BinaryPosition Copy()
         {
             var pos = Alloc(Type);
 
             for (var i = 0; i < Length; i++)
             {
                 pos[i] = this[i];
+            }
+
+            pos.OperativeSliceProvider = OperativeSliceProvider;
+
+            return pos;
+        }
+
+        internal override BinaryPosition And(BinaryPosition other)
+        {
+            var pos = (Position) Copy();
+            
+            switch (other)
+            {
+                case Position otherPos when Type != otherPos.Type:
+                    throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
+                
+                case Position otherPos:
+                {
+                    for (var i = 0; i < Length; i++)
+                    {
+                        pos[i] &= otherPos[i];
+                    }
+
+                    break;
+                }
+                case PositionBuffer otherBuff:
+                {
+                    var bufferIndex = OperativeSlice.LeftBound;
+                
+                    for (var i = 0; i < Length; i++, bufferIndex++)
+                    {
+                        pos[i] &= otherBuff[bufferIndex];
+                    }
+
+                    break;
+                }
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            return pos;
+        }
+
+        internal override BinaryPosition Or(BinaryPosition other)
+        {
+            var pos = (Position) Copy();
+            
+            switch (other)
+            {
+                case Position otherPos when Type != otherPos.Type:
+                    throw new InvalidOperationException("Both positions must be for the same type of DTFObject");
+                
+                case Position otherPos:
+                {
+                    for (var i = 0; i < Length; i++)
+                    {
+                        pos[i] |= otherPos[i];
+                    }
+
+                    break;
+                }
+                case PositionBuffer otherBuff:
+                {
+                    var bufferIndex = OperativeSlice.LeftBound;
+                
+                    for (var i = 0; i < Length; i++, bufferIndex++)
+                    {
+                        pos[i] |= otherBuff[bufferIndex];
+                    }
+
+                    break;
+                }
+                default:
+                    throw new InvalidOperationException();
             }
 
             return pos;

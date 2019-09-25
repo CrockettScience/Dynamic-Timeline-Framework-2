@@ -12,14 +12,14 @@ namespace DynamicTimelineFramework.Objects {
         
         private string _parentKey;
 
-        internal Slice HeadlessSlice { get; }
+        internal Slice SprigBuilderSlice { get; }
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Dictionary<string, DTFObject>();
 
             //Register object with the timeline
-            HeadlessSlice = owner.SprigBuilder.RegisterObject(this);
+            SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this);
         }
 
         protected void AddObject(string key, DTFObject obj) {

@@ -35,10 +35,5 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return new Slice(leftBound, _indexedSpace);
 
         }
-
-        public void MaskDeltaVectors(Diff diff, List<SprigVector> delta)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

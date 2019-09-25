@@ -1,3 +1,4 @@
+using System;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
@@ -29,38 +30,17 @@ namespace DynamicTimelineFramework.Core
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
         public bool Constrain(ulong date, Position pos, out Diff outDiff) 
         {
-            //First, pull constraints to get the correct value
-            var compiler = _universe.Owner.Compiler;
-            compiler.PullConstraints(_dtfObject, _universe.Diff);
-            
-            //Proceed with the mask
-            var newPosition = this[date] & pos;
-            var delta = _universe.Owner.Compiler.GetDeltaVectors(_dtfObject.GetType(), pos, date);
-
-            //Check for a paradox
-            if (newPosition.Uncertainty < 0) {
-                //Paradox has occured
-                
-                outDiff = new Diff(date, _universe, delta);
-                
-                return false;
-            }
-
-            _universe.Owner.SprigBuilder.MaskDeltaVectors(_universe.Diff, delta);
-            
-            outDiff = null;
-
-            return true;
+            throw new NotImplementedException();
         }
 
-        public Position GetSuperposition(ulong date) {
-            //Pull proper constraints
-            var objectCompiler = _universe.Owner.Compiler;
-                
-            objectCompiler.PullConstraints(_dtfObject, _universe.Diff);
-                
-            //Now we can return the correct position
-            return _universe.Sprig.GetPosition(date, _dtfObject);
+        /// <summary>
+        /// Gets the unconstrained superposition of the object at date "date"
+        /// </summary>
+        /// <param name="date">The date to get the objects superposition at</param>
+        /// <returns>The unconstrained superposition of the object at date "date"</returns>
+        public Position GetSuperposition(ulong date) 
+        {
+            throw new NotImplementedException();
         }
     }
 }

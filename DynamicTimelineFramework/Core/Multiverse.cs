@@ -116,7 +116,7 @@ namespace DynamicTimelineFramework.Core
                         if (!field.IsStatic)
                             throw new DTFObjectCompilerException("All of " + fieldType.Name + "\'s attributed positions must be static");
                             
-                        //The field must be assignable from Position<Type>
+                        //The field must be assignable from Position
                         if (!fieldType.IsAssignableFrom(positionType))
                             throw new DTFObjectCompilerException(fieldType.Name + " is not assignable from " + positionType.Name + ", and cannot be attributed as a position by " + type.Name);
                             
@@ -180,7 +180,7 @@ namespace DynamicTimelineFramework.Core
                                         if ((translation & otherPosition).Uncertainty >= 0)
                                         {
                                             //This means that the field we're looking at is part of the translation
-                                            //we Dictionaryped to earlier, we can "Add" the outer field's position to the other
+                                            //we mapped to earlier, we can "Add" the outer field's position to the other
                                             //object as a reverse translation. This fulfills the transitive property for
                                             //the relation.
                                             if (!backTranslation.ContainsKey(otherPosition))
@@ -195,7 +195,7 @@ namespace DynamicTimelineFramework.Core
                         }
                     }
                     
-                    //Todo - Use the forward and backward Dictionary to compute the SprigVector
+                    //Todo - Compute Sprig position vectors
                     
                     //When we collapse to a position, the collapsed-to date can be anywhere from
                     //the beginning of the positions length or the end. So, we can compute the
@@ -215,88 +215,10 @@ namespace DynamicTimelineFramework.Core
             }
 
             #region FUNCTIONS
-
-            internal List<SprigVector> GetDeltaVectors(Type type, Position position, ulong date) 
-            {
-                var vector = _objectMetaData[type].GetPossibilityBreadth(position);
-                
-                //todo - The compiler needs to produce ALL the deltas
-                    
-                //All precomputed sprigVectors are centered at SPRIG_CENTER. We need to shift the values to the correct date
-                //We have to dance around straight subtraction for the sake of avoiding overflow
-                if (date < SPRIG_CENTER)
-                {
-                    vector.ShiftBackward(SPRIG_CENTER - date);
-                }
-
-                if (date > SPRIG_CENTER)
-                {
-                    vector.ShiftForward(date - SPRIG_CENTER);
-                }
-
-                throw new NotImplementedException();
-            }
-
-            internal void PushConstraints(DTFObject dtfObj, Diff diff)
-            {
-                //Get the metadata object
-                var meta = _objectMetaData[dtfObj.GetType()];
-                
-                //Iterate through each key and recursively constrain
-                var keys = dtfObj.GetLateralKeys();
-                foreach (var key in keys) {
-                    
-                    var dest = dtfObj.GetLateralObject(key);
-                    
-                    if (!Constrain(dtfObj, key, meta, diff)) continue;
-                    
-                    //If the constraint results in change, then push it's constraints as well
-                    
-                    PushConstraints(dest, diff);
-                }
-                
-            }
-
-            internal void PullConstraints(DTFObject dtfObj, Diff diff)
-            {
-                
-                if (dtfObj.HasParent())
-                    //It has no parents, no need to pull any constraints
-                    return;
-                
-                //It has a parent, so pull its parent's constraints
-                        
-                //Get the parent object
-                var key = dtfObj.GetParentKey();
-                var parent = dtfObj.GetLateralObject(key);
-
-                PullConstraints(parent, diff);
-                
-                //Now that we know, after some amount of recursion, that the parent object
-                //is fully constrained, we can constrain by it
-                
-                //Get the meta object for the other object
-                var otherMeta = _objectMetaData[parent.GetType()];
-                
-                //Constrain
-                Constrain(parent, dtfObj.GetParentKey(), otherMeta, diff);
-            }
-
-            private static bool Constrain(DTFObject source, string key, MetaData meta, Diff diff)
-            {
-                //Get the destination object
-                var dest = source.GetLateralObject(key);
-                
-                //Todo - Get the sprig
-                
-                throw new NotImplementedException();
-                
-                //Get the translation vector
-                //var translationVector = meta.Translate(key, source.GetSprig(diff).ToVector());
-                
-                //AND the sprigs together and check if there was a change
-                //return sprig.And(translationVector);
-            }
+            
+            //Todo - Remake compiler functions to account for the need to compile constraints for various scenarios,
+            //including applying crumple for diff chains, getting the breadth of timelines for both positions AND
+            //position buffers, etc
 
             #endregion
 
@@ -304,14 +226,12 @@ namespace DynamicTimelineFramework.Core
             {
                 public Dictionary<string, Dictionary<Position, Position>> LateralTranslation { get; }
                 
-                public Dictionary<Position, SprigVector> PreComputedSprigs { get; }
-                public Dictionary<Position, ulong> Length { get; }
+                public Dictionary<Position, SprigPositionVector> PreComputedSprigs { get; }
                 
                 public MetaData()
                 {
                     LateralTranslation = new Dictionary<string, Dictionary<Position, Position>>();
-                    PreComputedSprigs = new Dictionary<Position, SprigVector>();
-                    Length = new Dictionary<Position, ulong>();
+                    PreComputedSprigs = new Dictionary<Position, SprigPositionVector>();
                 }
 
                 public Position Translate(string key, Position input)
@@ -331,45 +251,24 @@ namespace DynamicTimelineFramework.Core
                     return output;
                 }
 
-                public SprigVector Translate(string key, SprigVector input)
+                public SprigPositionVector Translate(string key, SprigPositionVector input, Slice operativeSlice)
                 {
                      
                     var currentIn = input.Head;
-                    var currentOut = new SprigNode<Position>(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
-                    var output = new SprigVector(input.Slice, currentOut);
+                    var currentOut = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()), operativeSlice);
+                    var output = new SprigPositionVector(input.Slice, currentOut);
 
                     while (currentIn.Last != null)
                     {
                         currentIn = currentIn.Last;
                         
-                        currentOut.Last = new SprigNode<Position>(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
+                        currentOut.Last = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()), operativeSlice);
 
-                        currentOut = currentOut.Last;
+                        currentOut = (PositionNode) currentOut.Last;
                     }
 
                     return output;
 
-                }
-
-                public SprigVector GetPossibilityBreadth(Position position)
-                {
-                    throw new NotImplementedException();
-                    
-                    /*
-                     
-                    var eigenValues = position.GetEigenValues();
-                    var vector = new SprigVector(position.Type);
-
-                    foreach (var eigenValue in eigenValues) {
-                        var backwardBreadth = PreComputedSprigs[eigenValue].Copy();
-                        backwardBreadth.ShiftBackward(Length[eigenValue]);
-                        
-                        vector |= PreComputedSprigs[eigenValue] | backwardBreadth;
-                    }
-
-                    return vector;
-                    
-                    */
                 }
             }
         }

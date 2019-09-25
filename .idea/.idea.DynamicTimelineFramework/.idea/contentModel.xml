@@ -22,19 +22,27 @@
         </e>
         <e p="Internal" t="Include">
           <e p="Buffer" t="Include">
-            <e p="ISuperPosition.cs" t="Include" />
+            <e p="BinaryPosition.cs" t="Include" />
             <e p="PositionBuffer.cs" t="Include" />
             <e p="Slice.cs" t="Include" />
           </e>
+          <e p="Interfaces" t="Include">
+            <e p="ICopyAble.cs" t="Include" />
+            <e p="IOperativeSliceProvider.cs" t="Include" />
+            <e p="ISprigVector.cs" t="Include" />
+            <e p="Node.cs" t="Include" />
+          </e>
           <e p="Sprig" t="Include">
+            <e p="BufferNode.cs" t="Include" />
+            <e p="PositionNode.cs" t="Include" />
             <e p="Spine.cs" t="Include" />
             <e p="SpineBranchNode.cs" t="Include" />
             <e p="SpineHeadNode.cs" t="Include" />
             <e p="SpineNode.cs" t="Include" />
             <e p="Sprig.cs" t="Include" />
+            <e p="SprigBufferVector.cs" t="Include" />
             <e p="SprigBuilder.cs" t="Include" />
-            <e p="SprigNode.cs" t="Include" />
-            <e p="SprigVector.cs" t="Include" />
+            <e p="SprigPositionVector.cs" t="Include" />
           </e>
         </e>
         <e p="obj" t="ExcludeRecursive" />

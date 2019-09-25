@@ -5,36 +5,20 @@ using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Internal.Buffer {
-    internal class PositionBuffer : ISuperPosition
+    internal class PositionBuffer : BinaryPosition
     {
-        
-        public static PositionBuffer operator &(PositionBuffer left, Position right) {
-            var buffer = (PositionBuffer) left.Copy();
-
-            var bufferIndex = right.Slice.LeftBound;
-            for (var i = 0; i < right.Length; i++, bufferIndex++)
-            {
-                buffer[bufferIndex] &= right[i];
-            }
-
-            return buffer;
+        public static PositionBuffer operator &(PositionBuffer left, Position right)
+        {
+            return (PositionBuffer) left.And(right);
         }
         
         public static PositionBuffer operator |(PositionBuffer left, Position right) {
-            var buffer = (PositionBuffer) left.Copy();
-
-            var bufferIndex = right.Slice.LeftBound;
-            for (var i = 0; i < right.Length; i++, bufferIndex++)
-            {
-                buffer[bufferIndex] |= right[i];
-            }
-
-            return buffer;
+            return (PositionBuffer) left.Or(right);
         }
 
         public BitArray Flag { get; }
 
-        public int Length => Flag.Length;
+        public override int Length => Flag.Length;
 
         public PositionBuffer() {
             Flag = new BitArray(0);
@@ -43,6 +27,11 @@ namespace DynamicTimelineFramework.Internal.Buffer {
         public PositionBuffer(BitArray flag)
         {
             Flag = flag;
+        }
+
+        public PositionBuffer(int size, bool defaultValue)
+        {
+            Flag = new BitArray(size, defaultValue);
         }
 
         public Position Alloc(Type type, bool defaultValue = false) {
@@ -78,12 +67,12 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             }
         }
 
-        public bool this[int index] {
+        public override bool this[int index] {
             get => Flag[index];
             set => Flag[index] = value;
         }
 
-        public ISuperPosition Copy()
+        public override BinaryPosition Copy()
         {
             var flag = new BitArray(Flag.Length);
 
@@ -93,6 +82,74 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             }
             
             return new PositionBuffer(flag);
+        }
+
+        internal override BinaryPosition And(BinaryPosition other)
+        {
+            var buffer = (PositionBuffer) Copy();
+            
+            switch (other)
+            {
+                case Position otherPos:
+                {
+                    var bufferIndex = otherPos.OperativeSlice.LeftBound;
+                    for (var i = 0; i < otherPos.Length; i++, bufferIndex++)
+                    {
+                        buffer[bufferIndex] &= otherPos[i];
+                    }
+
+                    break;
+                }
+                
+                case PositionBuffer otherBuff:
+                {
+                    for (var i = 0; i < Length; i++)
+                    {
+                        buffer[i] &= otherBuff[i];
+                    }
+
+                    break;
+                }
+                
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            return buffer;
+        }
+
+        internal override BinaryPosition Or(BinaryPosition other)
+        {
+            var buffer = (PositionBuffer) Copy();
+            
+            switch (other)
+            {
+                case Position otherPos:
+                {
+                    var bufferIndex = otherPos.OperativeSlice.LeftBound;
+                    for (var i = 0; i < otherPos.Length; i++, bufferIndex++)
+                    {
+                        buffer[bufferIndex] |= otherPos[i];
+                    }
+
+                    break;
+                }
+                
+                case PositionBuffer otherBuff:
+                {
+                    for (var i = 0; i < Length; i++)
+                    {
+                        buffer[i] |= otherBuff[i];
+                    }
+
+                    break;
+                }
+                
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            return buffer;
         }
 
         public int UncertaintyAtSlice(Slice slice)

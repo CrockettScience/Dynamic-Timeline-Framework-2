@@ -1,15 +1,14 @@
-using System;
 using DynamicTimelineFramework.Core;
-using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Buffer;
+using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class Sprig
     {
-        private SprigNode<PositionBuffer> _head;
+        private BufferNode _head;
         
-        public SprigNode<PositionBuffer> Head
+        public BufferNode Head
         {
             get => _head;
 
@@ -21,13 +20,13 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public Sprig()
         {
-            Head = new SprigNode<PositionBuffer>(null, 0, new PositionBuffer());
+            Head = new BufferNode(null, 0, new PositionBuffer());
         }
 
         public void Alloc(int space, int startIndex)
         {
             var current = Head;
-            var buffer = (PositionBuffer) current.SuperPosition;
+            var buffer = current.SuperPosition;
             
             //Don't allocate if the buffer is already allocated
             while (buffer != null && buffer.Length == startIndex)
@@ -35,8 +34,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 buffer.Alloc(space);
                 
                 //Perform the same on the last
-                current = current.Last;
-                buffer = (PositionBuffer) current?.SuperPosition;
+                current = (BufferNode) current.Last;
+                buffer = current?.SuperPosition;
             }
         }
 
@@ -46,107 +45,30 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
             while (current.Index > date)
             {
-                current = current.Last;
+                current = (BufferNode) current.Last;
             }
 
-            var slice = new Slice(current.SuperPosition, obj.HeadlessSlice.LeftBound, obj.HeadlessSlice.RightBound);
+            var slice = new Slice(current.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
             
             return new Position(obj.GetType(), slice);
         }
         
-        public void And(SprigVector other)
+        public void And<T>(ISprigVector<T> other) where T : BinaryPosition
         {
-            var currentSprig = Head;
-            var currentVector = other.Head;
-            
-            var currentNew = new SprigNode<PositionBuffer>(null, Math.Max(currentSprig.Index, currentVector.Index), currentSprig.SuperPosition & currentVector.SuperPosition);
-            var newHead = currentNew;
-            
-            if(currentNew.SuperPosition.UncertaintyAtSlice(other.Slice) == -1)
-                throw new ParadoxException();
-
-            var leftGreaterPlaceholder = currentSprig.Index;
-            
-            if (currentSprig.Index >= currentVector.Index)
-                currentSprig = currentSprig.Last;
-            
-            if (currentVector.Index >= leftGreaterPlaceholder)
-                currentVector = currentVector.Last;
-
-            while (currentNew.Index != 0)
-            {
-                //AND the positions and set the index to the greater of the nodes
-                var newNode = new SprigNode<PositionBuffer>(null, Math.Max(currentSprig.Index, currentVector.Index), currentSprig.SuperPosition & currentVector.SuperPosition);
-                
-                if(newNode.SuperPosition.UncertaintyAtSlice(other.Slice) == -1)
-                    throw new ParadoxException();
-                
-                //If the new position is equal to the current node in the new list, then just update the start position of the new list
-                if (newNode.SuperPosition.Equals(currentNew.SuperPosition))
-                    currentNew.Index = newNode.Index;
-
-                else
-                    currentNew.Last = newNode;
-                
-                leftGreaterPlaceholder = currentSprig.Index;
-            
-                if (currentSprig.Index >= currentVector.Index)
-                    currentSprig = currentSprig.Last;
-            
-                if (currentVector.Index >= leftGreaterPlaceholder)
-                    currentVector = currentVector.Last;
-            }
+            var newHead = Node<PositionBuffer>.And(Head, other.Head);
             
             //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
-                Head = newHead;
+                Head = (BufferNode) newHead;
         }
         
-        public void Or(SprigVector other) {
-            var currentSprig = Head;
-            var currentVector = other.Head;
-            
-            var currentNew = new SprigNode<PositionBuffer>(null, Math.Max(currentSprig.Index, currentVector.Index), currentSprig.SuperPosition & currentVector.SuperPosition);
-            var newHead = currentNew;
-            
-            if(currentNew.SuperPosition.UncertaintyAtSlice(other.Slice) == -1)
-                throw new ParadoxException();
-
-            var leftGreaterPlaceholder = currentSprig.Index;
-            
-            if (currentSprig.Index >= currentVector.Index)
-                currentSprig = currentSprig.Last;
-            
-            if (currentVector.Index >= leftGreaterPlaceholder)
-                currentVector = currentVector.Last;
-
-            while (currentNew.Index != 0)
-            {
-                //AND the positions and set the index to the greater of the nodes
-                var newNode = new SprigNode<PositionBuffer>(null, Math.Max(currentSprig.Index, currentVector.Index), currentSprig.SuperPosition & currentVector.SuperPosition);
-                
-                if(newNode.SuperPosition.UncertaintyAtSlice(other.Slice) == -1)
-                    throw new ParadoxException();
-                
-                //If the new position is equal to the current node in the new list, then just update the start position of the new list
-                if (newNode.SuperPosition.Equals(currentNew.SuperPosition))
-                    currentNew.Index = newNode.Index;
-
-                else
-                    currentNew.Last = newNode;
-                
-                leftGreaterPlaceholder = currentSprig.Index;
-            
-                if (currentSprig.Index >= currentVector.Index)
-                    currentSprig = currentSprig.Last;
-            
-                if (currentVector.Index >= leftGreaterPlaceholder)
-                    currentVector = currentVector.Last;
-            }
+        public void Or<T>(ISprigVector<T> other) where T : BinaryPosition
+        {
+            var newHead = Node<PositionBuffer>.Or(Head, other.Head);
             
             //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
-                Head = newHead;
+                Head = (BufferNode) newHead;
         }
     }
 }
