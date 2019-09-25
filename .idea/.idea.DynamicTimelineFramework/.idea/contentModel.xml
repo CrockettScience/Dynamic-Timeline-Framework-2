@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\John\.Rider2019.2\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\John\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.-1968746815.00" t="ExcludeRecursive" />
-    <e p="C:\Users\John\Documents\DynamicTimelineFramework_2" t="IncludeFlat">
+    <e p="C:\Users\jcrockett\.Rider2019.2\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\jcrockett\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.1665773886.00" t="ExcludeRecursive" />
+    <e p="C:\Users\jcrockett\Documents\multiverseframework" t="IncludeFlat">
       <e p="DynamicTimelineFramework" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
         <e p="Core" t="Include">

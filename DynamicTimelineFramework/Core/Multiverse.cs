@@ -68,7 +68,7 @@ namespace DynamicTimelineFramework.Core
             //2^63
             public const ulong SPRIG_CENTER = 9_223_372_036_854_775_808;
 
-            private readonly Dictionary<Type, MetaData> _objectMetaData = new Dictionary<Type, MetaData>(); 
+            private readonly Dictionary<Type, TypeMetaData> _objectMetaData = new Dictionary<Type, TypeMetaData>(); 
             
             public ObjectCompiler(Assembly callingAssembly)
             {
@@ -92,7 +92,6 @@ namespace DynamicTimelineFramework.Core
 
                     //This is a type we are looking for. Now iterate though each field and build the metadata
                     var lateralTranslation = _objectMetaData[type].LateralTranslation;
-                    var preComputedSprigs = _objectMetaData[type].PreComputedSprigs;
                     
                     var positionType = typeof(Position);
                     
@@ -197,41 +196,87 @@ namespace DynamicTimelineFramework.Core
                     
                     //Todo - Compute Sprig position vectors
                     
+                    var preComputedSprigs = _objectMetaData[type].PreComputedVectors;
+                    
                     //When we collapse to a position, the collapsed-to date can be anywhere from
                     //the beginning of the positions length or the end. So, we can compute the
-                    //vector as if the collapsed position is at the "beginning" of the length, then
-                    //copy it and shift the copy to the LEFT by the length value, then OR the
-                    //vector and it's copy together to get the complete breadth of possibilities
+                    //vector by calculating the SPAN of the states separately, then OR'ing them together
                     foreach (var positionField in typeFields) {
 
-                        //Compute backward half
-                        
-                        //Compute forward states
-                        
-                        //Save
-                    }
+                        var spans = new List<SprigPositionVector>();
 
+                        var posAttr = (PositionAttribute) positionField.GetCustomAttribute(typeof(PositionAttribute));
+                        var pos = (Position) positionField.GetValue(null);
+                        
+                        //Find initial position
+                        var initialPosition = pos;
+                        var lastSuperPosition = backwardDictionary[pos];
+
+                        while (!initialPosition.Equals(lastSuperPosition)) {
+                            initialPosition = lastSuperPosition;
+
+                            var eigenValues = initialPosition.GetEigenValues();
+                            lastSuperPosition = Position.Alloc(initialPosition.Type);
+
+                            foreach (var eigenValue in eigenValues) {
+                                lastSuperPosition |= backwardDictionary[eigenValue];
+                            }
+                        }
+
+                        //Calculate backward spans, and stop when we hit a position that matches the initial position
+                        var shift = posAttr.Length;
+                        var currentPosition = pos;
+                        var set = new HashSet<HelperNode>();
+                        
+                        while (!currentPosition.Equals(initialPosition)) {
+                            
+                        }
+                        
+                        //Find terminal position
+                        
+                        //Calculate forward spans, and stop when we hit a position that matches the initial position
+
+                        //Save out computed vector
+                        var computedVector = spans[0];
+
+                        for (var i = 1; i < spans.Count; i++) {
+                            computedVector |= spans[i];
+                        }
+                        
+                        preComputedSprigs[pos] = new PositionMetaData(computedVector, shift);
+                    }
+                }
+            }
+
+
+            private class HelperNode {
+                
+                public Position value { get; }
+                
+                public ulong remainingLength { get; }
+                
+                public HelperNode(Position value, ulong remainingLength) {
+                    this.value = value;
+                    this.remainingLength = remainingLength;
                 }
             }
 
             #region FUNCTIONS
             
             //Todo - Remake compiler functions to account for the need to compile constraints for various scenarios,
-            //including applying crumple for diff chains, getting the breadth of timelines for both positions AND
-            //position buffers, etc
 
             #endregion
 
-            private class MetaData
+            private class TypeMetaData
             {
                 public Dictionary<string, Dictionary<Position, Position>> LateralTranslation { get; }
                 
-                public Dictionary<Position, SprigPositionVector> PreComputedSprigs { get; }
+                public Dictionary<Position, PositionMetaData> PreComputedVectors { get; }
                 
-                public MetaData()
+                public TypeMetaData()
                 {
                     LateralTranslation = new Dictionary<string, Dictionary<Position, Position>>();
-                    PreComputedSprigs = new Dictionary<Position, SprigPositionVector>();
+                    PreComputedVectors = new Dictionary<Position, PositionMetaData>();
                 }
 
                 public Position Translate(string key, Position input)
@@ -242,6 +287,7 @@ namespace DynamicTimelineFramework.Core
                     {
                         output = LateralTranslation[key][input];
                     }
+                    
                     catch (InvalidCastException)
                     {
                         //This means that the key given does not match the type of the lateral object
@@ -261,14 +307,39 @@ namespace DynamicTimelineFramework.Core
                     while (currentIn.Last != null)
                     {
                         currentIn = currentIn.Last;
-                        
-                        currentOut.Last = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()), operativeSlice);
 
-                        currentOut = (PositionNode) currentOut.Last;
+                        var lastTranslate = Translate(key, (Position) currentIn.SuperPosition.Copy());
+
+                        if (lastTranslate.Equals(currentOut.SuperPosition)) {
+                            currentOut.Index = currentIn.Index;
+                        }
+                        
+                        else {
+                            currentOut.Last = new PositionNode(null, currentIn.Index, lastTranslate, operativeSlice);
+                            currentOut = (PositionNode) currentOut.Last;
+                        }
                     }
 
                     return output;
 
+                }
+
+                public SprigPositionVector GetVector(Position pos) {
+                    return PreComputedVectors[pos].PositionVector;
+
+                }
+            }
+
+
+            private class PositionMetaData {
+                
+                public SprigPositionVector PositionVector { get; }
+                
+                public ulong Length { get; }
+                
+                public PositionMetaData(SprigPositionVector positionVector, ulong length) {
+                    PositionVector = positionVector;
+                    this.Length = length;
                 }
             }
         }
