@@ -18,14 +18,34 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
         
         #endregion
-        
-        public Slice Slice { get; }
+
+        private Slice _slice;
+
+        public Slice Slice
+        {
+            get => _slice;
+            
+            set
+            {
+                _slice = value;
+                var head = (PositionNode) Head;
+                head.OperativeSlice = value;
+            }
+        }
+
         public Node<Position>.INode Head { get; private set; }
 
         public SprigPositionVector(Slice slice, Node<Position>.INode head)
         {
-            Slice = slice;
             Head = head;
+            Slice = slice;
+
+        }
+        
+        public SprigPositionVector(Slice slice, Node<Position>.INode head)
+        {
+            Head = head;
+            Slice = slice;
 
         }
         
