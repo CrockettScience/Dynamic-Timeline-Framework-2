@@ -4,53 +4,45 @@ using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class SprigPositionVector : ISprigVector<Position>
+    internal class SprigPositionVector : ISprigVector<Position>, IOperativeSliceProvider
     {
         
         #region STATIC
 
         public static SprigPositionVector operator &(SprigPositionVector left, SprigPositionVector right) {
-            return new SprigPositionVector(left.Slice, Node<Position>.And(left.Head, right.Head));
+            return new SprigPositionVector(left.OperativeSlice, Node<Position>.And(left.Head, right.Head));
         }
         
         public static SprigPositionVector operator |(SprigPositionVector left, SprigPositionVector right) {
-            return new SprigPositionVector(left.Slice, Node<Position>.Or(left.Head, right.Head));
+            return new SprigPositionVector(left.OperativeSlice, Node<Position>.Or(left.Head, right.Head));
         }
         
         #endregion
 
-        private Slice _slice;
+        private PositionNode _head;
 
-        public Slice Slice
+        public Slice OperativeSlice { get; set; }
+
+        public Node<Position>.INode Head
         {
-            get => _slice;
-            
-            set
+            get => _head;
+
+            private set
             {
-                _slice = value;
-                var head = (PositionNode) Head;
-                head.OperativeSlice = value;
+                _head = (PositionNode) value;
+                _head.OperativeSliceProvider = this;
             }
         }
 
-        public Node<Position>.INode Head { get; private set; }
-
-        public SprigPositionVector(Slice slice, Node<Position>.INode head)
+        public SprigPositionVector(Slice operativeSlice, Node<Position>.INode head)
         {
+            OperativeSlice = operativeSlice;
             Head = head;
-            Slice = slice;
-
-        }
-        
-        public SprigPositionVector(Slice slice, Node<Position>.INode head)
-        {
-            Head = head;
-            Slice = slice;
 
         }
         
         public ISprigVector<Position> Copy() {
-            return new SprigPositionVector(Slice, Head.Copy());
+            return new SprigPositionVector(OperativeSlice, Head.Copy());
         }
         
         public void ShiftForward(ulong amount) {

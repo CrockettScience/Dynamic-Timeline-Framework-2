@@ -8,8 +8,8 @@ namespace DynamicTimelineFramework.Internal.Sprig
     {
         private Position _position;
 
-        private Slice _opSlice;
-
+        private IOperativeSliceProvider _operativeSliceProvider;
+        
         private PositionNode _last;
         
         public Position SuperPosition
@@ -23,6 +23,17 @@ namespace DynamicTimelineFramework.Internal.Sprig
             }
         }
 
+        public IOperativeSliceProvider OperativeSliceProvider
+        {
+            get => _operativeSliceProvider;
+            
+            set
+            {
+                _operativeSliceProvider = value;
+                _last._operativeSliceProvider = _operativeSliceProvider;
+            }
+        }
+
         public Node<Position>.INode Last
         {
             get => _last;
@@ -30,40 +41,29 @@ namespace DynamicTimelineFramework.Internal.Sprig
             set
             {
                 _last = (PositionNode) value;
-                _last.OperativeSlice = _opSlice;
+                _last._operativeSliceProvider = _operativeSliceProvider;
             }
         }
 
         public ulong Index { get; set; }
 
-        public Slice OperativeSlice
-        {
-            get => _opSlice;
-            
-            set
-            {
-                _opSlice = value;
-                var last = (PositionNode) Last;
-                last.OperativeSlice = value;
-            }
-        }
+        public Slice OperativeSlice => OperativeSliceProvider.OperativeSlice;
 
         public Node<Position>.INode MakeNode(Node<Position>.INode last, ulong index, Position superPosition)
         {
-            return new PositionNode(last, index, superPosition, OperativeSlice);
+            return new PositionNode(last, index, superPosition);
         }
 
-        public PositionNode(Node<Position>.INode last, ulong index, Position superPosition, Slice operativeSlice)
+        public PositionNode(Node<Position>.INode last, ulong index, Position superPosition)
         {
             Last = last;
             Index = index;
             SuperPosition = superPosition;
-            OperativeSlice = operativeSlice;
         }
 
         public Node<Position>.INode Copy()
         {
-            return new PositionNode(Last.Copy(), Index, (Position) SuperPosition.Copy(), OperativeSlice);
+            return new PositionNode(Last.Copy(), Index, (Position) SuperPosition.Copy());
         }
     }
 }

@@ -301,8 +301,8 @@ namespace DynamicTimelineFramework.Core
                 {
                      
                     var currentIn = input.Head;
-                    var currentOut = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()), operativeSlice);
-                    var output = new SprigPositionVector(input.Slice, currentOut);
+                    var currentOut = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
+                    var output = new SprigPositionVector(operativeSlice, currentOut);
 
                     while (currentIn.Last != null)
                     {
@@ -315,7 +315,7 @@ namespace DynamicTimelineFramework.Core
                         }
                         
                         else {
-                            currentOut.Last = new PositionNode(null, currentIn.Index, lastTranslate, operativeSlice);
+                            currentOut.Last = new PositionNode(null, currentIn.Index, lastTranslate);
                             currentOut = (PositionNode) currentOut.Last;
                         }
                     }
