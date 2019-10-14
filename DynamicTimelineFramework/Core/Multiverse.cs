@@ -32,7 +32,7 @@ namespace DynamicTimelineFramework.Core
             
             //Instantiate the multiverse timeline
             SprigBuilder = new SprigBuilder(BaseUniverse.Diff);
-
+            
             _multiverse = new Dictionary<Diff, Universe>()
             {
                 {BaseUniverse.Diff, BaseUniverse}
@@ -157,9 +157,8 @@ namespace DynamicTimelineFramework.Core
                                 
                                 //Store the reverse translation using a confirmation mask
                                 
-                                //If there's no metadata, that either means that the type 
-                                //isn't assignable from DTFObject, or that the mvIdentifierKey
-                                //isn't the one that was given.
+                                //If there's no metadata, that means that the type 
+                                //isn't assignable from DTFObject
                                 
                                 if(!_objectMetaData.ContainsKey(attribute.Type))
                                     throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name);

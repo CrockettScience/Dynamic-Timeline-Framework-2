@@ -10,11 +10,11 @@ namespace DynamicTimelineFramework.Core
         public Universe Parent => Diff.Parent;
         internal Sprig Sprig { get; }
 
-        internal Universe(Diff diff)
+        public Universe(Diff diff)
         {
             Diff = diff;
             Owner = diff.Parent.Owner;
-            Sprig = Owner.SprigBuilder.RegisterDiff(diff);
+            Sprig = Owner.SprigBuilder.GetSprig(diff);
         }
 
         /// <summary>

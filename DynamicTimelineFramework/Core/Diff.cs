@@ -10,11 +10,28 @@ namespace DynamicTimelineFramework.Core
         internal Universe Parent { get; }
         internal List<SprigPositionVector> Delta { get; }
 
-        internal Diff(ulong date, Universe parent, List<SprigPositionVector> delta)
+        internal Diff(ulong date, Universe allegingParent, List<SprigPositionVector> delta)
         {
             Date = date;
-            Parent = parent;
             Delta = delta;
+
+            var parent = allegingParent;
+
+            while (parent.Diff.Date <= Date)
+                parent = parent.Parent;
+            
+            Parent = parent;
+        }
+
+        internal void InstallChanges(Sprig sprig) {
+            //Todo - Called by the sprig builder after being registered. 
+            //This command constrains the sprig, given by the sprig builder,
+            //by the proper mask just prior to date.
+            //Once on the given sprig, then on the parent universe's sprig
+            
+            
+            
+            
         }
 
         public override bool Equals(object obj)

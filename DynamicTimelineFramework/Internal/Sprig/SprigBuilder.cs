@@ -16,9 +16,22 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             _indexedSpace = 0;
         }
 
-        public Sprig RegisterDiff(Diff diff)
+        public Sprig GetSprig(Diff diff)
         {
-            throw new NotImplementedException();
+            //Get Diff Chain
+            var diffChain = new LinkedList<Diff>();
+            var current = diff;
+
+            while (current != null) {
+                diffChain.AddFirst(current);
+                current = current.Parent.Diff;
+            }
+
+            var newSprig =  _spine.AddBranch(diffChain);
+            
+            diff.InstallChanges(newSprig);
+
+            return newSprig;
         }
 
         public Slice RegisterObject(DTFObject obj)
