@@ -8,7 +8,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public Spine(Diff rootDiff)
         {
-            _root = new SpineBranchNode(0);
+            _root = new SpineBranchNode(0, null);
             _root.AddBranch(rootDiff);
         }
 
@@ -49,17 +49,21 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 
                 //Current is looking at the branch node that comes before the spine
                 //node the new branch needs to be between
-                if (current.Date == lookingForDiff.Date) {
+                if (current.Date == diffToAdd.Date) {
                     return current.AddBranch(lookingForDiff);
                 }
                 
                 var atDiffNext = current[nextDiff];
-                var intermediary = new SpineBranchNode(lookingForDiff.Date);
+                var intermediary = new SpineBranchNode(lookingForDiff.Date, atDiffNext.RootSprig);
                 current[nextDiff] = intermediary;
 
                 intermediary[nextDiff] = atDiffNext;
                 return intermediary.AddBranch(lookingForDiff);
             }
+        }
+
+        public void RootSprig() {
+            
         }
     }
 }

@@ -8,6 +8,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
     {
         private BufferNode _head;
         
+        public Diff Diff { get; }
+        
         public BufferNode Head
         {
             get => _head;
@@ -17,10 +19,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 //Todo - We need to inform the spine that a new head is assigned, which will inform the neighboring branches
             }
         }
-
-        public Sprig()
+        
+        public Sprig(ulong index, Sprig root, Diff diff)
         {
-            Head = new BufferNode(null, 0, new PositionBuffer());
+            Head = new BufferNode(root?.GetBufferNode(index - 1), index, new PositionBuffer());
+            Diff = diff;
         }
 
         public void Alloc(int space, int startIndex)
@@ -39,7 +42,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
-        public Position GetPosition(ulong date, DTFObject obj)
+        public Position GetPosition(ulong date, DTFObject obj) {
+            var bNode = GetBufferNode(date);
+
+            var slice = new Slice(bNode.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
+            
+            return new Position(obj.GetType(), slice);
+        }
+        
+        public BufferNode GetBufferNode(ulong date)
         {
             var current = Head;
 
@@ -48,9 +59,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 current = (BufferNode) current.Last;
             }
 
-            var slice = new Slice(current.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
-            
-            return new Position(obj.GetType(), slice);
+            return current;
         }
         
         public void And<T>(ISprigVector<T> other) where T : BinaryPosition
