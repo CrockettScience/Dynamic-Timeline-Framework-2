@@ -10,6 +10,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public Diff Diff { get; }
         
+        public SprigBuilder Builder { get; set; }
+        
         public BufferNode Head
         {
             get => _head;
@@ -17,6 +19,16 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             set
             {
                 //Todo - We need to inform the spine that a new head is assigned, which will inform the neighboring branches
+                
+                //Get Diff Chain
+                var diffChain = Diff.GetDiffChain();
+                
+                //Use the Diff Chain to navigate through the Spine tree and realign the branch references
+                using (var diffEnum = diffChain.GetEnumerator()) {
+                    
+                    
+                    
+                }
             }
         }
         

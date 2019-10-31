@@ -34,6 +34,18 @@ namespace DynamicTimelineFramework.Core
             
         }
 
+        public LinkedList<Diff> GetDiffChain() {
+            var diffChain = new LinkedList<Diff>();
+            var current = this;
+
+            while (current != null) {
+                diffChain.AddFirst(current);
+                current = current.Parent.Diff;
+            }
+
+            return diffChain;
+        }
+
         public override bool Equals(object obj)
         {
             if (!(obj is Diff other)) return false;

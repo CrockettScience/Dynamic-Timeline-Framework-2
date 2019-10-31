@@ -4,12 +4,13 @@ using DynamicTimelineFramework.Core;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class Spine {
-        private SpineBranchNode _root;
+        private readonly SpineBranchNode _root;
 
-        public Spine(Diff rootDiff)
+        public Spine(Diff rootDiff, Universe rootUniverse)
         {
             _root = new SpineBranchNode(0, null);
-            _root.AddBranch(rootDiff);
+            
+            rootUniverse.Sprig = _root.AddBranch(rootDiff);
         }
 
         public void Alloc(int space, int startIndex)
@@ -60,10 +61,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 intermediary[nextDiff] = atDiffNext;
                 return intermediary.AddBranch(lookingForDiff);
             }
-        }
-
-        public void RootSprig() {
-            
         }
     }
 }

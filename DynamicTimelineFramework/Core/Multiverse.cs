@@ -22,16 +22,14 @@ namespace DynamicTimelineFramework.Core
 
         /// <summary>
         /// Instantiates a new multiverse with a blank base universe and compiles the system of objects
-        /// the share the identifier key in the DTFObjectDefinition attribute
         /// </summary>
-        /// <param name="id">The key to identify objects the object compiler will look for</param>
         public Multiverse()
         {
             // Set up the big bang diff
             BaseUniverse = new Universe(this);
             
             //Instantiate the multiverse timeline
-            SprigBuilder = new SprigBuilder(BaseUniverse.Diff);
+            SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
             
             _multiverse = new Dictionary<Diff, Universe>()
             {

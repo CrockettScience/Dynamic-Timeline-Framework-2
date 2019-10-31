@@ -8,13 +8,13 @@ namespace DynamicTimelineFramework.Core
         internal readonly Diff Diff;
         public Multiverse Owner { get; }
         public Universe Parent => Diff.Parent;
-        internal Sprig Sprig { get; }
+        internal Sprig Sprig { get; set; }
 
         public Universe(Diff diff)
         {
             Diff = diff;
             Owner = diff.Parent.Owner;
-            Sprig = Owner.SprigBuilder.GetSprig(diff);
+            Sprig = Owner.SprigBuilder.BuildSprig(diff);
         }
 
         /// <summary>

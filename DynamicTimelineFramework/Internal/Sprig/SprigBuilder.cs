@@ -10,27 +10,21 @@ namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SprigBuilder {
         private readonly Spine _spine;
         private int _indexedSpace;
-        public SprigBuilder(Diff rootDiff)
+        
+        public SprigBuilder(Diff rootDiff, Universe rootUniverse)
         {
-            _spine = new Spine(rootDiff);
+            _spine = new Spine(rootDiff, rootUniverse);
             _indexedSpace = 0;
         }
 
-        public Sprig GetSprig(Diff diff)
+        public Sprig BuildSprig(Diff diff)
         {
-            //Get Diff Chain
-            var diffChain = new LinkedList<Diff>();
-            var current = diff;
-
-            while (current != null) {
-                diffChain.AddFirst(current);
-                current = current.Parent.Diff;
-            }
-
-            var newSprig =  _spine.AddBranch(diffChain);
+            var newSprig =  _spine.AddBranch(diff.GetDiffChain());
             
             diff.InstallChanges(newSprig);
 
+            newSprig.Builder = this;
+            
             return newSprig;
         }
 
