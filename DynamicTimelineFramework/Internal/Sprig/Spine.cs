@@ -4,19 +4,19 @@ using DynamicTimelineFramework.Core;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class Spine {
-        private readonly SpineBranchNode _root;
+        public SpineBranchNode Root { get; }
 
         public Spine(Diff rootDiff, Universe rootUniverse)
         {
-            _root = new SpineBranchNode(0, null);
+            Root = new SpineBranchNode(0, null);
             
-            rootUniverse.Sprig = _root.AddBranch(rootDiff);
+            rootUniverse.Sprig = Root.AddBranch(rootDiff);
         }
 
         public void Alloc(int space, int startIndex)
         {
             //Though somewhat recursive, basically amounts to a Depth-First iteration of the spine tree
-            _root.Alloc(space, startIndex);
+            Root.Alloc(space, startIndex);
         }
 
         public Sprig AddBranch(LinkedList<Diff> diffChain) {
@@ -24,7 +24,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             var diffToAdd = diffChain.Last.Value;
             
             using (var diffEnum = diffChain.GetEnumerator()) {
-                var current = _root;
+                var current = Root;
+                
+                //Todo - am I accounting for the edge case of 1 diff only?
 
                 diffEnum.MoveNext();
                 var atDiff = diffEnum.Current;

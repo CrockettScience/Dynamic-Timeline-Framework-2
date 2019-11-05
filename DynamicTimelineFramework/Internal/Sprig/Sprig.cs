@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
@@ -18,16 +19,62 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
             set
             {
-                //Todo - We need to inform the spine that a new head is assigned, which will inform the neighboring branches
+                _head = value;
                 
                 //Get Diff Chain
                 var diffChain = Diff.GetDiffChain();
                 
+                //Get Spine
+                var spine = Builder.Spine;
+                
                 //Use the Diff Chain to navigate through the Spine tree and realign the branch references
                 using (var diffEnum = diffChain.GetEnumerator()) {
                     
+                    //Todo - am I accounting for the edge case of 1 diff only?
+
+                    diffEnum.MoveNext();
+                    var currentDiff = diffEnum.Current;
                     
-                    
+                    diffEnum.MoveNext();
+                    var lookingForDiff = diffEnum.Current;
+
+                    SpineNode currentNode = spine.Root;
+
+                    while (currentNode is SpineBranchNode branchNode) {
+                        Diff nextDiff;
+
+                        if (branchNode.Contains(lookingForDiff)) {
+                            currentDiff = lookingForDiff;
+
+                            diffEnum.MoveNext();
+                            lookingForDiff = diffEnum.Current;
+
+                            nextDiff = lookingForDiff;
+                        }
+
+                        else nextDiff = currentDiff;
+
+                        //Realign all branches
+                        foreach (var diff in branchNode) {
+                            
+                            //If it's the branch we're moving to next, we need to change it's bNode to the bNode on the new head
+                            if (Equals(diff, nextDiff)) {
+                                branchNode.GetBranch(diff).BNode = GetBufferNode(branchNode.Date);
+                            }
+
+                            //If it's a different branch, we need to change the bNode's previous to reflect the new structure
+                            else {
+                                var bNode = branchNode.GetBranch(diff).BNode;
+                                bNode.Last = GetBufferNode(bNode.Index);
+                                
+                                //Todo - Mask the other branch here to reflect the change
+                                // - Could be challenging. Consider flagging branch for "lazy" maintenance?
+                                // - Actually, lazy maintenance could be more efficient anyways
+                            }
+                        }
+
+                        currentNode = branchNode[nextDiff];
+                    }
                 }
             }
         }
@@ -62,7 +109,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return new Position(obj.GetType(), slice);
         }
         
-        public BufferNode GetBufferNode(ulong date)
+        private BufferNode GetBufferNode(ulong date)
         {
             var current = Head;
 

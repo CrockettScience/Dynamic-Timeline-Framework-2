@@ -1,9 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class SpineBranchNode : SpineNode
+    internal class SpineBranchNode : SpineNode, IEnumerable<Diff>
     {
         private readonly Dictionary<Diff, Branch> _branchMap;
         public ulong Date { get; }
@@ -42,7 +43,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
-        private class Branch {
+        public Branch GetBranch(Diff diff) {
+            return _branchMap[diff];
+        }
+
+        public class Branch {
             public SpineNode SNode { get; set; }
             public BufferNode BNode { get; set; }
             
@@ -50,6 +55,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 SNode = sNode;
                 BNode = bNode;
             }
+        }
+
+
+        public IEnumerator<Diff> GetEnumerator() {
+            return _branchMap.Keys.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
     }
 }

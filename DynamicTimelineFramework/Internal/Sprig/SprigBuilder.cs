@@ -8,18 +8,18 @@ using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SprigBuilder {
-        private readonly Spine _spine;
+        public Spine Spine { get; }
         private int _indexedSpace;
         
         public SprigBuilder(Diff rootDiff, Universe rootUniverse)
         {
-            _spine = new Spine(rootDiff, rootUniverse);
+            Spine = new Spine(rootDiff, rootUniverse);
             _indexedSpace = 0;
         }
 
         public Sprig BuildSprig(Diff diff)
         {
-            var newSprig =  _spine.AddBranch(diff.GetDiffChain());
+            var newSprig =  Spine.AddBranch(diff.GetDiffChain());
             
             diff.InstallChanges(newSprig);
 
@@ -37,7 +37,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             var leftBound = _indexedSpace;
             _indexedSpace += space;
             
-            _spine.Alloc(space, leftBound);
+            Spine.Alloc(space, leftBound);
             
             return new Slice(leftBound, _indexedSpace);
 
