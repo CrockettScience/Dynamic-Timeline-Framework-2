@@ -68,8 +68,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                                 bNode.Last = GetBufferNode(bNode.Index);
                                 
                                 //Todo - Mask the other branch here to reflect the change
-                                // - Could be challenging. Consider flagging branch for "lazy" maintenance?
-                                // - Actually, lazy maintenance could be more efficient anyways
                             }
                         }
 
