@@ -4,6 +4,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
     internal abstract class SpineNode
     {
         public abstract void Alloc(int space, int startIndex);
-        public abstract Sprig RootSprig { get; }
+        public abstract Sprig ParentSprig { get; }
     }
 }

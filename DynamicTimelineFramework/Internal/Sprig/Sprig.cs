@@ -29,27 +29,25 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 
                 //Use the Diff Chain to navigate through the Spine tree and realign the branch references
                 using (var diffEnum = diffChain.GetEnumerator()) {
-                    
-                    //Todo - am I accounting for the edge case of 1 diff only?
 
                     diffEnum.MoveNext();
                     var currentDiff = diffEnum.Current;
                     
                     diffEnum.MoveNext();
-                    var lookingForDiff = diffEnum.Current;
+                    var nextTurn = diffEnum.Current;
 
-                    SpineNode currentNode = spine.Root;
+                    SpineNode currentNode = spine.RootBranch;
 
                     while (currentNode is SpineBranchNode branchNode) {
                         Diff nextDiff;
 
-                        if (branchNode.Contains(lookingForDiff)) {
-                            currentDiff = lookingForDiff;
+                        if (nextTurn != null && branchNode.Contains(nextTurn)) {
+                            currentDiff = nextTurn;
 
                             diffEnum.MoveNext();
-                            lookingForDiff = diffEnum.Current;
+                            nextTurn = diffEnum.Current;
 
-                            nextDiff = lookingForDiff;
+                            nextDiff = nextTurn;
                         }
 
                         else nextDiff = currentDiff;
