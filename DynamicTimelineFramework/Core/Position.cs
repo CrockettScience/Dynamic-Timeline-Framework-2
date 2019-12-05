@@ -24,13 +24,13 @@ namespace DynamicTimelineFramework.Core
             return pos;
         }
         
-        public static Position Alloc(Type type, bool defaultValue = false)
+        public static Position Alloc(Type type, bool superPosition = false)
         {
             //Make a new Buffer
             var buffer = new PositionBuffer();
             
             //Make a position out of the buffer
-            var pos = buffer.Alloc(type, defaultValue);
+            var pos = buffer.Alloc(type, superPosition);
 
             return pos;
         }

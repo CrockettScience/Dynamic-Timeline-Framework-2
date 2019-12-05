@@ -99,10 +99,13 @@ namespace DynamicTimelineFramework.Core
                     var forwardDictionary = new Dictionary<Position, Position>();
                     var backwardDictionary = new Dictionary<Position, Position>();
                     
+                    //We need the lengths for later
+                    var lengthsDictionary = new Dictionary<Position, ulong>();
+                    
                     foreach (var field in typeFields)
                     {
-                        var forwardTransitionAttribute = (PositionAttribute) field.GetCustomAttribute(PositionAttr);
-                        var lateralConstraintAttributes = field.GetCustomAttributes(LateralConstraintAttr) as LateralConstraintAttribute[];
+                        var positionAttribute = (PositionAttribute) field.GetCustomAttribute(PositionAttr);
+                        var lateralConstraintAttributes = (LateralConstraintAttribute[]) field.GetCustomAttributes(LateralConstraintAttr);
 
                         //Perform a series of run time checks, and add to some preliminary structures
                         var fieldType = field.FieldType;
@@ -122,8 +125,11 @@ namespace DynamicTimelineFramework.Core
                         //Use the position attribute to precompute a sprig vector about the position
                         var fieldValue = (Position) field.GetValue(null);
                         
+                        //Save out length
+                        lengthsDictionary[fieldValue] = positionAttribute.Length;
+                        
                         //Store the forward Dictionary
-                        var forwardMask = Position.Alloc(type, forwardTransitionAttribute.ForwardTransitionSetBits);
+                        var forwardMask = Position.Alloc(type, positionAttribute.ForwardTransitionSetBits);
                         forwardDictionary[fieldValue] = forwardMask;
                         
                         //Store the reverse Dictionary
@@ -195,15 +201,29 @@ namespace DynamicTimelineFramework.Core
                     
                     var preComputedSprigs = _objectMetaData[type].PreComputedVectors;
                     
-                    //When we collapse to a position, the collapsed-to date can be anywhere from
+                    //Helper method for span creation
+                    SprigPositionVector MakeSpanVector(Position pos, long indexOffset, ulong span) {
+                        var head = new PositionNode(null, SPRIG_CENTER + (ulong) indexOffset + span, Position.Alloc(pos.Type, true)) {
+                            Last = new PositionNode(null, SPRIG_CENTER + (ulong) indexOffset, pos) {
+                                Last = new PositionNode(null, 0, Position.Alloc(pos.Type, true))
+                            }
+                        };
+                        
+                        return new SprigPositionVector(default , head);
+                    }
+
+                    //When we collapse to a position, the focal date can be anywhere from
                     //the beginning of the positions length or the end. So, we can compute the
                     //vector by calculating the SPAN of the states separately, then OR'ing them together
                     foreach (var positionField in typeFields) {
 
-                        var spans = new List<SprigPositionVector>();
-
-                        var posAttr = (PositionAttribute) positionField.GetCustomAttribute(typeof(PositionAttribute));
+                        var spanVectors = new List<SprigPositionVector>();
                         var pos = (Position) positionField.GetValue(null);
+                        var shift = lengthsDictionary[pos];
+                        var span = shift + shift - 1;
+                        
+                        //Add span for pos
+                        spanVectors.Add(MakeSpanVector(pos,  0 - (long) (span / 2), span));
                         
                         //Find initial position
                         var initialPosition = pos;
@@ -221,23 +241,41 @@ namespace DynamicTimelineFramework.Core
                         }
 
                         //Calculate backward spans, and stop when we hit a position that matches the initial position
-                        var shift = posAttr.Length;
-                        var currentPosition = pos;
-                        var set = new HashSet<HelperNode>();
+                        var currentPosition = backwardDictionary[pos];
                         
+                        //We use helper nodes to keep track of where we are on the spans
+                        var precedingNodeVals = backwardDictionary[pos].GetEigenValues();
+                        var helperNodes = new List<HelperNode>();
+
+                        foreach (var precedingNodeVal in precedingNodeVals) 
+                            helperNodes.Add(new HelperNode(precedingNodeVal, lengthsDictionary[precedingNodeVal] - 1));
+
+                        var indexOffset = 0L - 1;
                         while (!currentPosition.Equals(initialPosition)) {
-                            
+                            //Find the node with the lowest remaining length
+                            var lowest = helperNodes[0].remainingLength;
+
+                            //Move offset to that node create span vector
+
+                            //Remove Node and subtract distance covered from remaining nodes
+
+                            //Add in removed node's preceding values
+
+                            //Set current position
                         }
+                        
+                        //Starting at this offset we're at now, the position will remain currentPosition all the way back to the beginning
+                        
                         
                         //Find terminal position
                         
                         //Calculate forward spans, and stop when we hit a position that matches the initial position
 
                         //Save out computed vector
-                        var computedVector = spans[0];
+                        var computedVector = spanVectors[0];
 
-                        for (var i = 1; i < spans.Count; i++) {
-                            computedVector |= spans[i];
+                        for (var i = 1; i < spanVectors.Count; i++) {
+                            computedVector |= spanVectors[i];
                         }
                         
                         preComputedSprigs[pos] = new PositionMetaData(computedVector, shift);
