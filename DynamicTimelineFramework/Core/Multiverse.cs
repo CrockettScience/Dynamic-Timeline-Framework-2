@@ -105,7 +105,7 @@ namespace DynamicTimelineFramework.Core
                     foreach (var field in typeFields)
                     {
                         var positionAttribute = (PositionAttribute) field.GetCustomAttribute(PositionAttr);
-                        var lateralConstraintAttributes = (LateralConstraintAttribute[]) field.GetCustomAttributes(LateralConstraintAttr);
+                        var lateralConstraintAttributes = field.GetCustomAttributes(LateralConstraintAttr) as LateralConstraintAttribute[];
 
                         //Perform a series of run time checks, and add to some preliminary structures
                         var fieldType = field.FieldType;
