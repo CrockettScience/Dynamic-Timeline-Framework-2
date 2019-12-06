@@ -100,7 +100,7 @@ namespace DynamicTimelineFramework.Core
                     var backwardDictionary = new Dictionary<Position, Position>();
                     
                     //We need the lengths for later
-                    var lengthsDictionary = new Dictionary<Position, ulong>();
+                    var lengthsDictionary = new Dictionary<Position, long>();
                     
                     foreach (var field in typeFields)
                     {
@@ -196,15 +196,51 @@ namespace DynamicTimelineFramework.Core
                             }
                         }
                     }
+
+                    #region Check
+
+                    foreach (var field in typeFields)
+                    {
+                        
+                        var pos = (Position) field.GetValue(null);
+                        var backwardVals = backwardDictionary[pos].GetEigenValues();
+                        var forwardVals = forwardDictionary[pos].GetEigenValues();
+
+                        var length = lengthsDictionary[pos];
+                        foreach (var backwardVal in backwardVals)
+                        {
+
+                            //All backward node values must have the same length
+                            if (lengthsDictionary[backwardVal] != length)
+                                throw new DTFObjectCompilerException(
+                                    "Position Field '" + field.Name + "' of Type '" + type.Name +
+                                    "' has one or more possible forward positions with mismatched lengths");
+
+                        }
+                        
+                        length = lengthsDictionary[pos];
+                        foreach (var forwardVal in forwardVals)
+                        {
+                            //All forward node values must have the same length
+                            if (lengthsDictionary[forwardVal] != length)
+                                throw new DTFObjectCompilerException(
+                                    "Position Field '" + field.Name + "' of Type '" + type.Name +
+                                    "' has one or more possible forward positions with mismatched lengths");
+
+                        }
+                    }
+
+                    #endregion
                     
                     //Todo - Compute Sprig position vectors
                     
                     var preComputedSprigs = _objectMetaData[type].PreComputedVectors;
                     
                     //Helper method for span creation
-                    SprigPositionVector MakeSpanVector(Position pos, long indexOffset, ulong span) {
-                        var head = new PositionNode(null, SPRIG_CENTER + (ulong) indexOffset + span, Position.Alloc(pos.Type, true)) {
-                            Last = new PositionNode(null, SPRIG_CENTER + (ulong) indexOffset, pos) {
+                    SprigPositionVector MakeSpanVector(Position pos, long startOffset, ulong span)
+                    {
+                        var head = new PositionNode(null, SPRIG_CENTER + (ulong) startOffset + span, Position.Alloc(pos.Type, true)) {
+                            Last = new PositionNode(null, SPRIG_CENTER + (ulong) startOffset, pos) {
                                 Last = new PositionNode(null, 0, Position.Alloc(pos.Type, true))
                             }
                         };
@@ -219,11 +255,12 @@ namespace DynamicTimelineFramework.Core
 
                         var spanVectors = new List<SprigPositionVector>();
                         var pos = (Position) positionField.GetValue(null);
-                        var shift = lengthsDictionary[pos];
-                        var span = shift + shift - 1;
+                        var length = lengthsDictionary[pos];
+                        var shift = length - 1;
+                        var span = (ulong) length + (ulong) shift;
                         
                         //Add span for pos
-                        spanVectors.Add(MakeSpanVector(pos,  0 - (long) (span / 2), span));
+                        spanVectors.Add(MakeSpanVector(pos, -shift, span));
                         
                         //Find initial position
                         var initialPosition = pos;
@@ -244,28 +281,63 @@ namespace DynamicTimelineFramework.Core
                         var currentPosition = backwardDictionary[pos];
                         
                         //We use helper nodes to keep track of where we are on the spans
-                        var precedingNodeVals = backwardDictionary[pos].GetEigenValues();
+                        var backwardNodeVals = currentPosition.GetEigenValues();
                         var helperNodes = new List<HelperNode>();
 
-                        foreach (var precedingNodeVal in precedingNodeVals) 
-                            helperNodes.Add(new HelperNode(precedingNodeVal, lengthsDictionary[precedingNodeVal] - 1));
-
-                        var indexOffset = 0L - 1;
+                        var indexOffset = 0UL;
+                        foreach (var backwardNodeVal in backwardNodeVals)
+                        {
+                            length = lengthsDictionary[backwardNodeVal];
+                            span = (ulong) length + (ulong) shift;
+                            helperNodes.Add(new HelperNode(backwardNodeVal, span, (ulong) length));
+                        }
+                        
                         while (!currentPosition.Equals(initialPosition)) {
-                            //Find the node with the lowest remaining length
-                            var lowest = helperNodes[0].remainingLength;
+                            //Find the node with the lowest distance to latest start
+                            var lowest = helperNodes[0];
 
-                            //Move offset to that node create span vector
+                            for (var i = 1; i < helperNodes.Count; i++)
+                                if (lowest.DistanceToLatestStart > helperNodes[i].DistanceToLatestStart)
+                                    lowest = helperNodes[i];
+                            
+                            helperNodes.Remove(lowest);
+                            
+                            var distanceChange = lowest.DistanceToLatestStart;
 
-                            //Remove Node and subtract distance covered from remaining nodes
+                            //Move offset to that node
+                            indexOffset -= distanceChange;
+                            lowest.ReduceDistance(distanceChange);
+                            
+                            //Create span vector
+                            length = lengthsDictionary[lowest.Value];
+                            span = (ulong) length + (ulong) shift;
+                            
+                            spanVectors.Add(MakeSpanVector(lowest.Value, -shift, span));
+
+                            //Subtract distance covered from remaining nodes
+                            foreach (var helperNode in helperNodes)
+                                helperNode.ReduceDistance(distanceChange);
 
                             //Add in removed node's preceding values
+                            backwardNodeVals = backwardDictionary[lowest.Value].GetEigenValues();
+                            foreach (var backwardNodeVal in backwardNodeVals)
+                            {
+                                length = lengthsDictionary[backwardNodeVal];
+                                span = (ulong) length + (ulong) shift;
+                                helperNodes.Add(new HelperNode(backwardNodeVal, span, (ulong) length));
+                            }
 
-                            //Set current position
+                            //Set current position to the OR of all the helper nodes
+
+                            currentPosition = helperNodes[0].Value;
+                            for(var i = 1; i < helperNodes.Count; i++)
+                            {
+                                currentPosition |= helperNodes[i].Value;
+                            }
                         }
                         
                         //Starting at this offset we're at now, the position will remain currentPosition all the way back to the beginning
-                        
+                        spanVectors.Add(MakeSpanVector(initialPosition, long.MinValue, SPRIG_CENTER - indexOffset - 1));
                         
                         //Find terminal position
                         
@@ -278,7 +350,7 @@ namespace DynamicTimelineFramework.Core
                             computedVector |= spanVectors[i];
                         }
                         
-                        preComputedSprigs[pos] = new PositionMetaData(computedVector, shift);
+                        preComputedSprigs[pos] = new PositionMetaData(computedVector, length);
                     }
                 }
             }
@@ -286,13 +358,22 @@ namespace DynamicTimelineFramework.Core
 
             private class HelperNode {
                 
-                public Position value { get; }
+                public Position Value { get; }
                 
-                public ulong remainingLength { get; }
+                public ulong DistanceToEarliestStart { get; set; }  
                 
-                public HelperNode(Position value, ulong remainingLength) {
-                    this.value = value;
-                    this.remainingLength = remainingLength;
+                public ulong DistanceToLatestStart { get; set; }
+                
+                public HelperNode(Position value, ulong distanceToEarliestStart, ulong distanceToLatestStart) {
+                    Value = value;
+                    DistanceToEarliestStart = distanceToEarliestStart;
+                    DistanceToLatestStart = distanceToLatestStart;
+                }
+
+                public void ReduceDistance(ulong amount)
+                {
+                    DistanceToEarliestStart -= amount;
+                    DistanceToLatestStart -= amount;
                 }
             }
 
@@ -360,7 +441,7 @@ namespace DynamicTimelineFramework.Core
                 }
 
                 public SprigPositionVector GetVector(Position pos) {
-                    return PreComputedVectors[pos].PositionVector;
+                    return PreComputedVectors[pos].TimelineVector;
 
                 }
             }
@@ -368,13 +449,13 @@ namespace DynamicTimelineFramework.Core
 
             private class PositionMetaData {
                 
-                public SprigPositionVector PositionVector { get; }
+                public SprigPositionVector TimelineVector { get; }
                 
-                public ulong Length { get; }
+                public long Length { get; }
                 
-                public PositionMetaData(SprigPositionVector positionVector, ulong length) {
-                    PositionVector = positionVector;
-                    this.Length = length;
+                public PositionMetaData(SprigPositionVector timelineVector, long length) {
+                    TimelineVector = timelineVector;
+                    Length = length;
                 }
             }
         }
