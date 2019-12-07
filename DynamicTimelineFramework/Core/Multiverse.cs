@@ -25,19 +25,19 @@ namespace DynamicTimelineFramework.Core
         /// </summary>
         public Multiverse()
         {
+            //Run the Compiler
+            Compiler = new ObjectCompiler(Assembly.GetCallingAssembly());
+            
             // Set up the big bang diff
             BaseUniverse = new Universe(this);
             
             //Instantiate the multiverse timeline
-            SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
+            //SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
             
             _multiverse = new Dictionary<Diff, Universe>()
             {
                 {BaseUniverse.Diff, BaseUniverse}
             };
-            
-            //Run the Compiler
-            Compiler = new ObjectCompiler(Assembly.GetCallingAssembly());
             
         }
 
@@ -77,12 +77,15 @@ namespace DynamicTimelineFramework.Core
                 //Go through the types and create their metadata
                 foreach (var type in types)
                 {
-                    if (!type.IsAssignableFrom(typeof(DTFObject))) continue;
+                    if (!type.IsSubclassOf(typeof(DTFObject))) continue;
 
                     if (!(type.GetCustomAttribute(DTFObjectDefAttr) is DTFObjectDefinitionAttribute definitionAttr))
                         throw new DTFObjectCompilerException(type.Name + " is assignable from " + DTFObjectType.Name +
                                                              " but does not have a " + DTFObjectDefAttr.Name +
                                                              " defined.");
+                    
+                    dtfTypes.Add(type);
+                    _objectMetaData[type] = new TypeMetaData();
                 }
 
                 foreach (var type in dtfTypes)
@@ -232,18 +235,31 @@ namespace DynamicTimelineFramework.Core
 
                     #endregion
                     
-                    //Todo - Compute Sprig position vectors
-                    
                     var preComputedSprigs = _objectMetaData[type].PreComputedVectors;
                     
                     //Helper method for span creation
-                    SprigPositionVector MakeSpanVector(Position pos, long startOffset, ulong span)
-                    {
-                        var head = new PositionNode(null, SPRIG_CENTER + (ulong) startOffset + span, Position.Alloc(pos.Type, true)) {
-                            Last = new PositionNode(null, SPRIG_CENTER + (ulong) startOffset, pos) {
+                    SprigPositionVector MakeSpanVector(Position pos, ulong start, ulong span) {
+                        PositionNode head;
+                        if (start == 0) {
+                            head = new PositionNode(null, span, Position.Alloc(pos.Type, true)) {
+                                Last = new PositionNode(null, 0, pos)
+                            };
+                            
+                        }
+                        
+                        else if (start + span == ulong.MaxValue) {
+                            head = new PositionNode(null, start, pos) {
                                 Last = new PositionNode(null, 0, Position.Alloc(pos.Type, true))
-                            }
-                        };
+                            };
+                        }
+                        
+                        else {
+                            head = new PositionNode(null, start + span, Position.Alloc(pos.Type, true)) {
+                                Last = new PositionNode(null, start, pos) {
+                                    Last = new PositionNode(null, 0, Position.Alloc(pos.Type, true))
+                                }
+                            };
+                        }
                         
                         return new SprigPositionVector(default , head);
                     }
@@ -260,88 +276,148 @@ namespace DynamicTimelineFramework.Core
                         var span = (ulong) length + (ulong) shift;
                         
                         //Add span for pos
-                        spanVectors.Add(MakeSpanVector(pos, -shift, span));
-                        
-                        //Find initial position
-                        var initialPosition = pos;
-                        var lastSuperPosition = backwardDictionary[pos];
+                        spanVectors.Add(MakeSpanVector(pos, SPRIG_CENTER - (ulong) shift, span));
 
-                        while (!initialPosition.Equals(lastSuperPosition)) {
-                            initialPosition = lastSuperPosition;
-
-                            var eigenValues = initialPosition.GetEigenValues();
-                            lastSuperPosition = Position.Alloc(initialPosition.Type);
-
-                            foreach (var eigenValue in eigenValues) {
-                                lastSuperPosition |= backwardDictionary[eigenValue];
-                            }
-                        }
-
-                        //Calculate backward spans, and stop when we hit a position that matches the initial position
-                        var currentPosition = backwardDictionary[pos];
-                        
-                        //We use helper nodes to keep track of where we are on the spans
-                        var backwardNodeVals = currentPosition.GetEigenValues();
-                        var helperNodes = new List<HelperNode>();
-
-                        var indexOffset = 0UL;
-                        foreach (var backwardNodeVal in backwardNodeVals)
                         {
-                            length = lengthsDictionary[backwardNodeVal];
-                            span = (ulong) length + (ulong) shift;
-                            helperNodes.Add(new HelperNode(backwardNodeVal, span, (ulong) length));
-                        }
-                        
-                        while (!currentPosition.Equals(initialPosition)) {
-                            //Find the node with the lowest distance to latest start
-                            var lowest = helperNodes[0];
+                            //Find initial position
+                            var initialPosition = pos;
+                            var lastSuperPosition = backwardDictionary[pos];
 
-                            for (var i = 1; i < helperNodes.Count; i++)
-                                if (lowest.DistanceToLatestStart > helperNodes[i].DistanceToLatestStart)
-                                    lowest = helperNodes[i];
-                            
-                            helperNodes.Remove(lowest);
-                            
-                            var distanceChange = lowest.DistanceToLatestStart;
+                            while (!initialPosition.Equals(lastSuperPosition)) {
+                                initialPosition = lastSuperPosition;
 
-                            //Move offset to that node
-                            indexOffset -= distanceChange;
-                            lowest.ReduceDistance(distanceChange);
-                            
-                            //Create span vector
-                            length = lengthsDictionary[lowest.Value];
-                            span = (ulong) length + (ulong) shift;
-                            
-                            spanVectors.Add(MakeSpanVector(lowest.Value, -shift, span));
+                                var eigenValues = initialPosition.GetEigenValues();
+                                lastSuperPosition = Position.Alloc(type);
 
-                            //Subtract distance covered from remaining nodes
-                            foreach (var helperNode in helperNodes)
-                                helperNode.ReduceDistance(distanceChange);
+                                foreach (var eigenValue in eigenValues) {
+                                    lastSuperPosition |= backwardDictionary[eigenValue];
+                                }
+                            }
 
-                            //Add in removed node's preceding values
-                            backwardNodeVals = backwardDictionary[lowest.Value].GetEigenValues();
-                            foreach (var backwardNodeVal in backwardNodeVals)
-                            {
+                            //Calculate backward spans, and stop when we hit a position that matches the initial position
+                            var currentPosition = backwardDictionary[pos];
+
+                            //We use helper nodes to keep track of where we are on the spans
+                            var backwardNodeVals = currentPosition.GetEigenValues();
+                            var helperNodes = new List<HelperNode>();
+
+                            var index = SPRIG_CENTER;
+                            foreach (var backwardNodeVal in backwardNodeVals) {
                                 length = lengthsDictionary[backwardNodeVal];
                                 span = (ulong) length + (ulong) shift;
-                                helperNodes.Add(new HelperNode(backwardNodeVal, span, (ulong) length));
+                                helperNodes.Add(new HelperNode(backwardNodeVal, index - (ulong) shift, span, shift));
                             }
 
-                            //Set current position to the OR of all the helper nodes
+                            while (!currentPosition.Equals(initialPosition)) {
+                                //Find the node with the lowest distance to latest start
+                                var lowest = helperNodes[0];
 
-                            currentPosition = helperNodes[0].Value;
-                            for(var i = 1; i < helperNodes.Count; i++)
-                            {
-                                currentPosition |= helperNodes[i].Value;
+                                for (var i = 1; i < helperNodes.Count; i++)
+                                    if (index - lowest.LatestStart > index - helperNodes[i].LatestStart && !helperNodes[i].SpanMade)
+                                        lowest = helperNodes[i];
+
+                                //Move offset to that node
+                                index = lowest.LatestStart;
+
+                                //Create span vector
+                                length = lengthsDictionary[lowest.Value];
+                                span = (ulong) length + (ulong) shift;
+
+                                spanVectors.Add(MakeSpanVector(lowest.Value, index - (ulong) shift, span));
+                                lowest.SpanMade = true;
+
+                                //Add in removed node's preceding values
+                                backwardNodeVals = backwardDictionary[lowest.Value].GetEigenValues();
+                                foreach (var backwardNodeVal in backwardNodeVals) {
+                                    length = lengthsDictionary[backwardNodeVal];
+                                    span = (ulong) length + (ulong) shift;
+                                    helperNodes.Add(new HelperNode(backwardNodeVal, index - span, span, shift));
+                                }
+
+                                //Set current position to the OR of all the helper nodes that are in between the lines
+                                currentPosition = helperNodes[0].Value;
+                                for (var i = 1; i < helperNodes.Count; i++) {
+                                    var iNode = helperNodes[i];
+                                    
+                                    if(index >= iNode.EarliestStart && index < iNode.LatestEnd)
+                                        currentPosition |= helperNodes[i].Value;
+                                }
                             }
+
+                            //Starting at this offset we're at now, the position will remain initialPosition all the way back to the beginning
+                            spanVectors.Add(MakeSpanVector(initialPosition, 0, index));
+
+                        }    
+
+                        {
+                            //Find terminal position
+                            var terminalPosition = pos;
+                            var nextSuperPosition = forwardDictionary[pos];
+
+                            while (!terminalPosition.Equals(nextSuperPosition)) {
+                                terminalPosition = nextSuperPosition;
+
+                                var eigenValues = terminalPosition.GetEigenValues();
+                                nextSuperPosition = Position.Alloc(type);
+
+                                foreach (var eigenValue in eigenValues) {
+                                    nextSuperPosition |= forwardDictionary[eigenValue];
+                                }
+                            }
+
+                            //Calculate forward spans, and stop when we hit a position that matches the terminal position
+                            var currentPosition = forwardDictionary[pos];
+
+                            //We use helper nodes to keep track of where we are on the spans
+                            var forwardNodeVals = currentPosition.GetEigenValues();
+                            var helperNodes = new List<HelperNode>();
+
+                            var index = SPRIG_CENTER;
+                            foreach (var forwardNodeVal in forwardNodeVals) {
+                                length = lengthsDictionary[forwardNodeVal];
+                                span = (ulong) length + (ulong) shift;
+                                helperNodes.Add(new HelperNode(forwardNodeVal, index + 1, span, shift));
+                            }
+
+                            while (!currentPosition.Equals(terminalPosition)) {
+                                //Find the node with the lowest distance to the earliest start
+                                var lowest = helperNodes[0];
+
+                                for (var i = 1; i < helperNodes.Count; i++)
+                                    if (lowest.EarliestStart - index > helperNodes[i].EarliestStart - index && !helperNodes[i].SpanMade)
+                                        lowest = helperNodes[i];
+
+                                //Move offset to that node
+                                index = lowest.EarliestStart;
+
+                                //Create span vector
+                                length = lengthsDictionary[lowest.Value];
+                                span = (ulong) length + (ulong) shift;
+
+                                spanVectors.Add(MakeSpanVector(lowest.Value, index, span));
+                                lowest.SpanMade = true;
+
+                                //Add in removed node's next values
+                                forwardNodeVals = forwardDictionary[lowest.Value].GetEigenValues();
+                                foreach (var forwardNodeVal in forwardNodeVals) {
+                                    length = lengthsDictionary[forwardNodeVal];
+                                    span = (ulong) length + (ulong) shift;
+                                    helperNodes.Add(new HelperNode(forwardNodeVal, index + (ulong) length, span, shift));
+                                }
+
+                                //Set current position to the OR of all the helper nodes that the index is inside of
+                                currentPosition = helperNodes[0].Value;
+                                for (var i = 1; i < helperNodes.Count; i++) {
+                                    var iNode = helperNodes[i];
+                                    
+                                    if(index >= iNode.EarliestStart && index < iNode.LatestEnd)
+                                        currentPosition |= helperNodes[i].Value;
+                                }
+                            }
+
+                            //Starting at this offset we're at now, the position will remain terminalPosition all the way to the end
+                            spanVectors.Add(MakeSpanVector(terminalPosition, index, ulong.MaxValue - index));
                         }
-                        
-                        //Starting at this offset we're at now, the position will remain currentPosition all the way back to the beginning
-                        spanVectors.Add(MakeSpanVector(initialPosition, long.MinValue, SPRIG_CENTER - indexOffset - 1));
-                        
-                        //Find terminal position
-                        
-                        //Calculate forward spans, and stop when we hit a position that matches the initial position
 
                         //Save out computed vector
                         var computedVector = spanVectors[0];
@@ -354,32 +430,32 @@ namespace DynamicTimelineFramework.Core
                     }
                 }
             }
-
-
+            
             private class HelperNode {
                 
                 public Position Value { get; }
                 
-                public ulong DistanceToEarliestStart { get; set; }  
+                public ulong EarliestStart { get; }  
                 
-                public ulong DistanceToLatestStart { get; set; }
+                public ulong LatestStart { get; }
                 
-                public HelperNode(Position value, ulong distanceToEarliestStart, ulong distanceToLatestStart) {
-                    Value = value;
-                    DistanceToEarliestStart = distanceToEarliestStart;
-                    DistanceToLatestStart = distanceToLatestStart;
-                }
-
-                public void ReduceDistance(ulong amount)
+                public ulong LatestEnd { get; }
+                
+                public bool SpanMade { get; set; }
+                
+                public HelperNode(Position value, ulong earliestStart, ulong span, long shift) 
                 {
-                    DistanceToEarliestStart -= amount;
-                    DistanceToLatestStart -= amount;
+                    Value = value;
+                    EarliestStart = earliestStart;
+                    LatestStart = earliestStart + (ulong) shift;
+                    LatestEnd = earliestStart + span;
+                    SpanMade = false;
                 }
             }
 
             #region FUNCTIONS
             
-            //Todo - Remake compiler functions to account for the need to compile constraints for various scenarios,
+            //Todo - Make Compiler functions
 
             #endregion
 

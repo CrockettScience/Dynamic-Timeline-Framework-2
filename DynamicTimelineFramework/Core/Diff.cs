@@ -16,8 +16,8 @@ namespace DynamicTimelineFramework.Core
             Delta = delta;
 
             var parent = allegingParent;
-
-            while (parent.Diff.Date <= Date)
+            
+            while (parent?.Diff.Date <= Date)
                 parent = parent.Parent;
             
             Parent = parent;
@@ -40,7 +40,7 @@ namespace DynamicTimelineFramework.Core
 
             while (current != null) {
                 diffChain.AddFirst(current);
-                current = current.Parent.Diff;
+                current = current.Parent?.Diff;
             }
 
             return diffChain;

@@ -77,8 +77,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public Sprig(ulong index, Sprig root, Diff diff)
         {
-            Head = new BufferNode(root?.GetBufferNode(index - 1), index, new PositionBuffer());
             Diff = diff;
+            Head = new BufferNode(root?.GetBufferNode(index - 1), index, new PositionBuffer());
         }
 
         public void Alloc(int space, int startIndex)
