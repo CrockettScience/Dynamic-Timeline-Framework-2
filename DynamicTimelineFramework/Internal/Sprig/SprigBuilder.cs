@@ -13,8 +13,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public SprigBuilder(Diff rootDiff, Universe rootUniverse)
         {
-            //Todo - fix bootstrapping issue
             Spine = new Spine(rootDiff, rootUniverse);
+            rootUniverse.Sprig.Builder = this;
             _indexedSpace = 0;
         }
 

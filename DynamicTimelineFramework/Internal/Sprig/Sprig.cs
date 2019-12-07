@@ -23,7 +23,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 
                 //Get Diff Chain
                 var diffChain = Diff.GetDiffChain();
-                
+
                 //Get Spine
                 var spine = Builder.Spine;
                 
@@ -57,12 +57,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                             
                             //If it's the branch we're moving to next, we need to change it's bNode to the bNode on the new head
                             if (Equals(diff, nextDiff)) {
-                                branchNode.GetBranch(diff).BNode = GetBufferNode(branchNode.Date);
+                                branchNode.GetBranch(diff).ParentSprigHead = GetBufferNode(branchNode.Date);
                             }
 
                             //If it's a different branch, we need to change the bNode's previous to reflect the new structure
                             else {
-                                var bNode = branchNode.GetBranch(diff).BNode;
+                                var bNode = branchNode.GetBranch(diff).ParentSprigHead;
                                 bNode.Last = GetBufferNode(bNode.Index);
                                 
                                 //Todo - Mask the other branch here to reflect the change
@@ -78,7 +78,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public Sprig(ulong index, Sprig root, Diff diff)
         {
             Diff = diff;
-            Head = new BufferNode(root?.GetBufferNode(index - 1), index, new PositionBuffer());
+            
+            if(root == null)
+                _head = new BufferNode(null, index, new PositionBuffer());
+            else 
+                Head = new BufferNode(root.GetBufferNode(index - 1), index, new PositionBuffer());
         }
 
         public void Alloc(int space, int startIndex)

@@ -75,7 +75,7 @@ namespace DynamicTimelineFramework.Core
         public override int GetHashCode()
         {
 
-            return (Date.GetHashCode() ^ Delta[0].Head.SuperPosition.GetHashCode() * 397);
+            return Date.GetHashCode() ^ (Delta.Count > 0 ? Delta[0].Head.SuperPosition.GetHashCode() * 397 : 397);
         }
     }
 }

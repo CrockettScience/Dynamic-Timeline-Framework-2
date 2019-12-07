@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
@@ -22,7 +23,7 @@ namespace DynamicTimelineFramework.Core
         /// </summary>
         internal Universe(Multiverse multiverse)
         {
-            Diff = new Diff(0, null, null);
+            Diff = new Diff(0, null, new List<SprigPositionVector>());
             Owner = multiverse;
         }
         

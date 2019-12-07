@@ -32,7 +32,7 @@ namespace DynamicTimelineFramework.Core
             BaseUniverse = new Universe(this);
             
             //Instantiate the multiverse timeline
-            //SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
+            SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
             
             _multiverse = new Dictionary<Diff, Universe>()
             {

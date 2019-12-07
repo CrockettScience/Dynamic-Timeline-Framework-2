@@ -13,9 +13,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public Diff Diff { get; }
         
         public SpineNode this[Diff diff] {
-            get => _branchMap[diff].SNode;
+            get => _branchMap[diff].Next;
 
-            set => _branchMap[diff].SNode = value;
+            set => _branchMap[diff].Next = value;
         }
 
         public SpineBranchNode(ulong date, Sprig parentSprig, Diff diff) {
@@ -42,7 +42,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             foreach (var next in nexts)
             {
-                next.SNode.Alloc(space, startIndex);
+                next.Next.Alloc(space, startIndex);
             }
         }
 
@@ -51,12 +51,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
 
         public class Branch {
-            public SpineNode SNode { get; set; }
-            public BufferNode BNode { get; set; }
+            public SpineNode Next { get; set; }
+            public BufferNode ParentSprigHead { get; set; }
             
-            public Branch(SpineNode sNode, BufferNode bNode) {
-                SNode = sNode;
-                BNode = bNode;
+            public Branch(SpineNode next, BufferNode parentSprigHead) {
+                Next = next;
+                ParentSprigHead = parentSprigHead;
             }
         }
 
