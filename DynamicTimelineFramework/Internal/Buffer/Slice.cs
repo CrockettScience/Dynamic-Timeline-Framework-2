@@ -30,7 +30,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
 
             //Returns true if the flags are the same
             for (var i = LeftBound; i < RightBound; i++) {
-                if (Head[i] ^ other.Head[i])
+                if (Head[i] ^ other.Head[i + (other.LeftBound - LeftBound)])
                     return false;
             }
 
@@ -41,7 +41,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             var hash = 0;
             
             for (var i = LeftBound; i < RightBound; i++) {
-                hash ^= Head[i] ? i * 367 : i * 997;
+                hash ^= Head[i] ? (i - LeftBound) * 367 : (i - LeftBound) * 997;
 
             }
 

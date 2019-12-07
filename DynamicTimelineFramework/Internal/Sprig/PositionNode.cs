@@ -30,7 +30,8 @@ namespace DynamicTimelineFramework.Internal.Sprig
             set
             {
                 _operativeSliceProvider = value;
-                _last._operativeSliceProvider = _operativeSliceProvider;
+                if(_last != null)
+                    _last._operativeSliceProvider = _operativeSliceProvider;
             }
         }
 
@@ -41,7 +42,9 @@ namespace DynamicTimelineFramework.Internal.Sprig
             set
             {
                 _last = (PositionNode) value;
-                _last._operativeSliceProvider = _operativeSliceProvider;
+                
+                if(_last != null)
+                    _last._operativeSliceProvider = _operativeSliceProvider;
             }
         }
 

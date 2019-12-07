@@ -42,7 +42,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             
             Alloc(space, defaultValue);
             
-            return new Position(type, new Slice(this, leftBound, Flag.Length + space));
+            return new Position(type, new Slice(this, leftBound, leftBound + space));
         }
 
         public void Alloc(int space, bool defaultValue = false)
