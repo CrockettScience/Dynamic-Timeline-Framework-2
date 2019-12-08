@@ -52,11 +52,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public class Branch {
             public SpineNode Next { get; set; }
-            public BufferNode ParentSprigHead { get; set; }
+            public BufferNode FirstNodeOnBranch { get; set; }
             
-            public Branch(SpineNode next, BufferNode parentSprigHead) {
+            public Branch(SpineNode next, BufferNode firstNodeOnBranch) {
                 Next = next;
-                ParentSprigHead = parentSprigHead;
+                FirstNodeOnBranch = firstNodeOnBranch;
             }
         }
 

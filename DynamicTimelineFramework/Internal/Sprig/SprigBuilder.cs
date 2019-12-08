@@ -9,18 +9,20 @@ using DynamicTimelineFramework.Objects.Attributes;
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SprigBuilder {
         public Spine Spine { get; }
-        private int _indexedSpace;
+        public int IndexedSpace { get; private set; }
+        
+        public readonly List<DTFObject> Registry = new List<DTFObject>();
         
         public SprigBuilder(Diff rootDiff, Universe rootUniverse)
         {
             Spine = new Spine(rootDiff, rootUniverse);
             rootUniverse.Sprig.Builder = this;
-            _indexedSpace = 0;
+            IndexedSpace = 0;
         }
 
         public Sprig BuildSprig(Diff diff)
         {
-            var newSprig =  Spine.AddBranch(diff.GetDiffChain());
+            var newSprig = Spine.AddBranch(diff.GetDiffChain());
             
             diff.InstallChanges(newSprig);
 
@@ -35,12 +37,14 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             var objDef = (DTFObjectDefinitionAttribute) obj.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
             var space = objDef.PositionCount;
 
-            var leftBound = _indexedSpace;
-            _indexedSpace += space;
+            var leftBound = IndexedSpace;
+            IndexedSpace += space;
             
             Spine.Alloc(space, leftBound);
             
-            return new Slice(leftBound, _indexedSpace);
+            Registry.Add(obj);
+            
+            return new Slice(leftBound, IndexedSpace);
 
         }
     }

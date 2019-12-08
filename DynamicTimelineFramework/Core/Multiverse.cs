@@ -536,7 +536,39 @@ namespace DynamicTimelineFramework.Core
 
             #region FUNCTIONS
             
-            //Todo - Make Compiler functions
+            public SprigBufferVector GetTimelineVector(SprigBuilder builder, ulong date, PositionBuffer buffer)
+            {
+                var timelineVector = new SprigBufferVector(builder.IndexedSpace);
+
+                var registry = builder.Registry;
+
+                foreach (var dtfObject in registry)
+                {
+                    timelineVector |= GetTimelineVector(dtfObject, date, buffer.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigBuilderSlice));
+                }
+
+                return timelineVector;
+            }
+
+            public SprigPositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
+            {
+                var timelineVector = new SprigPositionVector(dtfObject.SprigBuilderSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
+
+                var eigenVals = position.GetEigenValues();
+
+                foreach (var val in eigenVals)
+                {
+                    timelineVector |= _objectMetaData[dtfObject.GetType()].GetVector(val);
+                }
+                
+                if(date < SprigCenter)
+                    timelineVector.ShiftBackward(SprigCenter - date);
+                
+                if(date > SprigCenter)
+                    timelineVector.ShiftForward(date - SprigCenter);
+
+                return timelineVector;
+            }
 
             #endregion
 

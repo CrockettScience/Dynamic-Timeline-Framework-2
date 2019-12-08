@@ -40,7 +40,7 @@ namespace DynamicTimelineFramework.Core
 
             while (current != null) {
                 diffChain.AddFirst(current);
-                current = current.Parent?.Diff;
+                current = current.Parent.Diff;
             }
 
             return diffChain;

@@ -16,32 +16,28 @@ namespace DynamicTimelineFramework.Internal.Sprig
             return new SprigBufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
         }
         
+        public static SprigBufferVector operator &(SprigBufferVector left, SprigPositionVector right) {
+            return new SprigBufferVector(Node<PositionBuffer>.And(left.Head, right.Head));
+        }
+        
+        public static SprigBufferVector operator |(SprigBufferVector left, SprigPositionVector right) {
+            return new SprigBufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
+        }
+        
         #endregion
 
         public Node<PositionBuffer>.INode Head { get; private set; }
-        
-        public SprigBufferVector(int size, List<SprigPositionVector> vectors, bool emptySpaceValue)
-        {
-            //Empty space value will be the default bit state for values not accounted for by the given vectors.
-            //Set to FALSE if you want to OR the vector with a sprig buffer while preserving the state of the values,
-            //Set to TRUE if you want to AND the vector with a sprig buffer while preserving the state of the values
-             
-            var bufferBase = (Node<PositionBuffer>.INode) new BufferNode(null, 0, new PositionBuffer(size, emptySpaceValue));
-
-            foreach (var vector in vectors)
-            {
-                bufferBase = Node<PositionBuffer>.And(bufferBase, vector.Head);
-            }
-
-            Head = bufferBase;
-
-        }
         
         public SprigBufferVector(Node<PositionBuffer>.INode head)
         {
 
             Head = head;
 
+        }
+        
+        public SprigBufferVector(int size, bool defaultValue = false)
+        {
+            Head = new BufferNode(null, 0, new PositionBuffer(size, defaultValue));
         }
 
         public ISprigVector<PositionBuffer> Copy()

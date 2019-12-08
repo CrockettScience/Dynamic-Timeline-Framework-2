@@ -169,6 +169,11 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             return hWeight - 1;
         }
 
+        public Position PositionAtSlice(Type type, Slice slice)
+        {
+            return new Position(type, new Slice(this, slice.LeftBound, slice.RightBound));
+        }
+
         public override bool Equals(object obj)
         {
             if (!(obj is PositionBuffer other)) return false;
