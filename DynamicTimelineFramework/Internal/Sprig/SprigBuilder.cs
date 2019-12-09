@@ -31,7 +31,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return newSprig;
         }
 
-        public Slice RegisterObject(DTFObject obj)
+        public OperativeSlice RegisterObject(DTFObject obj)
         {
             //Allocate space for every sprig in the tree
             var objDef = (DTFObjectDefinitionAttribute) obj.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
@@ -44,7 +44,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             Registry.Add(obj);
             
-            return new Slice(leftBound, IndexedSpace);
+            return new OperativeSlice(leftBound, IndexedSpace);
 
         }
     }

@@ -65,7 +65,7 @@ namespace Test {
         public static readonly Position BlackHole        = Position.Alloc<Star>((int) Stage.BlackHole);
 
         public Star(Galaxy galaxy, Multiverse owner) : base(owner){
-            SetParent(GALAXY_KEY, galaxy);
+            SetLateralObject(GALAXY_KEY, galaxy);
         }
 
         public override Position InitialSuperPosition() {

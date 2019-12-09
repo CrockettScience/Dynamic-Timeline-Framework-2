@@ -32,15 +32,5 @@ namespace DynamicTimelineFramework.Core
         {
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Gets the unconstrained superposition of the object at date "date"
-        /// </summary>
-        /// <param name="date">The date to get the objects superposition at</param>
-        /// <returns>The unconstrained superposition of the object at date "date"</returns>
-        public Position GetSuperposition(ulong date) 
-        {
-            throw new NotImplementedException();
-        }
     }
 }

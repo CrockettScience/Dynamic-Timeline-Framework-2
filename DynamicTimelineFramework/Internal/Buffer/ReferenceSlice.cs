@@ -1,23 +1,19 @@
+using DynamicTimelineFramework.Internal.Interfaces;
+
 namespace DynamicTimelineFramework.Internal.Buffer {
-    internal struct Slice {
+    internal struct ReferenceSlice : ISlice {
         public readonly PositionBuffer Head;
-        public readonly int LeftBound;
-        public readonly int RightBound;
+        public int LeftBound { get; }
+        public int RightBound { get; }
             
-        public Slice(PositionBuffer head, int leftBound, int rightBound) {
+        public ReferenceSlice(PositionBuffer head, int leftBound, int rightBound) {
             Head = head;
-            LeftBound = leftBound;
-            RightBound = rightBound;
-        }
-        
-        public Slice(int leftBound, int rightBound) {
-            Head = null;
             LeftBound = leftBound;
             RightBound = rightBound;
         }
 
         public override bool Equals(object obj) {
-            if (!(obj is Slice other)) return false;
+            if (!(obj is ReferenceSlice other)) return false;
 
             if (other == this) return true;
             
@@ -48,11 +44,11 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             return hash;
         }
 
-        public static bool operator ==(Slice lhs, Slice rhs) {
+        public static bool operator ==(ReferenceSlice lhs, ReferenceSlice rhs) {
             return lhs.Head == rhs.Head && lhs.LeftBound == rhs.LeftBound;
         }
 
-        public static bool operator !=(Slice lhs, Slice rhs) {
+        public static bool operator !=(ReferenceSlice lhs, ReferenceSlice rhs) {
             return !(lhs == rhs);
         }
     }

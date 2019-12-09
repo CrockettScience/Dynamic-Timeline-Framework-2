@@ -43,10 +43,12 @@
   <ItemGroup>
     <Compile Include="Exception\DTFObjectDefinitionException.cs" />
     <Compile Include="Exception\ParadoxException.cs" />
-    <Compile Include="Internal\Buffer\Slice.cs" />
+    <Compile Include="Internal\Buffer\OperativeSlice.cs" />
+    <Compile Include="Internal\Buffer\ReferenceSlice.cs" />
     <Compile Include="Internal\Buffer\BinaryPosition.cs" />
     <Compile Include="Internal\Interfaces\ICopyable.cs" />
     <Compile Include="Internal\Interfaces\IOperativeSliceProvider.cs" />
+    <Compile Include="Internal\Interfaces\ISlice.cs" />
     <Compile Include="Internal\Interfaces\Node.cs" />
     <Compile Include="Internal\Interfaces\ISprigVector.cs" />
     <Compile Include="Internal\Sprig\SprigBufferVector.cs" />

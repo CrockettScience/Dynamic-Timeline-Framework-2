@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using DynamicTimelineFramework.Core;
+using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Internal.Buffer {
@@ -42,7 +43,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             
             Alloc(space, defaultValue);
             
-            return new Position(type, new Slice(this, leftBound, leftBound + space));
+            return new Position(type, new ReferenceSlice(this, leftBound, leftBound + space));
         }
 
         public void Alloc(int space, bool defaultValue = false)
@@ -152,7 +153,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             return buffer;
         }
 
-        public int UncertaintyAtSlice(Slice slice)
+        public int UncertaintyAtSlice(ReferenceSlice slice)
         {
             var lb = slice.LeftBound;
             var rb = slice.RightBound;
@@ -169,9 +170,9 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             return hWeight - 1;
         }
 
-        public Position PositionAtSlice(Type type, Slice slice)
+        public Position PositionAtSlice(Type type, ISlice slice)
         {
-            return new Position(type, new Slice(this, slice.LeftBound, slice.RightBound));
+            return new Position(type, new ReferenceSlice(this, slice.LeftBound, slice.RightBound));
         }
 
         public override bool Equals(object obj)

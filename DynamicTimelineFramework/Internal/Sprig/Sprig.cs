@@ -41,10 +41,20 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
+        public SprigPositionVector ToPositionVector(DTFObject dtfObject)
+        {
+            return new SprigPositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
+        }
+        
+        public SprigBufferVector ToBufferVector()
+        {
+            return new SprigBufferVector(Head);
+        }
+
         public Position GetPosition(ulong date, DTFObject obj) {
             var bNode = GetBufferNode(date);
 
-            var slice = new Slice(bNode.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
+            var slice = new ReferenceSlice(bNode.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
             
             return new Position(obj.GetType(), slice);
         }
@@ -61,22 +71,32 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return current;
         }
         
-        public void And<T>(ISprigVector<T> other) where T : BinaryPosition
+        public bool And<T>(ISprigVector<T> other) where T : BinaryPosition
         {
             var newHead = Node<PositionBuffer>.And(Head, other.Head);
             
             //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
+            {
                 SetHeadAndRealign(0, (BufferNode) newHead);
+                return true;
+            }
+
+            return false;
         }
         
-        public void Or<T>(ISprigVector<T> other) where T : BinaryPosition
+        public bool Or<T>(ISprigVector<T> other) where T : BinaryPosition
         {
             var newHead = Node<PositionBuffer>.Or(Head, other.Head);
             
             //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
+            {
                 SetHeadAndRealign(0, (BufferNode) newHead);
+                return false;
+            }
+
+            return true;
         }
 
         private void SetHeadAndRealign(ulong realignFromDateOnward, BufferNode head)

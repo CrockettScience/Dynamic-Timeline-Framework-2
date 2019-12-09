@@ -50,7 +50,7 @@ namespace DynamicTimelineFramework.Internal.Sprig
 
         public ulong Index { get; set; }
 
-        public Slice OperativeSlice => OperativeSliceProvider.OperativeSlice;
+        public OperativeSlice OperativeSlice => OperativeSliceProvider.OperativeSlice;
 
         public Node<Position>.INode MakeNode(Node<Position>.INode last, ulong index, Position superPosition)
         {

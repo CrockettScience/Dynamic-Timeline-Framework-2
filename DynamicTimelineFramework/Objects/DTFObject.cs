@@ -9,10 +9,8 @@ namespace DynamicTimelineFramework.Objects {
         
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
-        
-        private string _parentKey;
 
-        internal Slice SprigBuilderSlice { get; }
+        internal OperativeSlice SprigBuilderSlice { get; }
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
@@ -22,7 +20,7 @@ namespace DynamicTimelineFramework.Objects {
             SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this);
         }
 
-        protected void AddObject(string key, DTFObject obj) {
+        protected void SetLateralObject(string key, DTFObject obj) {
             if(_lateralDirectory.ContainsKey(key))
                 throw new DTFObjectDefinitionException(GetType() + " attempted to add an object to key " + key + "twice");
             
@@ -30,28 +28,12 @@ namespace DynamicTimelineFramework.Objects {
             _lateralKeys.Add(key);
             
             //Subscribe to the other objects directory
-            obj._lateralDirectory[key + "-BACK_REFERENCE-" + GetType().GetHashCode()] = this;
-            obj._lateralKeys.Add(key + "-BACK_REFERENCE-" + GetType().GetHashCode());
-        }
-        
-        protected void SetParent(string key, DTFObject obj) {
-            if(HasParent())
-                throw new DTFObjectDefinitionException(GetType() + " can only have 1 parent");
-            
-            _lateralDirectory[key] = obj;
-            _parentKey = key;
-        }
-        
-        internal bool HasParent() {
-            return _parentKey != null;
+            obj._lateralDirectory[key + "-BACK_REFERENCE-" + GetHashCode()] = this;
+            obj._lateralKeys.Add(key + "-BACK_REFERENCE-" + GetHashCode());
         }
 
         internal DTFObject GetLateralObject(string key) {
             return _lateralDirectory[key];
-        }
-        
-        internal string GetParentKey() {
-            return _parentKey;
         }
 
         internal List<string> GetLateralKeys()

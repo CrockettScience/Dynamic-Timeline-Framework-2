@@ -76,9 +76,9 @@ namespace DynamicTimelineFramework.Core
         
         internal IOperativeSliceProvider OperativeSliceProvider { private get; set; }
 
-        internal Slice Slice { get; }
+        internal ReferenceSlice Slice { get; }
 
-        internal Slice OperativeSlice => OperativeSliceProvider.OperativeSlice;
+        internal OperativeSlice OperativeSlice => OperativeSliceProvider.OperativeSlice;
 
         public override int Length => Slice.RightBound - Slice.LeftBound;
 
@@ -105,7 +105,7 @@ namespace DynamicTimelineFramework.Core
             }
         }
 
-        internal Position(Type type, Slice slice)
+        internal Position(Type type, ReferenceSlice slice)
         {
             Type = type;
             Slice = slice;

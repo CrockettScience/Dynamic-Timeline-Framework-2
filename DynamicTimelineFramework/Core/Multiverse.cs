@@ -26,7 +26,7 @@ namespace DynamicTimelineFramework.Core
         public Multiverse()
         {
             //Run the Compiler
-            Compiler = new ObjectCompiler(Assembly.GetCallingAssembly());
+            Compiler = new ObjectCompiler(Assembly.GetCallingAssembly(), this);
             
             // Set up the big bang diff
             BaseUniverse = new Universe(this);
@@ -66,10 +66,13 @@ namespace DynamicTimelineFramework.Core
             //2^63
             public const ulong SprigCenter = 9_223_372_036_854_775_808;
 
-            private readonly Dictionary<Type, TypeMetaData> _objectMetaData = new Dictionary<Type, TypeMetaData>(); 
+            private readonly Dictionary<Type, TypeMetaData> _objectMetaData = new Dictionary<Type, TypeMetaData>();
+
+            private readonly Multiverse Owner;
             
-            public ObjectCompiler(Assembly callingAssembly)
+            public ObjectCompiler(Assembly callingAssembly, Multiverse owner)
             {
+                Owner = owner;
                 var types = callingAssembly.GetTypes();
                 
                 var dtfTypes = new List<Type>();
@@ -536,6 +539,38 @@ namespace DynamicTimelineFramework.Core
 
             #region FUNCTIONS
             
+            internal void PushLateralConstraints(DTFObject dtfObj, Universe universe)
+            {
+                //Get the metadata object
+                var meta = _objectMetaData[dtfObj.GetType()];
+                
+                //Iterate through each key and recursively constrain
+                var keys = dtfObj.GetLateralKeys();
+                foreach (var key in keys) {
+                    
+                    var dest = dtfObj.GetLateralObject(key);
+                    
+                    if (!ConstrainLateralObject(dtfObj, key, meta, universe)) continue;
+                    
+                    //If the constraint results in change, then push it's constraints as well
+                    
+                    PushLateralConstraints(dest, universe);
+                }
+                
+            }
+
+            private bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Universe universe)
+            {
+                var dest = source.GetLateralObject(lateralKey);
+                
+                //Get the translation vector
+                var translationVector = lateralMetaData.Translate(lateralKey, Owner[universe.Diff].Sprig.ToPositionVector(source), dest.SprigBuilderSlice);
+                
+                //AND the sprig with the translation vector and return whether or not a change was made
+                return universe.Sprig.And(translationVector);
+            }
+
+            
             public SprigBufferVector GetTimelineVector(SprigBuilder builder, ulong date, PositionBuffer buffer)
             {
                 var timelineVector = new SprigBufferVector(builder.IndexedSpace);
@@ -602,12 +637,12 @@ namespace DynamicTimelineFramework.Core
                     return output;
                 }
 
-                public SprigPositionVector Translate(string key, SprigPositionVector input, Slice operativeSlice)
+                public SprigPositionVector Translate(string key, SprigPositionVector input, OperativeSlice outputOperativeSlice)
                 {
                      
                     var currentIn = input.Head;
                     var currentOut = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
-                    var output = new SprigPositionVector(operativeSlice, currentOut);
+                    var output = new SprigPositionVector(outputOperativeSlice, currentOut);
 
                     while (currentIn.Last != null)
                     {

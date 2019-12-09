@@ -4,6 +4,6 @@ namespace DynamicTimelineFramework.Internal.Interfaces
 {
     internal interface IOperativeSliceProvider
     {
-        Slice OperativeSlice { get; }
+        OperativeSlice OperativeSlice { get; }
     }
 }
