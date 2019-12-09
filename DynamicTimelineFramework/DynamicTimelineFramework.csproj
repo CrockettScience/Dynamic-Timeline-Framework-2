@@ -42,7 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Exception\DTFObjectDefinitionException.cs" />
-    <Compile Include="Exception\ParadoxException.cs" />
+    <Compile Include="Exception\UnresolvableParadoxException.cs" />
     <Compile Include="Internal\Buffer\OperativeSlice.cs" />
     <Compile Include="Internal\Buffer\ReferenceSlice.cs" />
     <Compile Include="Internal\Buffer\BinaryPosition.cs" />

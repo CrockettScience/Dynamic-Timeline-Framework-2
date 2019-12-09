@@ -23,7 +23,7 @@ namespace DynamicTimelineFramework.Core
         /// </summary>
         internal Universe(Multiverse multiverse)
         {
-            Diff = new Diff(0, null, new List<SprigPositionVector>());
+            Diff = new Diff(0, null, new SprigBufferVector(0));
             Owner = multiverse;
         }
         

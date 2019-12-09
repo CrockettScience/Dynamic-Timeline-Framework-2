@@ -35,14 +35,6 @@ namespace Test
         public Galaxy(Multiverse owner) : base(owner)
         {}
 
-        public override Position InitialSuperPosition() {
-            return PreExistent;
-        }
-
-        public override Position TerminalSuperPosition() {
-            return Degenerate;
-        }
-
 
         public enum Stage {
             PreExistent,

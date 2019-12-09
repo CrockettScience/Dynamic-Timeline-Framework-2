@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Buffer;
+using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Objects {
     public abstract class DTFObject {
@@ -10,11 +11,15 @@ namespace DynamicTimelineFramework.Objects {
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
 
+        internal DTFOOperativeSliceProvider _operativeSliceProvider;
+
         internal OperativeSlice SprigBuilderSlice { get; }
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Dictionary<string, DTFObject>();
+            
+            _operativeSliceProvider = new DTFOOperativeSliceProvider(this);
 
             //Register object with the timeline
             SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this);
@@ -41,7 +46,16 @@ namespace DynamicTimelineFramework.Objects {
             return _lateralKeys;
         }
 
-        public abstract Position InitialSuperPosition();
-        public abstract Position TerminalSuperPosition();
+        internal class DTFOOperativeSliceProvider : IOperativeSliceProvider
+        {
+            private readonly DTFObject _proxyOwner;
+
+            public OperativeSlice OperativeSlice => _proxyOwner.SprigBuilderSlice;
+
+            public DTFOOperativeSliceProvider(DTFObject proxyOwner)
+            {
+                _proxyOwner = proxyOwner;
+            }
+        }
     }
 }

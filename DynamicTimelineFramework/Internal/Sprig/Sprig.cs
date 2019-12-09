@@ -7,6 +7,17 @@ using DynamicTimelineFramework.Objects;
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class Sprig
     {
+        public Position this[ulong date, DTFObject obj]
+        {
+            get
+            {
+                var bNode = GetBufferNode(date);
+
+                var slice = new ReferenceSlice(bNode.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
+            
+                return new Position(obj.GetType(), slice);
+            }
+        }
         
         public Diff Diff { get; }
         
@@ -49,14 +60,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public SprigBufferVector ToBufferVector()
         {
             return new SprigBufferVector(Head);
-        }
-
-        public Position GetPosition(ulong date, DTFObject obj) {
-            var bNode = GetBufferNode(date);
-
-            var slice = new ReferenceSlice(bNode.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
-            
-            return new Position(obj.GetType(), slice);
         }
         
         private BufferNode GetBufferNode(ulong date)

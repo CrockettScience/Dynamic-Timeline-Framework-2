@@ -1,4 +1,6 @@
 using System;
+using DynamicTimelineFramework.Exception;
+using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
@@ -8,7 +10,7 @@ namespace DynamicTimelineFramework.Core
         private readonly Universe _universe;
         private readonly DTFObject _dtfObject;
 
-        public Position this[ulong date] => _universe.Sprig.GetPosition(date, _dtfObject);
+        public Position this[ulong date] => _universe.Sprig[date, _dtfObject];
 
         internal Continuity(Universe universe, DTFObject dtfObject)
         {
@@ -18,19 +20,45 @@ namespace DynamicTimelineFramework.Core
 
         /// <summary>
         /// Attempts to Constrain the position at date to pos. If the constraint results in a paradox
-        /// (that is, the resultant position's Uncertainty property returns -1), but is transitionable
-        /// (the position at date - 1 has at least 1 eigenvalue that defines pos as an eigenvalue or
-        /// set of eigenvalues in it's forward transition), It will create and assign a Diff object
-        /// to outDiff that can be used to instantiate a universe branch where the object's position
-        /// at date is collapsed to Pos.
+        /// (that is, the resultant position's Uncertainty property is less than pos), but is transitionable
+        /// (Every eigenvalue in pos is in the set of eigenvalues in the forward transition of the superposition
+        /// at date - 1 ), It will create and assign a Diff object to outDiff that can be used to instantiate a
+        /// universe branch where the object's position at date is collapsed to Pos.
         /// </summary>
         /// <param name="date">The date to collapse to the position at</param>
-        /// <param name="pos">The position to collapse to</param>
+        /// <param name="pos">The positions to collapse to</param>
         /// <param name="outDiff">The resultant diff if the attempted collapse should return a paradox</param>
+        /// <exception cref="UnresolvableParadoxException">If the given position results in a paradox that cannot be transitioned to</exception>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
-        public bool Constrain(ulong date, Position pos, out Diff outDiff) 
+        public bool Constrain(ulong date, Position pos, out Diff outDiff)
         {
-            throw new NotImplementedException();
+            //Create a copy of the position with the correct operative slice
+            var deltaPosition = new Position(_dtfObject.GetType(), pos.Slice)
+            {
+                OperativeSliceProvider = _dtfObject._operativeSliceProvider
+            };
+
+            //Get timeline position vector
+            var timelineVector = _universe.Owner.Compiler.GetTimelineVector(_dtfObject, date, deltaPosition);
+
+            //Check if it's possible to constrain the position
+            if ((this[date] & deltaPosition).Uncertainty < deltaPosition.Uncertainty)
+            {
+                //Not possible to constrain, check if it's transitionable
+                if(date != 0 && (this[date - 1] & timelineVector[date - 1]).Uncertainty < timelineVector[date - 1].Uncertainty)
+                {
+                    //Not transitionable
+                    throw new UnresolvableParadoxException();
+                }
+                
+                outDiff = new Diff(date, _universe, new SprigBufferVector(_universe.Owner.SprigBuilder.IndexedSpace, true) & timelineVector);
+                return false;
+            }
+            
+            //Constrain the position
+            _universe.Sprig.And(timelineVector);
+            outDiff = null;
+            return true;
         }
     }
 }

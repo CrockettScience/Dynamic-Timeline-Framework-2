@@ -68,14 +68,6 @@ namespace Test {
             SetLateralObject(GALAXY_KEY, galaxy);
         }
 
-        public override Position InitialSuperPosition() {
-            return PreExistence;
-        }
-
-        public override Position TerminalSuperPosition() {
-            return WhiteDwarf | Neutron | BlackHole;
-        }
-
         public enum Stage {
             PreExistent, 
             Birth,

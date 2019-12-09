@@ -153,23 +153,6 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             return buffer;
         }
 
-        public int UncertaintyAtSlice(ReferenceSlice slice)
-        {
-            var lb = slice.LeftBound;
-            var rb = slice.RightBound;
-                
-            //Count the number of set bits in the bitArray
-            var hWeight = 0;
-
-            for (var i = lb; i < rb; i++) {
-                if (Flag[i])
-                    hWeight++;
-            }
-                
-            //Uncertainty is the Hamming Weight of the bits minus one
-            return hWeight - 1;
-        }
-
         public Position PositionAtSlice(Type type, ISlice slice)
         {
             return new Position(type, new ReferenceSlice(this, slice.LeftBound, slice.RightBound));

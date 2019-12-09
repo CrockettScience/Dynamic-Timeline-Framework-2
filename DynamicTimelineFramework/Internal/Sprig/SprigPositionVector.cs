@@ -18,6 +18,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
         
         #endregion
+        
+        public Position this[ulong date]
+        {
+            get => GetPositionNode(date).SuperPosition;
+        }
 
         private PositionNode _head;
 
@@ -57,6 +62,18 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 bufferCurrent = bufferCurrent.Last;
                 
             }
+        }
+
+        private PositionNode GetPositionNode(ulong date)
+        {
+            var current = (PositionNode) Head;
+
+            while (current.Index > date)
+            {
+                current = (PositionNode) current.Last;
+            }
+
+            return current;
         }
         
         public ISprigVector<Position> Copy() {

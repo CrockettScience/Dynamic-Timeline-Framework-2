@@ -8,9 +8,9 @@ namespace DynamicTimelineFramework.Core
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        internal List<SprigPositionVector> Delta { get; }
+        internal SprigBufferVector Delta { get; }
 
-        internal Diff(ulong date, Universe allegingParent, List<SprigPositionVector> delta)
+        internal Diff(ulong date, Universe allegingParent, SprigBufferVector delta)
         {
             Date = date;
             Delta = delta;
@@ -62,20 +62,14 @@ namespace DynamicTimelineFramework.Core
             if (Parent != other.Parent)
                 return false;
 
-            for (var i = 0; i < Delta.Count; i++)
-            {
-                if (!Delta[i].Equals(other.Delta[i]))
-                    return false;
-            }
-
-            return true;
+            return Delta.Equals(other.Delta);
 
         }
 
         public override int GetHashCode()
         {
 
-            return Date.GetHashCode() ^ (Delta.Count > 0 ? Delta[0].Head.SuperPosition.GetHashCode() * 397 : 397);
+            return Date.GetHashCode() ^ Delta.Head.SuperPosition.GetHashCode() * 397;
         }
     }
 }

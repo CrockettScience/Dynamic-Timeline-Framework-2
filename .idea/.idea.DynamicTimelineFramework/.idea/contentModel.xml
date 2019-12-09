@@ -18,7 +18,7 @@
           <e p="DTFObjectCompilerException.cs" t="Include" />
           <e p="DTFObjectDefinitionException.cs" t="Include" />
           <e p="InvalidFlagSpaceFactor.cs" t="Include" />
-          <e p="ParadoxException.cs" t="Include" />
+          <e p="UnresolvableParadoxException.cs" t="Include" />
         </e>
         <e p="Internal" t="Include">
           <e p="Buffer" t="Include">
