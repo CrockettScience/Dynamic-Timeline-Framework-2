@@ -23,10 +23,10 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public Sprig BuildSprig(Diff diff)
         {
             var newSprig = Spine.AddBranch(diff.GetDiffChain());
-            
-            diff.InstallChanges(newSprig);
 
             newSprig.Builder = this;
+            
+            diff.InstallChanges(newSprig);
             
             return newSprig;
         }

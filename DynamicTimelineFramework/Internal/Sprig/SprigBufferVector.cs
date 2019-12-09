@@ -26,6 +26,11 @@ namespace DynamicTimelineFramework.Internal.Sprig
         
         #endregion
 
+        public PositionBuffer this[ulong date]
+        {
+            get => GetBufferNode(date).SuperPosition;
+        }
+
         public Node<PositionBuffer>.INode Head { get; private set; }
         
         public SprigBufferVector(Node<PositionBuffer>.INode head)
@@ -33,6 +38,18 @@ namespace DynamicTimelineFramework.Internal.Sprig
 
             Head = head;
 
+        }
+        
+        public BufferNode GetBufferNode(ulong date)
+        {
+            var current = (BufferNode) Head;
+
+            while (current.Index > date)
+            {
+                current = (BufferNode) current.Last;
+            }
+
+            return current;
         }
         
         public SprigBufferVector(int size, bool defaultValue = false)

@@ -62,7 +62,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return new SprigBufferVector(Head);
         }
         
-        private BufferNode GetBufferNode(ulong date)
+        public BufferNode GetBufferNode(ulong date)
         {
             var current = Head;
 

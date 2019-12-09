@@ -8,12 +8,12 @@ namespace DynamicTimelineFramework.Core
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        internal SprigBufferVector Delta { get; }
+        private readonly SprigBufferVector _delta;
 
         internal Diff(ulong date, Universe allegingParent, SprigBufferVector delta)
         {
             Date = date;
-            Delta = delta;
+            _delta = delta;
 
             var parent = allegingParent;
             
@@ -23,15 +23,24 @@ namespace DynamicTimelineFramework.Core
             Parent = parent;
         }
 
-        internal void InstallChanges(Sprig sprig) {
-            //Todo - Called by the sprig builder after being registered. 
-            //This command constrains the sprig, given by the sprig builder,
-            //by the proper mask just prior to date.
-            //Once on the given sprig, then on the parent universe's sprig
+        internal void InstallChanges(Sprig newSprig) {
+            //This command installs the changes given by the diff.
+            var mvCompiler = Parent.Owner.Compiler;
+            var sprigBuilder = Parent.Owner.SprigBuilder;
+
+            //Constrain the new sprig to establish the shared certainty signature
+            var priorCertaintySignature = mvCompiler.GetTimelineVector(sprigBuilder, Date - 1,
+                Parent.Sprig.GetBufferNode(Date - 1).SuperPosition);
+
+            newSprig.And(priorCertaintySignature);
             
+            //Constrain the new sprig to establish the changes defined by the diff
+            newSprig.And(_delta);
             
-            
-            
+            //Constrain the parent sprig to back-propagate the new certainty signature
+            var newCertaintySignature = mvCompiler.GetTimelineVector(sprigBuilder, Date - 1, _delta[Date - 1]);
+            Parent.Sprig.And(newCertaintySignature);
+
         }
 
         public LinkedList<Diff> GetDiffChain() {
@@ -62,14 +71,14 @@ namespace DynamicTimelineFramework.Core
             if (Parent != other.Parent)
                 return false;
 
-            return Delta.Equals(other.Delta);
+            return _delta.Equals(other._delta);
 
         }
 
         public override int GetHashCode()
         {
 
-            return Date.GetHashCode() ^ Delta.Head.SuperPosition.GetHashCode() * 397;
+            return Date.GetHashCode() ^ _delta.Head.SuperPosition.GetHashCode() * 397;
         }
     }
 }
