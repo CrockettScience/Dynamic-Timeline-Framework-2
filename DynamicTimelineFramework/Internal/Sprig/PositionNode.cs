@@ -68,5 +68,13 @@ namespace DynamicTimelineFramework.Internal.Sprig
         {
             return new PositionNode(Last.Copy(), Index, (Position) SuperPosition.Copy());
         }
+
+        public bool Validate()
+        {
+            if (SuperPosition.Uncertainty == -1)
+                return false;
+
+            return Last == null || ((PositionNode) Last).Validate();
+        }
     }
 }

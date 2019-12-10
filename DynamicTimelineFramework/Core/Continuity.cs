@@ -22,8 +22,9 @@ namespace DynamicTimelineFramework.Core
         /// Attempts to Constrain the position at date to pos. If the constraint results in a paradox
         /// (that is, the resultant position's Uncertainty property is less than pos), but is transitionable
         /// (Every eigenvalue in pos is in the set of eigenvalues in the forward transition of the superposition
-        /// at date - 1 ), It will create and assign a Diff object to outDiff that can be used to instantiate a
-        /// universe branch where the object's position at date is collapsed to Pos.
+        /// at date - 1, and the required previous states end there as well), It will create and assign a Diff
+        /// object to outDiff that can be used to instantiate a universe branch where the object's position at date is
+        /// collapsed to Pos.
         /// </summary>
         /// <param name="date">The date to collapse to the position at</param>
         /// <param name="pos">The positions to collapse to</param>
@@ -50,6 +51,18 @@ namespace DynamicTimelineFramework.Core
                     //Not transitionable
                     throw new UnresolvableParadoxException();
                 }
+                
+                //Validate vector to verify the lengths can line up
+                var existingVector = _universe.Sprig.ToPositionVector(_dtfObject);
+
+                while (existingVector.Head.Index >= date)
+                    existingVector.Head = existingVector.Head.Last;
+                    
+                existingVector.Head = new PositionNode(existingVector.Head, date, Position.Alloc(_dtfObject.GetType(), true));
+
+                if (!((PositionNode) (existingVector & timelineVector).Head).Validate())
+                    //Not transitionable
+                    throw new UnresolvableParadoxException();
                 
                 outDiff = new Diff(date, _universe, new SprigBufferVector(_universe.Owner.SprigBuilder.IndexedSpace, true) & timelineVector);
                 return false;

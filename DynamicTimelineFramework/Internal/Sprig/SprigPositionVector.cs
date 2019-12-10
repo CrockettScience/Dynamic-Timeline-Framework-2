@@ -32,10 +32,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         {
             get => _head;
 
-            private set
+            set
             {
                 _head = (PositionNode) value;
-                _head.OperativeSliceProvider = this;
+                
+                if(_head.OperativeSliceProvider != this)
+                    _head.OperativeSliceProvider = this;
             }
         }
 

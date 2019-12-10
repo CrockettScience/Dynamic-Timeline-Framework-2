@@ -11,25 +11,22 @@ namespace Test
             
             var galaxy = new Galaxy(multiverse);
             var star = new Star(galaxy, multiverse);
+            
+            var rootStarContinuity = universe.GetContinuity(star);
+            
+            //Test branching multiverse
+            rootStarContinuity.Constrain(10_000_000_000, Star.Proto, out var d0);
+            rootStarContinuity.Constrain(11_000_000_000, Star.MainSequence, out d0);
+            rootStarContinuity.Constrain(11_000_000_000, Star.Massive, out var massiveStarDiff);
+            
+            var massiveStarUniverse = new Universe(massiveStarDiff);
 
-            var galContinuity = universe.GetContinuity(galaxy);
-            var starContinuity = universe.GetContinuity(star);
-            
-            //Get the position at the beginning and end of the universe;
-            var bigBangPosition = starContinuity[0];
-            var heatDeathPosition = starContinuity[ulong.MaxValue];
-            
-            //Collapse the position
-            starContinuity.Constrain(0, Star.PreExistence, out var d0);
-            bigBangPosition = starContinuity[0];
-            
-            starContinuity.Constrain(ulong.MaxValue, Star.BlackHole | Star.Neutron | Star.WhiteDwarf, out var d1);
-            heatDeathPosition = starContinuity[ulong.MaxValue];
-            
-            var galBigBangPosition = galContinuity[0];
-            var galHeatDeathPosition = galContinuity[0];
-            
-            
+            var massiveStarContinuity = massiveStarUniverse.GetContinuity(star);
+
+            var testPosition = rootStarContinuity[10_000_000_000];
+            testPosition = massiveStarContinuity[10_000_000_000];
+            testPosition = rootStarContinuity[11_000_000_000];
+            testPosition = massiveStarContinuity[11_000_000_000];
 
         }
     }

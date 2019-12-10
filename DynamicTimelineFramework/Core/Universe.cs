@@ -16,6 +16,7 @@ namespace DynamicTimelineFramework.Core
             Diff = diff;
             Owner = diff.Parent.Owner;
             Sprig = Owner.SprigBuilder.BuildSprig(diff);
+            Owner.AddUniverse(this);
         }
 
         /// <summary>

@@ -54,6 +54,11 @@ namespace DynamicTimelineFramework.Core
                 return _multiverse[diff];
             }
         }
+
+        internal void AddUniverse(Universe universe)
+        {
+            _multiverse[universe.Diff] = universe;
+        }
         
         internal class ObjectCompiler
         {

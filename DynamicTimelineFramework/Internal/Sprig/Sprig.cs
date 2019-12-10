@@ -77,9 +77,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public bool And<T>(ISprigVector<T> other) where T : BinaryPosition
         {
-            //Clip the vector to adjust for off-cycle timeline changes
-            ClipVector(other);
-            
             var newHead = Node<PositionBuffer>.And(Head, other.Head);
             
             //We only should assign the new head if any changes were made
@@ -94,9 +91,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public bool Or<T>(ISprigVector<T> other) where T : BinaryPosition
         {
-            //Clip the vector to adjust for off-cycle timeline changes
-            ClipVector(other);
-            
             var newHead = Node<PositionBuffer>.Or(Head, other.Head);
             
             //We only should assign the new head if any changes were made
@@ -174,11 +168,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                     currentNode = branchNode[nextDiff];
                 }
             }
-        }
-
-        private void ClipVector<T>(ISprigVector<T> vector) where T : BinaryPosition
-        {
-            throw new NotImplementedException();
         }
     }
 }
