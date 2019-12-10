@@ -95,7 +95,7 @@ namespace DynamicTimelineFramework.Core
                 {
 
                     //This is a type we are looking for. Now iterate though each field and build the metadata
-                    var lateralTranslation = _objectMetaData[type].LateralTranslation;
+                    var lateralTranslation = _objectMetaData[type].LateralTranslation.Map;
                     
                     var positionType = typeof(Position);
                     
@@ -173,15 +173,15 @@ namespace DynamicTimelineFramework.Core
                                 if(!_objectMetaData.ContainsKey(attribute.Type))
                                     throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name);
                                 
-                                var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation;
+                                var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation.Map;
                                 foreach (var otherField in attribute.Type.GetFields())
                                 {
                                     if (otherField.GetCustomAttribute(PositionAttr) is PositionAttribute)
                                     {
-                                        if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()))
-                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()] = new Dictionary<Position, Position>();
+                                        if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE" + type.Name))
+                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE" + type.Name] = new Dictionary<Position, Position>();
 
-                                        var backTranslation = otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.GetHashCode()];
+                                        var backTranslation = otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE" + type.Name];
                                         
                                         var otherPosition = (Position) otherField.GetValue(null);
 
@@ -347,11 +347,11 @@ namespace DynamicTimelineFramework.Core
                                 HelperNode lowest = null;
 
                                 foreach (var node in helperNodes)
-                                    if ((lowest == null || index - lowest.EarliestStart > index - node.EarliestStart) && !node.SpanMade)
+                                    if ((lowest == null || index - lowest.TheoreticalEarliestStart > index - node.TheoreticalEarliestStart) && !node.SpanMade)
                                         lowest = node;
 
                                 //Move offset to that node
-                                index = lowest.EarliestStart;
+                                index = lowest.TheoreticalEarliestStart;
 
                                 //Create span vector
                                 spanVectors.Add(MakeSpanVectorFromNode(lowest));
@@ -456,21 +456,18 @@ namespace DynamicTimelineFramework.Core
             {
                 
                 public Position Value { get; }
-                
+                public ulong TheoreticalEarliestStart { get; }
                 public ulong EarliestStart { get; }  
-                
                 public ulong LatestStart { get; }
-                
                 public ulong LatestEnd { get; }
-                
                 public bool SpanMade { get; set; }
 
-                private HelperNode _repInheritedFrom;
+                private readonly HelperNode _repInheritedFrom;
 
-                private bool _repFwd;
-                private bool _repBwd;
+                private readonly bool _repFwd;
+                private readonly bool _repBwd;
                 
-                public HelperNode(Position value, ulong earliestStart, ulong span, long shift, bool repFwd, bool repBwd, HelperNode repInheritedFrom = null) 
+                public HelperNode(Position value, ulong theoreticalEarliestStart, ulong span, long shift, bool repFwd, bool repBwd, HelperNode repInheritedFrom = null) 
                 {
                     //Determine if the state repeats forward or backward
                     _repFwd = repFwd;
@@ -479,9 +476,10 @@ namespace DynamicTimelineFramework.Core
                     _repInheritedFrom = repInheritedFrom;
                     
                     Value = value;
-                    EarliestStart = _repBwd ? 0 : earliestStart;
-                    LatestStart = earliestStart + (ulong) shift;
-                    LatestEnd = _repFwd ? ulong.MaxValue : earliestStart + span;
+                    TheoreticalEarliestStart = theoreticalEarliestStart;
+                    EarliestStart = _repBwd ? 0 : theoreticalEarliestStart;
+                    LatestStart = theoreticalEarliestStart + (ulong) shift;
+                    LatestEnd = _repFwd ? ulong.MaxValue : theoreticalEarliestStart + span;
                     SpanMade = false;
                 }
 
@@ -538,6 +536,10 @@ namespace DynamicTimelineFramework.Core
             }
 
             #region FUNCTIONS
+
+            internal void AddLateralProxy(Type destType, Type sourceType, string inputKey, string sourceKey) {
+                _objectMetaData[destType].LateralTranslation.AddProxy(inputKey, sourceKey + "-BACK_REFERENCE" + sourceType.Name);
+            }
             
             internal void PushLateralConstraints(DTFObject dtfObj, Universe universe)
             {
@@ -564,7 +566,7 @@ namespace DynamicTimelineFramework.Core
                 var dest = source.GetLateralObject(lateralKey);
                 
                 //Get the translation vector
-                var translationVector = lateralMetaData.Translate(lateralKey, Owner[universe.Diff].Sprig.ToPositionVector(source), dest.SprigBuilderSlice);
+                var translationVector = lateralMetaData.Translate(lateralKey, universe.Sprig.ToPositionVector(source), dest.SprigBuilderSlice);
                 
                 //AND the sprig with the translation vector and return whether or not a change was made
                 return universe.Sprig.And(translationVector);
@@ -609,46 +611,28 @@ namespace DynamicTimelineFramework.Core
 
             private class TypeMetaData
             {
-                public Dictionary<string, Dictionary<Position, Position>> LateralTranslation { get; }
+                public LateralTranslation LateralTranslation { get; }
                 
                 public Dictionary<Position, PositionMetaData> PreComputedVectors { get; }
                 
                 public TypeMetaData()
                 {
-                    LateralTranslation = new Dictionary<string, Dictionary<Position, Position>>();
+                    LateralTranslation = new LateralTranslation();
                     PreComputedVectors = new Dictionary<Position, PositionMetaData>();
-                }
-
-                public Position Translate(string key, Position input)
-                {
-                    Position output;
-
-                    try
-                    {
-                        output = LateralTranslation[key][input];
-                    }
-                    
-                    catch (InvalidCastException)
-                    {
-                        //This means that the key given does not match the type of the lateral object
-                        throw new ArgumentException("The given key does not map to the correct lateral type");
-                    }
-
-                    return output;
                 }
 
                 public SprigPositionVector Translate(string key, SprigPositionVector input, OperativeSlice outputOperativeSlice)
                 {
                      
                     var currentIn = input.Head;
-                    var currentOut = new PositionNode(null, currentIn.Index, Translate(key, (Position) currentIn.SuperPosition.Copy()));
+                    var currentOut = new PositionNode(null, currentIn.Index, LateralTranslation[key, (Position) currentIn.SuperPosition.Copy()]);
                     var output = new SprigPositionVector(outputOperativeSlice, currentOut);
 
                     while (currentIn.Last != null)
                     {
                         currentIn = currentIn.Last;
 
-                        var lastTranslate = Translate(key, (Position) currentIn.SuperPosition.Copy());
+                        var lastTranslate = LateralTranslation[key, (Position) currentIn.SuperPosition.Copy()];
 
                         if (lastTranslate.Equals(currentOut.SuperPosition)) {
                             currentOut.Index = currentIn.Index;
@@ -681,6 +665,32 @@ namespace DynamicTimelineFramework.Core
                     TimelineVector = timelineVector;
                     Length = length;
                 }
+            }
+
+
+            private class LateralTranslation {
+                public readonly Dictionary<string, Dictionary<Position, Position>> Map = new Dictionary<string, Dictionary<Position, Position>>();
+                private readonly Dictionary<string, string> _proxy = new Dictionary<string, string>();
+
+                public Position this[string key, Position input] {
+                    get {
+                        var latMap = Map[_proxy.ContainsKey(key) ? _proxy[key] : key];
+                        var eigenvals = input.GetEigenValues();
+
+                        var superPosition = latMap[eigenvals[0]];
+
+                        for (var i = 1; i < eigenvals.Count; i++) {
+                            superPosition |= latMap[eigenvals[i]];
+                        }
+
+                        return superPosition;
+                    }
+                }
+
+                public void AddProxy(string input, string output) {
+                    _proxy[input] = output;
+                }
+                
             }
         }
     }

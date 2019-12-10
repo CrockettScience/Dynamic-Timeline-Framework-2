@@ -31,7 +31,7 @@ namespace DynamicTimelineFramework.Internal.Sprig
             {
                 _operativeSliceProvider = value;
                 if(_last != null)
-                    _last._operativeSliceProvider = _operativeSliceProvider;
+                    _last.OperativeSliceProvider = _operativeSliceProvider;
             }
         }
 

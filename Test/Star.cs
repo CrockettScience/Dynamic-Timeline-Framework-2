@@ -41,11 +41,11 @@ namespace Test {
         public static readonly Position PlanetaryNebula  = Position.Alloc<Star>((int) Stage.PlanetaryNebula);
 
         [Position(1, (int) Stage.WhiteDwarf)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Degenerate)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death, (int) Galaxy.Stage.Degenerate)]
         public static readonly Position Burnoff       = Position.Alloc<Star>((int) Stage.Burnoff);
         
         [Position(1, (int) Stage.WhiteDwarf)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Degenerate)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death, (int) Galaxy.Stage.Degenerate)]
         public static readonly Position WhiteDwarf       = Position.Alloc<Star>((int) Stage.WhiteDwarf);
         
         [Position(350, (int) Stage.Death)]
@@ -53,15 +53,15 @@ namespace Test {
         public static readonly Position Supernova        = Position.Alloc<Star>((int) Stage.Supernova);
         
         [Position(1, (int) Stage.Neutron, (int) Stage.BlackHole)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Degenerate)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death, (int) Galaxy.Stage.Degenerate)]
         public static readonly Position Death          = Position.Alloc<Star>((int) Stage.Death);
         
         [Position(1, (int) Stage.Neutron)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Degenerate)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death, (int) Galaxy.Stage.Degenerate)]
         public static readonly Position Neutron          = Position.Alloc<Star>((int) Stage.Neutron);
         
         [Position(1, (int) Stage.BlackHole)]
-        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Degenerate)]
+        [LateralConstraint(GALAXY_KEY, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death, (int) Galaxy.Stage.Degenerate)]
         public static readonly Position BlackHole        = Position.Alloc<Star>((int) Stage.BlackHole);
 
         public Star(Galaxy galaxy, Multiverse owner) : base(owner){

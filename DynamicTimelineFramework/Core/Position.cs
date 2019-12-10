@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
@@ -76,21 +77,21 @@ namespace DynamicTimelineFramework.Core
         
         internal IOperativeSliceProvider OperativeSliceProvider { private get; set; }
 
-        internal ReferenceSlice Slice { get; }
+        internal ReferenceSlice ReferenceSlice { get; }
 
         internal OperativeSlice OperativeSlice => OperativeSliceProvider.OperativeSlice;
 
-        public override int Length => Slice.RightBound - Slice.LeftBound;
+        public override int Length => ReferenceSlice.RightBound - ReferenceSlice.LeftBound;
 
         public Type Type { get; }
 
         public int Uncertainty
         {
             get {
-                var flag = Slice.Head.Flag;
+                var flag = ReferenceSlice.Head.Flag;
 
-                var lb = Slice.LeftBound;
-                var rb = Slice.RightBound;
+                var lb = ReferenceSlice.LeftBound;
+                var rb = ReferenceSlice.RightBound;
                 
                 //Count the number of set bits in the bitArray
                 var hWeight = 0;
@@ -105,10 +106,10 @@ namespace DynamicTimelineFramework.Core
             }
         }
 
-        internal Position(Type type, ReferenceSlice slice)
+        internal Position(Type type, ReferenceSlice referenceSlice)
         {
             Type = type;
-            Slice = slice;
+            ReferenceSlice = referenceSlice;
         }
 
         /// <summary>
@@ -125,10 +126,10 @@ namespace DynamicTimelineFramework.Core
             var buffer = new PositionBuffer();
             
             //Iterate through and make positions for each set bit
-            var flag = Slice.Head.Flag;
+            var flag = ReferenceSlice.Head.Flag;
 
-            var lb = Slice.LeftBound;
-            var rb = Slice.RightBound;
+            var lb = ReferenceSlice.LeftBound;
+            var rb = ReferenceSlice.RightBound;
 
             var eigenVals = new List<Position>();
             
@@ -146,11 +147,22 @@ namespace DynamicTimelineFramework.Core
         public override bool Equals(object obj) {
             if (!(obj is Position other)) return false;
 
-            return other.Slice.Equals(Slice);
+            for (var i = 0; i < Length; i++) {
+                if (this[i] ^ other[i])
+                    return false;
+            }
+
+            return true;
         }
 
         public override int GetHashCode() {
-            return Slice.GetHashCode();
+            var hash = int.MaxValue;
+
+            for (var i = 0; i < Length; i++) {
+                hash ^= this[i] ? i * 367 : i * 397;
+            }
+
+            return hash;
         }
 
         public override bool this[int index] {
@@ -158,13 +170,13 @@ namespace DynamicTimelineFramework.Core
                 if(index >= Length)
                     throw new IndexOutOfRangeException();
                 
-                return Slice.Head[Slice.LeftBound + index];
+                return ReferenceSlice.Head[ReferenceSlice.LeftBound + index];
             }
             set {
                 if(index >= Length)
                     throw new IndexOutOfRangeException();
                 
-                Slice.Head[Slice.LeftBound + index] = value;
+                ReferenceSlice.Head[ReferenceSlice.LeftBound + index] = value;
             }
         }
 

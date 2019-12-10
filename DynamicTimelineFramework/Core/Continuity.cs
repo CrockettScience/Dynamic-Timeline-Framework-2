@@ -33,9 +33,9 @@ namespace DynamicTimelineFramework.Core
         public bool Constrain(ulong date, Position pos, out Diff outDiff)
         {
             //Create a copy of the position with the correct operative slice
-            var deltaPosition = new Position(_dtfObject.GetType(), pos.Slice)
+            var deltaPosition = new Position(_dtfObject.GetType(), pos.ReferenceSlice)
             {
-                OperativeSliceProvider = _dtfObject._operativeSliceProvider
+                OperativeSliceProvider = _dtfObject.OperativeSliceProvider
             };
 
             //Get timeline position vector
@@ -57,6 +57,8 @@ namespace DynamicTimelineFramework.Core
             
             //Constrain the position
             _universe.Sprig.And(timelineVector);
+            _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe);
+            
             outDiff = null;
             return true;
         }

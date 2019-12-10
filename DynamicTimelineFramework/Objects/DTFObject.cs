@@ -11,18 +11,20 @@ namespace DynamicTimelineFramework.Objects {
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
 
-        internal DTFOOperativeSliceProvider _operativeSliceProvider;
+        internal readonly DTFOOperativeSliceProvider OperativeSliceProvider;
 
         internal OperativeSlice SprigBuilderSlice { get; }
+        private Multiverse.ObjectCompiler Compiler { get; }
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Dictionary<string, DTFObject>();
             
-            _operativeSliceProvider = new DTFOOperativeSliceProvider(this);
+            OperativeSliceProvider = new DTFOOperativeSliceProvider(this);
 
             //Register object with the timeline
             SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this);
+            Compiler = owner.Compiler;
         }
 
         protected void SetLateralObject(string key, DTFObject obj) {
@@ -32,9 +34,12 @@ namespace DynamicTimelineFramework.Objects {
             _lateralDirectory[key] = obj;
             _lateralKeys.Add(key);
             
-            //Subscribe to the other objects directory
-            obj._lateralDirectory[key + "-BACK_REFERENCE-" + GetHashCode()] = this;
-            obj._lateralKeys.Add(key + "-BACK_REFERENCE-" + GetHashCode());
+            //Subscribe to the other object's directory and add a proxy
+            var backKey = key + "-BACK_REFERENCE" + GetHashCode();
+            obj._lateralDirectory[backKey] = this;
+            obj._lateralKeys.Add(backKey);
+            Compiler.AddLateralProxy(obj.GetType(), GetType(), backKey, key);
+            
         }
 
         internal DTFObject GetLateralObject(string key) {

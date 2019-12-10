@@ -20,6 +20,16 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             SuperPosition = superPosition;
         }
 
+        public override bool Equals(object obj) {
+            if (!(obj is BufferNode other)) return false;
+
+            if (Index != other.Index || !SuperPosition.Equals(other.SuperPosition)) return false;
+
+            return Last?.Equals(other.Last) ?? true;
+
+        }
+
+
         public Node<PositionBuffer>.INode Copy()
         {
             return new BufferNode((BufferNode) Last.Copy(), Index, (PositionBuffer) SuperPosition.Copy());

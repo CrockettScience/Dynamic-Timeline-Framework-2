@@ -26,7 +26,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         private PositionNode _head;
 
-        public OperativeSlice OperativeSlice { get; set; }
+        public OperativeSlice OperativeSlice { get; }
 
         public Node<Position>.INode Head
         {
@@ -49,10 +49,10 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public SprigPositionVector(OperativeSlice operativeSlice, Type objectType, Node<PositionBuffer>.INode bufferHead)
         {
             OperativeSlice = operativeSlice;
-            var vectorHead = new PositionNode(null, bufferHead.Index, bufferHead.SuperPosition.PositionAtSlice(objectType, operativeSlice));
+            Head = new PositionNode(null, bufferHead.Index, bufferHead.SuperPosition.PositionAtSlice(objectType, operativeSlice));
             
             var bufferCurrent = bufferHead.Last;
-            var vectorCurrent = vectorHead;
+            var vectorCurrent = Head;
 
             while (bufferCurrent != null)
             {

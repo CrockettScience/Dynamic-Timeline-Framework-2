@@ -77,7 +77,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
         {
             var flag = new BitArray(Flag.Length);
 
-            for (var i = 0; i > flag.Length; i++)
+            for (var i = 0; i < flag.Length; i++)
             {
                 flag[i] = Flag[i];
             }
@@ -162,7 +162,12 @@ namespace DynamicTimelineFramework.Internal.Buffer {
         {
             if (!(obj is PositionBuffer other)) return false;
 
-            return Flag.Equals(other.Flag);
+            for (var i = 0; i < Flag.Count; i++) {
+                if (Flag[i] ^ other.Flag[i])
+                    return false;
+            }
+
+            return true;
         }
     }
 }
