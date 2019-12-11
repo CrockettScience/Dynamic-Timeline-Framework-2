@@ -17,7 +17,7 @@ namespace DynamicTimelineFramework.Core
 
             var parent = allegingParent;
             
-            while (parent?.Diff.Date <= Date)
+            while (parent?.Diff.Date > Date)
                 parent = parent.Parent;
             
             Parent = parent;
@@ -26,10 +26,9 @@ namespace DynamicTimelineFramework.Core
         internal void InstallChanges(Sprig newSprig) {
             //This command installs the changes given by the diff.
             var mvCompiler = Parent.Owner.Compiler;
-            var sprigBuilder = Parent.Owner.SprigBuilder;
 
             //Constrain the new sprig to establish the shared certainty signature
-            var priorCertaintySignature = mvCompiler.GetTimelineVector(sprigBuilder, Date - 1,
+            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1,
                 Parent.Sprig.GetBufferNode(Date - 1).SuperPosition);
 
             newSprig.And(priorCertaintySignature);
@@ -38,11 +37,17 @@ namespace DynamicTimelineFramework.Core
             newSprig.And(_delta);
             
             //Constrain the parent sprig to back-propagate the new certainty signature
-            var newCertaintySignature = mvCompiler.GetTimelineVector(sprigBuilder, Date - 1, _delta[Date - 1]);
+            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1]);
             Parent.Sprig.And(newCertaintySignature);
 
         }
 
+        /// <summary>
+        /// Gets the chain of Diffs that, together, encode all the changes made since the root
+        /// universe
+        /// </summary>
+        /// <returns>The chain of Diffs that, together, encode all the changes made since the root
+        /// universe</returns>
         public LinkedList<Diff> GetDiffChain() {
             var diffChain = new LinkedList<Diff>();
             var current = this;

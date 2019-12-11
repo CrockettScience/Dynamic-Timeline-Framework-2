@@ -1,5 +1,4 @@
-﻿using System;
-using DynamicTimelineFramework.Core;
+﻿using DynamicTimelineFramework.Core;
 
 namespace Test
 {
@@ -20,14 +19,17 @@ namespace Test
             rootStarContinuity.Constrain(11_000_000_000, Star.Massive, out var massiveStarDiff);
             
             var massiveStarUniverse = new Universe(massiveStarDiff);
-
             var massiveStarContinuity = massiveStarUniverse.GetContinuity(star);
 
-            var testPosition = rootStarContinuity[10_000_000_000];
-            testPosition = massiveStarContinuity[10_000_000_000];
-            testPosition = rootStarContinuity[11_000_000_000];
-            testPosition = massiveStarContinuity[11_000_000_000];
+            massiveStarContinuity.Constrain(13_000_000_351, Star.BlackHole, out d0);
+            massiveStarContinuity.Constrain(13_000_000_351, Star.Neutron, out var neutronStarDiff);
+            
+            var neutronStarUniverse = new Universe(neutronStarDiff);
+            var neutronStarContinuity = neutronStarUniverse.GetContinuity(star);
 
+            var testPosition = rootStarContinuity[13_000_000_351];   //White Dwarf
+            testPosition = massiveStarContinuity[13_000_000_351];    //Black Hole
+            testPosition = neutronStarContinuity[13_000_000_351];    //Neutron Star
         }
     }
 }

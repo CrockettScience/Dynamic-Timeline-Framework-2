@@ -8,7 +8,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public Spine(Diff rootDiff, Universe rootUniverse)
         {
-            RootBranch = new SpineBranchNode(0, null, rootDiff);
+            RootBranch = new SpineBranchNode(0, null);
             
             rootUniverse.Sprig = RootBranch.AddBranch(rootDiff);
         }
@@ -22,59 +22,46 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public Sprig AddBranch(LinkedList<Diff> diffChain) 
         {
             //Use the diff chain to follow the trail of diffs from the spine's root to place the new branch
-            var diffToAdd = diffChain.Last.Value;
+            var branchDate = diffChain.Last.Value.Date;
             
             using (var diffEnum = diffChain.GetEnumerator()) 
             {
                 //The diff chain includes the diff that hasn't been spliced in yet, so there's always at least two diffs
-                //in the chain; rootDiff and diffToAdd
+                //in the chain; rootDiff and nextDiff
                 
                 diffEnum.MoveNext();
-                var rootDiff = diffEnum.Current;
+                var nextDiff = diffEnum.Current;
+
+                diffEnum.MoveNext();
+                var nextTurn = diffEnum.Current;
                 
-                var currentBranch = RootBranch;
-                var nextDiff = rootDiff;
-                
-                if (RootBranch[rootDiff] is SpineBranchNode firstBranch && firstBranch.Date < diffToAdd.Date)
-                {
-                    currentBranch = firstBranch;
+                var currentBranchNode = RootBranch;
 
-                    diffEnum.MoveNext();
+                while (currentBranchNode[nextDiff] is SpineBranchNode nextBranchNode && nextBranchNode.Date <= branchDate) {
                     
-                    //The enum is now on the "next turn" we have to take
-                    var isAtTurn = !diffEnum.Current.Equals(diffToAdd) && currentBranch.Contains(diffEnum.Current);
+                    currentBranchNode = nextBranchNode;
                     
-                    nextDiff = isAtTurn ? diffEnum.Current : currentBranch.Diff;
-                    var nextDate = currentBranch[nextDiff] is SpineBranchNode b0 ? b0.Date : ulong.MaxValue;
+                    if (nextTurn != null && currentBranchNode.Contains(nextTurn)) {
+                        nextDiff = nextTurn;
 
-                    while (nextDate < diffToAdd.Date)
-                    {
-                        currentBranch = (SpineBranchNode) currentBranch[nextDiff];
-                        isAtTurn = !diffEnum.Current.Equals(diffToAdd) && currentBranch.Contains(diffEnum.Current);
-
-                        if (isAtTurn)
-                            diffEnum.MoveNext();
-                        
-                        nextDiff = isAtTurn ? diffEnum.Current : currentBranch.Diff;
-                        nextDate = currentBranch[nextDiff] is SpineBranchNode b1 ? b1.Date : ulong.MaxValue;
-
+                        nextTurn = diffEnum.Current;
                     }
                 }
 
                 //Current is looking at the branch node the new branch is going to be added on
-                if (currentBranch.Date == diffToAdd.Date) {
-                    return currentBranch.AddBranch(diffToAdd);
+                if (currentBranchNode.Date == branchDate) {
+                    return currentBranchNode.AddBranch(nextTurn);
                 }
                 
                 //Current is looking at the branch node that comes before the spine
                 //node the new branch needs to be between. Create a new node and insert in between
-                var nextBranch = currentBranch[nextDiff];
-                var newBranch = new SpineBranchNode(diffToAdd.Date, nextBranch.ParentSprig, nextDiff);
-                currentBranch[nextDiff] = newBranch;
-                newBranch[nextDiff] = nextBranch;
+                var nextBranch = currentBranchNode[nextDiff];
+                var newBranch = new SpineBranchNode(branchDate, nextBranch.ParentSprig);
+                currentBranchNode[nextDiff] = newBranch;
+                newBranch.AddBranch(nextBranch);
                 
                 //Add the new branch to the branch node we just made
-                return newBranch.AddBranch(diffToAdd);
+                return newBranch.AddBranch(nextTurn);
             }
         }
     }

@@ -12,6 +12,12 @@ namespace DynamicTimelineFramework.Core
 {
     public class Multiverse
     {
+        //Bonus Level:
+        //Todo - Document public facing classes and members
+        //Todo - Add more options to constrain, including a way to constrain more than one object at once and encode changes in a single diff
+        //Todo - Add a way to "select" a single position from a list of positions, both for one object and for several at a time
+        //Todo - Add ways to discern exactly what objects and states are encoded inside diffs and diffChains
+
         private readonly Dictionary<Diff, Universe> _multiverse;
         
         internal SprigBuilder SprigBuilder { get; }
@@ -214,8 +220,8 @@ namespace DynamicTimelineFramework.Core
                     {
                         
                         var pos = (Position) field.GetValue(null);
-                        var backwardVals = backwardDictionary[pos].GetEigenValues();
-                        var forwardVals = forwardDictionary[pos].GetEigenValues();
+                        var backwardVals = backwardDictionary[pos].GetEigenStates();
+                        var forwardVals = forwardDictionary[pos].GetEigenStates();
 
                         var length = lengthsDictionary[backwardVals[0]];
                         for (var i = 1; i < backwardVals.Count; i++)
@@ -324,7 +330,7 @@ namespace DynamicTimelineFramework.Core
                             while (!initialPosition.Equals(lastSuperPosition)) {
                                 initialPosition = lastSuperPosition;
 
-                                var eigenValues = initialPosition.GetEigenValues();
+                                var eigenValues = initialPosition.GetEigenStates();
                                 lastSuperPosition = Position.Alloc(type);
 
                                 foreach (var eigenValue in eigenValues) {
@@ -337,7 +343,7 @@ namespace DynamicTimelineFramework.Core
                             var repeatsBackward = (currentPosition & pos).Uncertainty == 0;
 
                             //We use helper nodes to keep track of where we are on the spans
-                            var backwardNodeVals = currentPosition.GetEigenValues();
+                            var backwardNodeVals = currentPosition.GetEigenStates();
                             var helperNodes = new List<HelperNode>();
 
                             var index = SprigCenter;
@@ -389,7 +395,7 @@ namespace DynamicTimelineFramework.Core
                             while (!terminalPosition.Equals(nextSuperPosition)) {
                                 terminalPosition = nextSuperPosition;
 
-                                var eigenValues = terminalPosition.GetEigenValues();
+                                var eigenValues = terminalPosition.GetEigenStates();
                                 nextSuperPosition = Position.Alloc(type);
 
                                 foreach (var eigenValue in eigenValues) {
@@ -402,7 +408,7 @@ namespace DynamicTimelineFramework.Core
                             var repeatsforward = (currentPosition & pos).Uncertainty == 0;
 
                             //We use helper nodes to keep track of where we are on the spans
-                            var forwardNodeVals = currentPosition.GetEigenValues();
+                            var forwardNodeVals = currentPosition.GetEigenStates();
                             var helperNodes = new List<HelperNode>();
 
                             var index = SprigCenter;
@@ -491,7 +497,7 @@ namespace DynamicTimelineFramework.Core
                 public void AddForwardValues(Dictionary<Position, Position> forwardDictionary, Dictionary<Position, long> lengths, List<HelperNode> nodes, long shift)
                 {
                     
-                    var forwardNodeVals = forwardDictionary[Value].GetEigenValues();
+                    var forwardNodeVals = forwardDictionary[Value].GetEigenStates();
                     foreach (var forwardNodeVal in forwardNodeVals) {
                         
                         //Don't add the forward val if it's the same as the current val
@@ -509,7 +515,7 @@ namespace DynamicTimelineFramework.Core
                 public void AddbackwardValues(Dictionary<Position, Position> backwardDictionary, Dictionary<Position, long> lengths, List<HelperNode> nodes, long shift)
                 {
                     
-                    var backwardNodeVals = backwardDictionary[Value].GetEigenValues();
+                    var backwardNodeVals = backwardDictionary[Value].GetEigenStates();
                     foreach (var backwardNodeVal in backwardNodeVals) {
                         
                         //Don't add the forward val if it's the same as the current val
@@ -578,8 +584,8 @@ namespace DynamicTimelineFramework.Core
             }
 
             
-            public SprigBufferVector GetTimelineVector(SprigBuilder builder, ulong date, PositionBuffer buffer)
-            {
+            public SprigBufferVector GetTimelineVector(ulong date, PositionBuffer buffer) {
+                var builder = Owner.SprigBuilder;
                 var timelineVector = new SprigBufferVector(builder.IndexedSpace);
 
                 var registry = builder.Registry;
@@ -596,7 +602,7 @@ namespace DynamicTimelineFramework.Core
             {
                 var timelineVector = new SprigPositionVector(dtfObject.SprigBuilderSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
 
-                var eigenVals = position.GetEigenValues();
+                var eigenVals = position.GetEigenStates();
 
                 foreach (var val in eigenVals)
                 {
@@ -680,7 +686,7 @@ namespace DynamicTimelineFramework.Core
                 public Position this[string key, Position input] {
                     get {
                         var latMap = Map[_proxy.ContainsKey(key) ? _proxy[key] : key];
-                        var eigenvals = input.GetEigenValues();
+                        var eigenvals = input.GetEigenStates();
 
                         var superPosition = latMap[eigenvals[0]];
 

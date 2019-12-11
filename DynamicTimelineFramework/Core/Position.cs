@@ -116,10 +116,10 @@ namespace DynamicTimelineFramework.Core
         /// Returns an array of positions such that each position has 0 uncertainty and all positions OR'd together
         /// equals the current position. In other words:
         ///
-        /// anyPosition.Equals(anyPosition.GetEigenValues().Aggregate(anyPosition, (i, p) => i | p) is always TRUE;
+        /// anyPosition.Equals(anyPosition.GetEigenStates().Aggregate(anyPosition, (i, p) => i | p)) is always TRUE;
         /// </summary>
         /// <returns></returns>
-        public List<Position> GetEigenValues()
+        public List<Position> GetEigenStates()
         {
             
             //Create a buffer to hold all the eigenvalues.

@@ -9,15 +9,15 @@ namespace Test {
         private const string GalaxyKey = "Galaxy";
         
         [Position(1, (int) Stage.PreExistent, (int) Stage.Birth)]
-        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.PreExistent, (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.ProtoGalaxy)]
+        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.PreExistent, (int) Galaxy.Stage.Birth, (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.ProtoGalaxy)]
         public static readonly Position PreExistence     = Position.Alloc<Star>((int) Stage.PreExistent);
 
         [Position(1, (int) Stage.Proto)]
-        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.ProtoGalaxy)]
+        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old)]
         public static readonly Position Birth            = Position.Alloc<Star>((int) Stage.Birth);
         
         [Position(1_000_000_000, (int) Stage.MainSequence, (int) Stage.Massive)]
-        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.ProtoGalaxy)]
+        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old)]
         public static readonly Position Proto            = Position.Alloc<Star>((int) Stage.Proto);
         
         [Position(1_000_000_000, (int) Stage.RedGiant)]
@@ -41,7 +41,7 @@ namespace Test {
         public static readonly Position PlanetaryNebula  = Position.Alloc<Star>((int) Stage.PlanetaryNebula);
 
         [Position(1, (int) Stage.WhiteDwarf)]
-        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death, (int) Galaxy.Stage.Degenerate)]
+        [LateralConstraint(GalaxyKey, typeof(Galaxy), (int) Galaxy.Stage.Young, (int) Galaxy.Stage.Middle, (int) Galaxy.Stage.Old, (int) Galaxy.Stage.Death)]
         public static readonly Position Burnoff       = Position.Alloc<Star>((int) Stage.Burnoff);
         
         [Position(1, (int) Stage.WhiteDwarf)]

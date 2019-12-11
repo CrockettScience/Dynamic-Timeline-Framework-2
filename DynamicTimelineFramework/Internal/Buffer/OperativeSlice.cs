@@ -2,7 +2,7 @@ using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Internal.Buffer
 {
-    public struct OperativeSlice : ISlice
+    internal struct OperativeSlice : ISlice
     {
         public int LeftBound { get; }
         public int RightBound { get; }

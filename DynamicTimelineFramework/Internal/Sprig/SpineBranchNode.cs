@@ -10,19 +10,16 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public ulong Date { get; }
         public override Sprig ParentSprig { get; }
         
-        public Diff Diff { get; }
-        
         public SpineNode this[Diff diff] {
             get => _branchMap[diff].Next;
 
             set => _branchMap[diff].Next = value;
         }
 
-        public SpineBranchNode(ulong date, Sprig parentSprig, Diff diff) {
+        public SpineBranchNode(ulong date, Sprig parentSprig) {
             _branchMap = new Dictionary<Diff, Branch>();
             Date = date;
             ParentSprig = parentSprig;
-            Diff = diff;
         }
 
         public bool Contains(Diff diff) {
@@ -34,6 +31,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             _branchMap[diff] = new Branch(newHead, newHead.ParentSprig.Head);
             return newHead.ParentSprig;
+        }
+        
+        public void AddBranch(SpineNode next) {
+            var diff = next.ParentSprig.Diff;
+            _branchMap[diff] = new Branch(next, next.ParentSprig.GetBufferNode(Date));
         }
 
         public override void Alloc(int space, int startIndex)

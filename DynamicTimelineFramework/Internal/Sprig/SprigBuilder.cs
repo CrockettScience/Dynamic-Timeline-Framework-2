@@ -12,12 +12,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public int IndexedSpace { get; private set; }
         
         public readonly List<DTFObject> Registry = new List<DTFObject>();
+
+        public Multiverse Owner;
         
         public SprigBuilder(Diff rootDiff, Universe rootUniverse)
         {
             Spine = new Spine(rootDiff, rootUniverse);
             rootUniverse.Sprig.Builder = this;
             IndexedSpace = 0;
+            Owner = rootUniverse.Owner;
         }
 
         public Sprig BuildSprig(Diff diff)

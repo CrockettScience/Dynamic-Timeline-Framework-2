@@ -117,55 +117,52 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             using (var diffEnum = diffChain.GetEnumerator()) {
 
                 diffEnum.MoveNext();
-                var currentDiff = diffEnum.Current;
-                
-                diffEnum.MoveNext();
-                var nextTurn = diffEnum.Current;
+                var nextDiff = diffEnum.Current;
+
+                var nextTurn = diffEnum.MoveNext() ? diffEnum.Current : null;
 
                 SpineNode currentNode = spine.RootBranch;
-
-                while (currentNode is SpineBranchNode branchNode && branchNode.Date >= realignFromDateOnward) {
-                    Diff nextDiff;
+                while (currentNode is SpineBranchNode branchNode) {
 
                     if (nextTurn != null && branchNode.Contains(nextTurn)) {
-                        currentDiff = nextTurn;
-
-                        diffEnum.MoveNext();
-                        nextTurn = diffEnum.Current;
-
                         nextDiff = nextTurn;
-                    }
 
-                    else nextDiff = currentDiff;
-
-                    //Realign all branches
-                    foreach (var diff in branchNode) {
-                        
-                        //If it's the branch we're moving to next, we need to change the first node to the correct one on the new head
-                        if (Equals(diff, nextDiff)) {
-                            branchNode.GetBranch(diff).FirstNodeOnBranch = GetBufferNode(branchNode.Date);
-                        }
-
-                        //If it's a different branch, we need to change the first node's previous to reflect the new structure
-                        else if (branchNode.Date > 0)
-                        {
-                            var branch = branchNode.GetBranch(diff);
-                            
-                            var firstNodeOnBranch = branch.FirstNodeOnBranch;
-                            var previousNode = GetBufferNode(branchNode.Date - 1);
-                            firstNodeOnBranch.Last = previousNode;
-                            
-                            //Mask the other branch here to reflect the change
-                            var timelineVector = diff.Parent.Owner.Compiler.GetTimelineVector(Builder, branchNode.Date, previousNode.SuperPosition);
-                            var branchSprig = branch.Next.ParentSprig;
-                            var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date + 1);
-                            
-                            branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead);
-
-                        }
+                        nextTurn = diffEnum.MoveNext() ? diffEnum.Current : null;
                     }
 
                     currentNode = branchNode[nextDiff];
+
+                    //Realign all branches that come on or after realignFromDateOnward
+                    if (branchNode.Date >= realignFromDateOnward) {
+                        foreach (var diff in branchNode) {
+
+                            //If it's the branch we're moving to next, we need to change the first node to the correct one on the new head
+                            if (Equals(diff, nextDiff)) {
+                                branchNode.GetBranch(diff).FirstNodeOnBranch = GetBufferNode(branchNode.Date);
+                            }
+
+                            //If it's a different branch, we need to change the first node's previous to reflect the new structure
+                            else if (branchNode.Date > 0) {
+                                var branch = branchNode.GetBranch(diff);
+
+                                var firstNodeOnBranch = branch.FirstNodeOnBranch;
+                                var previousNode = GetBufferNode(branchNode.Date - 1);
+
+                                while (previousNode.Index >= firstNodeOnBranch.Index)
+                                    previousNode = (BufferNode) previousNode.Last;
+
+                                firstNodeOnBranch.Last = previousNode;
+
+                                //Mask the other branch here to reflect the change
+                                var timelineVector = Builder.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, GetBufferNode(branchNode.Date - 1).SuperPosition);
+                                var branchSprig = branch.Next.ParentSprig;
+                                var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date + 1);
+
+                                if(!newBranchHead.Equals(branchSprig.Head))
+                                    branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead);
+                            }
+                        }
+                    }
                 }
             }
         }
