@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Concurrent;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
@@ -73,6 +71,17 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
 
             return current;
+        }
+
+        public bool Validate()
+        {
+            foreach (var dtfObject in Builder.Registry)
+            {
+                if (!((PositionNode) ToPositionVector(dtfObject).Head).Validate())
+                    return false;
+            }
+
+            return true;
         }
         
         public bool And<T>(ISprigVector<T> other) where T : BinaryPosition

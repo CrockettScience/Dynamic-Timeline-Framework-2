@@ -10,24 +10,31 @@ using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Core
 {
+    /// <summary>
+    /// The core object of DynamicTimelineFramework. A multiverse represents a collection of branching universes that
+    /// all share states up until a particular date, where the timelines "branch" off into separate paths. TH
+    ///
+    /// The Multiverse constructor will seek through the calling assembly's classes and look for classes that inherit
+    /// from DTFObject, and then evaluate the required attributes and can throw various exceptions if errors are made.
+    /// </summary>
     public class Multiverse
     {
-        //Bonus Level:
-        //Todo - Document public facing classes and members
-        //Todo - Add more options to constrain, including a way to constrain more than one object at once and encode changes in a single diff
-        //Todo - Add a way to "select" a single position from a list of positions, both for one object and for several at a time
-        //Todo - Add ways to discern exactly what objects and states are encoded inside diffs and diffChains
 
-        private readonly Dictionary<Diff, Universe> _multiverse;
+        private readonly Dictionary<Diff, Universe> _multiverse = new Dictionary<Diff, Universe>();
         
         internal SprigBuilder SprigBuilder { get; }
         
         internal ObjectCompiler Compiler { get; }
         
+        private readonly HashSet<Diff> _pendingDiffs = new HashSet<Diff>();
+        
+        /// <summary>
+        /// The core universe that all other universes branch off of.
+        /// </summary>
         public Universe BaseUniverse { get; }
 
         /// <summary>
-        /// Instantiates a new multiverse with a blank base universe and compiles the system of objects
+        /// Instantiates a new multiverse with a blank base universe and compiles the system of objects.
         /// </summary>
         public Multiverse()
         {
@@ -40,25 +47,31 @@ namespace DynamicTimelineFramework.Core
             //Instantiate the multiverse timeline
             SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
             
-            _multiverse = new Dictionary<Diff, Universe>()
-            {
-                {BaseUniverse.Diff, BaseUniverse}
-            };
-            
         }
 
-        public Universe this[Diff diff]
-        {
-            get
-            {
-                //The indexer works as an always-valid accessor; it either gets whats in the dictionary or creates the entry
-                if(!_multiverse.ContainsKey(diff))
-                {
-                    _multiverse[diff] = new Universe(diff);
-                }
+        /// <summary>
+        /// Accesses the specific universe that was constructed using the given diff.
+        /// </summary>
+        /// <param name="diff">The diff used to construct the universe</param>
+        public Universe this[Diff diff] => _multiverse[diff];
 
-                return _multiverse[diff];
-            }
+        internal void AddDiffPending(Diff diff)
+        {
+            _pendingDiffs.Add(diff);
+        }
+
+        internal void ClearPendingDiffs()
+        {
+            foreach (var diff in _pendingDiffs)
+                diff.IsExpired = true;
+            
+            _pendingDiffs.Clear();
+        }
+        
+        internal void ClearPendingDiff(Diff diff)
+        {
+            diff.IsExpired = true;
+            _pendingDiffs.Remove(diff);
         }
 
         internal void AddUniverse(Universe universe)
@@ -220,8 +233,8 @@ namespace DynamicTimelineFramework.Core
                     {
                         
                         var pos = (Position) field.GetValue(null);
-                        var backwardVals = backwardDictionary[pos].GetEigenStates();
-                        var forwardVals = forwardDictionary[pos].GetEigenStates();
+                        var backwardVals = backwardDictionary[pos].GetEigenstates();
+                        var forwardVals = forwardDictionary[pos].GetEigenstates();
 
                         var length = lengthsDictionary[backwardVals[0]];
                         for (var i = 1; i < backwardVals.Count; i++)
@@ -330,7 +343,7 @@ namespace DynamicTimelineFramework.Core
                             while (!initialPosition.Equals(lastSuperPosition)) {
                                 initialPosition = lastSuperPosition;
 
-                                var eigenValues = initialPosition.GetEigenStates();
+                                var eigenValues = initialPosition.GetEigenstates();
                                 lastSuperPosition = Position.Alloc(type);
 
                                 foreach (var eigenValue in eigenValues) {
@@ -343,7 +356,7 @@ namespace DynamicTimelineFramework.Core
                             var repeatsBackward = (currentPosition & pos).Uncertainty == 0;
 
                             //We use helper nodes to keep track of where we are on the spans
-                            var backwardNodeVals = currentPosition.GetEigenStates();
+                            var backwardNodeVals = currentPosition.GetEigenstates();
                             var helperNodes = new List<HelperNode>();
 
                             var index = SprigCenter;
@@ -395,7 +408,7 @@ namespace DynamicTimelineFramework.Core
                             while (!terminalPosition.Equals(nextSuperPosition)) {
                                 terminalPosition = nextSuperPosition;
 
-                                var eigenValues = terminalPosition.GetEigenStates();
+                                var eigenValues = terminalPosition.GetEigenstates();
                                 nextSuperPosition = Position.Alloc(type);
 
                                 foreach (var eigenValue in eigenValues) {
@@ -408,7 +421,7 @@ namespace DynamicTimelineFramework.Core
                             var repeatsforward = (currentPosition & pos).Uncertainty == 0;
 
                             //We use helper nodes to keep track of where we are on the spans
-                            var forwardNodeVals = currentPosition.GetEigenStates();
+                            var forwardNodeVals = currentPosition.GetEigenstates();
                             var helperNodes = new List<HelperNode>();
 
                             var index = SprigCenter;
@@ -497,7 +510,7 @@ namespace DynamicTimelineFramework.Core
                 public void AddForwardValues(Dictionary<Position, Position> forwardDictionary, Dictionary<Position, long> lengths, List<HelperNode> nodes, long shift)
                 {
                     
-                    var forwardNodeVals = forwardDictionary[Value].GetEigenStates();
+                    var forwardNodeVals = forwardDictionary[Value].GetEigenstates();
                     foreach (var forwardNodeVal in forwardNodeVals) {
                         
                         //Don't add the forward val if it's the same as the current val
@@ -515,7 +528,7 @@ namespace DynamicTimelineFramework.Core
                 public void AddbackwardValues(Dictionary<Position, Position> backwardDictionary, Dictionary<Position, long> lengths, List<HelperNode> nodes, long shift)
                 {
                     
-                    var backwardNodeVals = backwardDictionary[Value].GetEigenStates();
+                    var backwardNodeVals = backwardDictionary[Value].GetEigenstates();
                     foreach (var backwardNodeVal in backwardNodeVals) {
                         
                         //Don't add the forward val if it's the same as the current val
@@ -566,7 +579,6 @@ namespace DynamicTimelineFramework.Core
                     if (!ConstrainLateralObject(dtfObj, key, meta, universe)) continue;
                     
                     //If the constraint results in change, then push it's constraints as well
-                    
                     PushLateralConstraints(dest, universe);
                 }
                 
@@ -581,6 +593,35 @@ namespace DynamicTimelineFramework.Core
                 
                 //AND the sprig with the translation vector and return whether or not a change was made
                 return universe.Sprig.And(translationVector);
+            }
+
+            public void PullLateralConstraints(DTFObject source, DTFObject dest)
+            {
+                var meta = _objectMetaData[source.GetType()];
+                
+                //Iterate through each universe and pull constraints into the timelines
+                foreach (var universe in Owner._multiverse.Values)
+                {
+                    //Get the key that maps to dest
+                    foreach (var key in source.GetLateralKeys())
+                    {
+                        if (source.GetLateralObject(key) == dest)
+                        {
+                            //If the constraint results in a change, validate the state of the universe's timeline and
+                            //make sure a no bridging errors occured
+                            if (ConstrainLateralObject(source, key, meta, universe))
+                            {
+                                //Push lateral constraints and validate timeline
+                                PushLateralConstraints(dest, universe);
+                                
+                                if(!universe.Sprig.Validate())
+                                    throw new InvalidBridgingException();
+                            }
+
+                            break;
+                        }
+                    }
+                }
             }
 
             
@@ -602,12 +643,16 @@ namespace DynamicTimelineFramework.Core
             {
                 var timelineVector = new SprigPositionVector(dtfObject.SprigBuilderSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
 
-                var eigenVals = position.GetEigenStates();
+                var eigenVals = position.GetEigenstates();
 
                 foreach (var val in eigenVals)
                 {
                     timelineVector |= _objectMetaData[dtfObject.GetType()].GetVector(val);
                 }
+                
+                //Check for invalid bridging
+                if(!((PositionNode) timelineVector.Head).Validate())
+                    throw new InvalidBridgingException();
                 
                 if(date < SprigCenter)
                     timelineVector.ShiftBackward(SprigCenter - date);
@@ -636,14 +681,14 @@ namespace DynamicTimelineFramework.Core
                 {
                      
                     var currentIn = input.Head;
-                    var currentOut = new PositionNode(null, currentIn.Index, LateralTranslation[key, (Position) currentIn.SuperPosition.Copy()]);
+                    var currentOut = new PositionNode(null, currentIn.Index, LateralTranslation[key, currentIn.SuperPosition.Copy()]);
                     var output = new SprigPositionVector(outputOperativeSlice, currentOut);
 
                     while (currentIn.Last != null)
                     {
                         currentIn = currentIn.Last;
 
-                        var lastTranslate = LateralTranslation[key, (Position) currentIn.SuperPosition.Copy()];
+                        var lastTranslate = LateralTranslation[key, currentIn.SuperPosition.Copy()];
 
                         if (lastTranslate.Equals(currentOut.SuperPosition)) {
                             currentOut.Index = currentIn.Index;
@@ -686,7 +731,7 @@ namespace DynamicTimelineFramework.Core
                 public Position this[string key, Position input] {
                     get {
                         var latMap = Map[_proxy.ContainsKey(key) ? _proxy[key] : key];
-                        var eigenvals = input.GetEigenStates();
+                        var eigenvals = input.GetEigenstates();
 
                         var superPosition = latMap[eigenvals[0]];
 

@@ -1,5 +1,4 @@
 using DynamicTimelineFramework.Core;
-using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal class SpineHeadNode : SpineNode

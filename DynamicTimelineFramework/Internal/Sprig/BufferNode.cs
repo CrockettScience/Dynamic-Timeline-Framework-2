@@ -32,7 +32,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public Node<PositionBuffer>.INode Copy()
         {
-            return new BufferNode((BufferNode) Last.Copy(), Index, (PositionBuffer) SuperPosition.Copy());
+            return new BufferNode((BufferNode) Last.Copy(), Index, SuperPosition.Copy());
         }
     }
 }

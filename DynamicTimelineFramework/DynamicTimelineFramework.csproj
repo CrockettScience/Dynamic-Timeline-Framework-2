@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exception\InvalidBridgingException.cs" />
+    <Compile Include="Exception\DiffExpiredException.cs" />
     <Compile Include="Exception\DTFObjectDefinitionException.cs" />
     <Compile Include="Exception\UnresolvableParadoxException.cs" />
     <Compile Include="Internal\Buffer\OperativeSlice.cs" />
@@ -67,7 +69,6 @@
     <Compile Include="Core\Position.cs" />
     <Compile Include="Core\Universe.cs" />
     <Compile Include="Exception\DTFObjectCompilerException.cs" />
-    <Compile Include="Exception\InvalidFlagSpaceFactor.cs" />
     <Compile Include="Internal\Sprig\PositionNode.cs" />
     <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />
     <Compile Include="Objects\Attributes\PositionAttribute.cs" />

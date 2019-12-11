@@ -27,9 +27,9 @@ namespace Test
             var neutronStarUniverse = new Universe(neutronStarDiff);
             var neutronStarContinuity = neutronStarUniverse.GetContinuity(star);
 
-            var testPosition = rootStarContinuity[13_000_000_351];   //White Dwarf
-            testPosition = massiveStarContinuity[13_000_000_351];    //Black Hole
-            testPosition = neutronStarContinuity[13_000_000_351];    //Neutron Star
+            var testPosition = rootStarContinuity[ulong.MaxValue];   //White Dwarf
+            testPosition = massiveStarContinuity[ulong.MaxValue];    //Black Hole
+            testPosition = neutronStarContinuity[ulong.MaxValue];    //Neutron Star
         }
     }
 }

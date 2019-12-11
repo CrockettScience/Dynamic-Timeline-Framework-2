@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="C:\Users\jcrockett\.Rider2019.2\config\scratches" t="IncludeRecursive" />
-    <e p="C:\Users\jcrockett\.Rider2019.2\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\jcrockett\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.1665773886.00" t="ExcludeRecursive" />
-    <e p="C:\Users\jcrockett\Documents\multiverseframework" t="IncludeFlat">
+    <e p="C:\Users\cohib\.Rider2019.2\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\cohib\.Rider2019.2\system\resharper-host\local\Transient\ReSharperHost\v192\SolutionCaches\_DynamicTimelineFramework.459735419.00" t="ExcludeRecursive" />
+    <e p="C:\Users\cohib\RiderProjects\DynamicTimelineFramework_2" t="IncludeFlat">
       <e p="DynamicTimelineFramework" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
         <e p="Core" t="Include">
@@ -16,9 +15,10 @@
         </e>
         <e p="DynamicTimelineFramework.csproj" t="IncludeRecursive" />
         <e p="Exception" t="Include">
+          <e p="DiffExpiredException.cs" t="Include" />
           <e p="DTFObjectCompilerException.cs" t="Include" />
           <e p="DTFObjectDefinitionException.cs" t="Include" />
-          <e p="InvalidFlagSpaceFactor.cs" t="Include" />
+          <e p="InvalidBridgingException.cs" t="Include" />
           <e p="UnresolvableParadoxException.cs" t="Include" />
         </e>
         <e p="Internal" t="Include">

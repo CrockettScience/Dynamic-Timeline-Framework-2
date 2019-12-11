@@ -1,5 +1,3 @@
-using DynamicTimelineFramework.Core;
-
 namespace DynamicTimelineFramework.Internal.Sprig {
     internal abstract class SpineNode
     {

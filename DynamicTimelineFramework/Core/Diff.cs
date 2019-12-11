@@ -1,14 +1,28 @@
 using System.Collections.Generic;
+using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Sprig;
-using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
 {  
+    /// <summary>
+    /// A Diff encodes the specific changes that are made to the timeline. Diffs are created when attempting to
+    /// constrain the timeline to a state that isn't available, and can can be passed into the constructor of a
+    /// universe. Once a Universe is constructed, Diffs are used as a key to access the universe from the
+    /// Multiverse's indexer. It is recommended that Diffs are maintained or saved after constructing a universe. If
+    /// allowed to go out of scope after Universe construction, the Universe will become inaccessible but remain as a
+    /// permanent part of the Multiverse "tree"
+    ///
+    /// The creation and existence of a Diff has no effect on the timeline until it's passed into a Universe's
+    /// constructor
+    /// </summary>
     public class Diff
     {
         internal ulong Date { get; }
         internal Universe Parent { get; }
-        private readonly SprigBufferVector _delta;
+        
+        private SprigBufferVector _delta;
+
+        public bool IsExpired { get; internal set; }
 
         internal Diff(ulong date, Universe allegingParent, SprigBufferVector delta)
         {
@@ -21,6 +35,12 @@ namespace DynamicTimelineFramework.Core
                 parent = parent.Parent;
             
             Parent = parent;
+
+            if (parent == null) return;
+            
+            Parent.Owner.AddDiffPending(this);
+
+            IsExpired = false;
         }
 
         internal void InstallChanges(Sprig newSprig) {
@@ -46,8 +66,7 @@ namespace DynamicTimelineFramework.Core
         /// Gets the chain of Diffs that, together, encode all the changes made since the root
         /// universe
         /// </summary>
-        /// <returns>The chain of Diffs that, together, encode all the changes made since the root
-        /// universe</returns>
+        /// <returns>The chain of Diffs that, together, encode all the changes made since the root universe</returns>
         public LinkedList<Diff> GetDiffChain() {
             var diffChain = new LinkedList<Diff>();
             var current = this;
@@ -58,6 +77,33 @@ namespace DynamicTimelineFramework.Core
             }
 
             return diffChain;
+        }
+
+        /// <summary>
+        /// Attempt to combine the delta from the given diff into the calling diff. If successful, otherDiff will be
+        /// rendered expired and you can use the calling diff to manifest it's changes
+        /// </summary>
+        /// <param name="otherDiff">The diff to combine. Diff will become expired if successful</param>
+        /// <exception cref="DiffExpiredException">If either diff has expired</exception>
+        /// <returns>True if the diffs are compatible and have been combined into the calling diff, false if not</returns>
+        public bool Combine(Diff otherDiff)
+        {
+            if (IsExpired || otherDiff.IsExpired)
+                throw new DiffExpiredException();
+            
+            //Check trivial disqualifications
+            if (Date != otherDiff.Date || Parent != otherDiff.Parent)
+                return false;
+
+            //Combine the delta's and validate
+            var combined = _delta & otherDiff._delta;
+
+            if (!combined.Validate(Parent.Owner.SprigBuilder))
+                return false;
+            
+            //Combine into this
+            _delta = combined;
+            return true;
         }
 
         public override bool Equals(object obj)

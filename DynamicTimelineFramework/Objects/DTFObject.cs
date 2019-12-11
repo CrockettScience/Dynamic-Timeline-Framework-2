@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Exception;
@@ -6,12 +5,18 @@ using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Objects {
+    
+    /// <summary>
+    /// The parent object used to define object behaviour on DynamicTimelineFramework
+    /// </summary>
     public abstract class DTFObject {
         
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
 
         internal readonly DTFOOperativeSliceProvider OperativeSliceProvider;
+
+        internal readonly int ReferenceHash;
 
         internal OperativeSlice SprigBuilderSlice { get; }
         private Multiverse.ObjectCompiler Compiler { get; }
@@ -23,10 +28,22 @@ namespace DynamicTimelineFramework.Objects {
             OperativeSliceProvider = new DTFOOperativeSliceProvider(this);
 
             //Register object with the timeline
-            SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this);
+            SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this, out var hash);
+            ReferenceHash = hash;
             Compiler = owner.Compiler;
         }
 
+        /// <summary>
+        /// Can be called during the inherited constructor to define and set lateral objects. Lateral objects cannot be
+        /// redefined once set. Care should be taken when adding two or more lateral objects that already exist on the
+        /// timeline but are not laterally constrained to one another, or they are constrained in a way that is
+        /// incompatible with the constraints put forth by this object.
+        /// </summary>
+        /// <param name="key">The key that identifies the set of lateral constraints defined by LateralConstraintAttributes</param>
+        /// <param name="obj">The object to set</param>
+        /// <exception cref="DTFObjectDefinitionException">When attempting to set more than one object with the same key</exception>
+        /// <exception cref="InvalidBridgingException">When the constraining of two or more objects that already exist
+        /// on the timeline results in segments with no valid states</exception>
         protected void SetLateralObject(string key, DTFObject obj) {
             if(_lateralDirectory.ContainsKey(key))
                 throw new DTFObjectDefinitionException(GetType() + " attempted to add an object to key " + key + "twice");
@@ -39,6 +56,9 @@ namespace DynamicTimelineFramework.Objects {
             obj._lateralDirectory[backKey] = this;
             obj._lateralKeys.Add(backKey);
             Compiler.AddLateralProxy(obj.GetType(), GetType(), backKey, key);
+            
+            //Pull constraints from the object's existing timeline
+            Compiler.PullLateralConstraints(obj, this);
             
         }
 

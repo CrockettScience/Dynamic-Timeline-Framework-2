@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
+using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig
 {
@@ -60,6 +60,22 @@ namespace DynamicTimelineFramework.Internal.Sprig
         public ISprigVector<PositionBuffer> Copy()
         {
             return new SprigBufferVector(Head.Copy());
+        }
+
+        public bool Validate(SprigBuilder builder)
+        {
+            foreach (var dtfObject in builder.Registry)
+            {
+                if (!((PositionNode) ToPositionVector(dtfObject).Head).Validate())
+                    return false;
+            }
+
+            return true;
+        }
+        
+        public SprigPositionVector ToPositionVector(DTFObject dtfObject)
+        {
+            return new SprigPositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
         }
         
         public void ShiftForward(ulong amount) {

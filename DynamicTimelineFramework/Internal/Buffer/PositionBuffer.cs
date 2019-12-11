@@ -19,7 +19,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
 
         public BitArray Flag { get; }
 
-        public override int Length => Flag.Length;
+        public int Length => Flag.Length;
 
         public PositionBuffer() {
             Flag = new BitArray(0);
@@ -68,12 +68,12 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             }
         }
 
-        public override bool this[int index] {
+        public bool this[int index] {
             get => Flag[index];
             set => Flag[index] = value;
         }
 
-        public override BinaryPosition Copy()
+        public PositionBuffer Copy()
         {
             var flag = new BitArray(Flag.Length);
 
@@ -87,7 +87,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
 
         internal override BinaryPosition And(BinaryPosition other)
         {
-            var buffer = (PositionBuffer) Copy();
+            var buffer = Copy();
             
             switch (other)
             {
@@ -121,7 +121,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
 
         internal override BinaryPosition Or(BinaryPosition other)
         {
-            var buffer = (PositionBuffer) Copy();
+            var buffer = Copy();
             
             switch (other)
             {

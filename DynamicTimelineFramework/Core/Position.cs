@@ -1,17 +1,36 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
+using System.Data;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
 {
+    /// <summary>
+    /// A position represents are particular state or superstate. 
+    /// </summary>
     public class Position : BinaryPosition
     {
 
         #region STATIC
+        internal static Position Alloc(Type type, bool superPosition = false)
+        {
+            //Make a new Buffer
+            var buffer = new PositionBuffer();
+            
+            //Make a position out of the buffer
+            var pos = buffer.Alloc(type, superPosition);
 
+            return pos;
+        }
+
+        /// <summary>
+        /// Used to construct a position.
+        /// </summary>
+        /// <param name="type">The Type of DTFObject to make a position of</param>
+        /// <param name="setBits">Indices to set to true. Each set bit represents a single eigenstate</param>
+        /// <returns>The position that represents the state or superstate articulated by the set bits</returns>
         public static Position Alloc(Type type, params int[] setBits)
         {
             //Make a position
@@ -25,17 +44,12 @@ namespace DynamicTimelineFramework.Core
             return pos;
         }
         
-        public static Position Alloc(Type type, bool superPosition = false)
-        {
-            //Make a new Buffer
-            var buffer = new PositionBuffer();
-            
-            //Make a position out of the buffer
-            var pos = buffer.Alloc(type, superPosition);
-
-            return pos;
-        }
-        
+        /// <summary>
+        /// Used to construct a position.
+        /// </summary>
+        /// <param name="setBits">Indices to set to true. Each set bit represents a single eigenstate</param>
+        /// <typeparam name="T">The Type of DTFObject to make a position of</typeparam>
+        /// <returns>The position that represents the state or superstate articulated by the set bits</returns>
         public static Position Alloc<T>(params int[] setBits) where T : DTFObject
         {
             //Make a position
@@ -53,11 +67,9 @@ namespace DynamicTimelineFramework.Core
         {
             return (Position) left.And(right);
         }
-        
         public static Position operator |(Position left, Position right) {
             return (Position) left.Or(right);
         }
-        
         public static Position operator ^(Position lhs, Position rhs)
         {
             var pos = Alloc(lhs.Type);
@@ -75,16 +87,28 @@ namespace DynamicTimelineFramework.Core
 
         #endregion
         
+        private readonly bool _readOnly;
+        
         internal IOperativeSliceProvider OperativeSliceProvider { private get; set; }
 
         internal ReferenceSlice ReferenceSlice { get; }
 
         internal OperativeSlice OperativeSlice => OperativeSliceProvider.OperativeSlice;
 
-        public override int Length => ReferenceSlice.RightBound - ReferenceSlice.LeftBound;
+        /// <summary>
+        /// Total number of bits in the position. Represents the maximum number of eigenstates
+        /// </summary>
+        public int Length => ReferenceSlice.RightBound - ReferenceSlice.LeftBound;
 
+        /// <summary>
+        /// The DTFObject type that the position represent a state or superstate of.
+        /// </summary>
         public Type Type { get; }
 
+        /// <summary>
+        /// A measure of the amount of uncertainty encoded in the Position. If there is only one eigenstate, the
+        /// uncertainty will be 0. A value of -1 means there are no eigenstates.
+        /// </summary>
         public int Uncertainty
         {
             get {
@@ -106,20 +130,21 @@ namespace DynamicTimelineFramework.Core
             }
         }
 
-        internal Position(Type type, ReferenceSlice referenceSlice)
+        internal Position(Type type, ReferenceSlice referenceSlice, bool readOnly = false)
         {
+            _readOnly = readOnly;
             Type = type;
             ReferenceSlice = referenceSlice;
         }
 
         /// <summary>
-        /// Returns an array of positions such that each position has 0 uncertainty and all positions OR'd together
+        /// Retrieves a List of positions such that each position has 0 uncertainty and all positions OR'd together
         /// equals the current position. In other words:
         ///
-        /// anyPosition.Equals(anyPosition.GetEigenStates().Aggregate(anyPosition, (i, p) => i | p)) is always TRUE;
+        /// anyPosition.Equals(anyPosition.GetEigenstates().Aggregate(anyPosition, (i, p) => i | p)) is always TRUE;
         /// </summary>
         /// <returns></returns>
-        public List<Position> GetEigenStates()
+        public List<Position> GetEigenstates()
         {
             
             //Create a buffer to hold all the eigenvalues.
@@ -165,7 +190,12 @@ namespace DynamicTimelineFramework.Core
             return hash;
         }
 
-        public override bool this[int index] {
+        /// <summary>
+        /// Accesses the value of the bit at index
+        /// </summary>
+        /// <param name="index">The index of the bit to access</param>
+        /// <exception cref="IndexOutOfRangeException"> If the index is greater than Length</exception>
+        public bool this[int index] {
             get {
                 if(index >= Length)
                     throw new IndexOutOfRangeException();
@@ -173,14 +203,21 @@ namespace DynamicTimelineFramework.Core
                 return ReferenceSlice.Head[ReferenceSlice.LeftBound + index];
             }
             set {
+                if(_readOnly)
+                    throw new ReadOnlyException();
+                    
                 if(index >= Length)
                     throw new IndexOutOfRangeException();
-                
+
                 ReferenceSlice.Head[ReferenceSlice.LeftBound + index] = value;
             }
         }
 
-        public override BinaryPosition Copy()
+        /// <summary>
+        /// Duplicates the object
+        /// </summary>
+        /// <returns>A copy of the position</returns>
+        public Position Copy()
         {
             var pos = Alloc(Type);
 
@@ -196,7 +233,7 @@ namespace DynamicTimelineFramework.Core
 
         internal override BinaryPosition And(BinaryPosition other)
         {
-            var pos = (Position) Copy();
+            var pos = Copy();
             
             switch (other)
             {
@@ -232,7 +269,7 @@ namespace DynamicTimelineFramework.Core
 
         internal override BinaryPosition Or(BinaryPosition other)
         {
-            var pos = (Position) Copy();
+            var pos = Copy();
             
             switch (other)
             {

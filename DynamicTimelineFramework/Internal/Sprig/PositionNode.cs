@@ -66,7 +66,7 @@ namespace DynamicTimelineFramework.Internal.Sprig
 
         public Node<Position>.INode Copy()
         {
-            return new PositionNode(Last.Copy(), Index, (Position) SuperPosition.Copy());
+            return new PositionNode(Last.Copy(), Index, SuperPosition.Copy());
         }
 
         public bool Validate()

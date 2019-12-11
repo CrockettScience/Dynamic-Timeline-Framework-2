@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Core;
@@ -34,7 +33,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return newSprig;
         }
 
-        public OperativeSlice RegisterObject(DTFObject obj)
+        public OperativeSlice RegisterObject(DTFObject obj, out int referenceHash)
         {
             //Allocate space for every sprig in the tree
             var objDef = (DTFObjectDefinitionAttribute) obj.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
@@ -46,7 +45,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             Spine.Alloc(space, leftBound);
             
             Registry.Add(obj);
+
+            referenceHash = Registry.Count * 397;
             
+            Owner.ClearPendingDiffs();
+
             return new OperativeSlice(leftBound, IndexedSpace);
 
         }

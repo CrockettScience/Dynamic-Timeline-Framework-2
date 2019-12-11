@@ -1,6 +1,6 @@
 namespace DynamicTimelineFramework.Internal.Interfaces
 {
-    public interface ICopyable<out T>
+    internal interface ICopyable<out T>
     {
         T Copy();
     }
