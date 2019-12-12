@@ -53,10 +53,15 @@ namespace DynamicTimelineFramework.Core
         /// <param name="outDiff">The resultant diff if the attempted collapse should return a paradox</param>
         /// <exception cref="UnresolvableParadoxException">If the given position results in a paradox that cannot be transitioned to</exception>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
-        public bool Constrain(ulong date, Position pos, out Diff outDiff)
-        {
+        public bool Constrain(ulong date, Position pos, out Diff outDiff) {
+            var multiverse = _universe.Owner;
+            var compiler = multiverse.Compiler;
+            
             //Dequeue constraint Tasks
             _universe.ClearConstraintTasks();
+            
+            //Pull parent constraints
+            compiler.PullParentConstraints(_dtfObject, _universe);
             
             //Create a copy of the position with the correct operative slice
             var deltaPosition = new Position(_dtfObject.GetType(), pos.ReferenceSlice)
@@ -89,7 +94,7 @@ namespace DynamicTimelineFramework.Core
 
             //Constrain the position
             _universe.Sprig.And(timelineVector);
-            _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe);
+            _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe, true);
             
             //Clear pending diffs
             _universe.Owner.ClearPendingDiffs();

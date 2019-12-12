@@ -111,7 +111,7 @@ namespace DynamicTimelineFramework.Core
                         if (_universe.Owner.Compiler.ConstrainLateralObject(_source, key, _meta, _universe))
                         {
                             //Push lateral constraints and validate timeline
-                            _universe.Owner.Compiler.PushLateralConstraints(_dest, _universe);
+                            _universe.Owner.Compiler.PushLateralConstraints(_dest, _universe, false);
                                 
                             if(!_universe.Sprig.Validate())
                                 throw new InvalidBridgingException();

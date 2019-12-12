@@ -196,10 +196,10 @@ namespace DynamicTimelineFramework.Core
                                 {
                                     if (otherField.GetCustomAttribute(PositionAttr) is PositionAttribute)
                                     {
-                                        if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE" + type.Name))
-                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE" + type.Name] = new Dictionary<Position, Position>();
+                                        if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.Name))
+                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.Name] = new Dictionary<Position, Position>();
 
-                                        var backTranslation = otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE" + type.Name];
+                                        var backTranslation = otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.Name];
                                         
                                         var otherPosition = (Position) otherField.GetValue(null);
 
@@ -559,12 +559,17 @@ namespace DynamicTimelineFramework.Core
                 _objectMetaData[destType].LateralTranslation.AddProxy(inputKey, sourceKey + "-BACK_REFERENCE" + sourceType.Name);
             }
             
-            internal void PushLateralConstraints(DTFObject dtfObj, Universe universe)
+            internal void PushLateralConstraints(DTFObject dtfObj, Universe universe, bool pushToParent)
             {
                 //Get the metadata object
                 var meta = _objectMetaData[dtfObj.GetType()];
+
+                //Constrain up the parent tree
+                if (pushToParent && dtfObj.ParentKey != null && ConstrainLateralObject(dtfObj, dtfObj.ParentKey, meta, universe))
+                    PushLateralConstraints(dtfObj.Parent, universe, true);
+                    
                 
-                //Iterate through each key and recursively constrain
+                //Iterate through the rest of the keys and recursively constrain
                 var keys = dtfObj.GetLateralKeys();
                 foreach (var key in keys) {
                     
@@ -573,9 +578,9 @@ namespace DynamicTimelineFramework.Core
                     if (!ConstrainLateralObject(dtfObj, key, meta, universe)) continue;
                     
                     //If the constraint results in change, then push it's constraints as well
-                    PushLateralConstraints(dest, universe);
+                    //Since all lateral objects have the same parent, don't need to push to parent every time
+                    PushLateralConstraints(dest, universe, false);
                 }
-                
             }
 
             internal bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Universe universe)
@@ -591,6 +596,7 @@ namespace DynamicTimelineFramework.Core
 
             public void PullLateralConstraints(DTFObject source, DTFObject dest)
             {
+                //Get the metadata object
                 var meta = _objectMetaData[source.GetType()];
                 
                 //Iterate through each universe and pull constraints into the timelines
@@ -598,6 +604,26 @@ namespace DynamicTimelineFramework.Core
                 {
                     universe.EnqueueConstraintTask(source, dest, meta);
                 }
+            }
+            
+            public void PullParentConstraints(DTFObject dest, Universe universe)
+            {
+                //Recursively pull up
+                if (dest.Parent != null) {
+                    PullParentConstraints(dest.Parent, universe);
+
+                    var source = dest.Parent;
+
+                    //Get the metadata object
+                    var meta = _objectMetaData[source.GetType()];
+
+                    //Constrain from parent and push if changes were found
+                    var translationVector = meta.Translate(dest.ParentKey + "-BACK_REFERENCE-" + dest.GetType().Name, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
+                    
+                    if(universe.Sprig.And(translationVector))
+                        PushLateralConstraints(dest, universe, false);
+                }
+
             }
 
             public BufferVector GetTimelineVector(ulong date, PositionBuffer buffer) {

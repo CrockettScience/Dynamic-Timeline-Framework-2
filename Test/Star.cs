@@ -65,7 +65,7 @@ namespace Test {
         public static readonly Position BlackHole        = Position.Alloc<Star>((int) Stage.BlackHole);
 
         public Star(Galaxy galaxy, Multiverse owner) : base(owner){
-            SetLateralObject(GalaxyKey, galaxy);
+            SetParent(GalaxyKey, galaxy);
         }
 
         public enum Stage {

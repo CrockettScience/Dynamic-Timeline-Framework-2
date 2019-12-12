@@ -48,8 +48,7 @@ namespace DynamicTimelineFramework.Core
             var mvCompiler = Parent.Owner.Compiler;
 
             //Constrain the new sprig to establish the shared certainty signature
-            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1,
-                Parent.Sprig.GetBufferNode(Date - 1).SuperPosition);
+            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.GetBufferNode(Date - 1).SuperPosition);
 
             newSprig.And(priorCertaintySignature);
             

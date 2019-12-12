@@ -10,16 +10,18 @@ namespace DynamicTimelineFramework.Objects {
     /// The parent object used to define object behaviour on DynamicTimelineFramework
     /// </summary>
     public abstract class DTFObject {
-        
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
 
         internal readonly DTFOOperativeSliceProvider OperativeSliceProvider;
 
         internal readonly int ReferenceHash;
-
         internal OperativeSlice SprigManagerSlice { get; }
         private Multiverse.ObjectCompiler Compiler { get; }
+
+
+        public string ParentKey { get; set; }
+        public DTFObject Parent => ParentKey == null ? null : _lateralDirectory[ParentKey];
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
@@ -65,6 +67,21 @@ namespace DynamicTimelineFramework.Objects {
             //Pull constraints from the object's existing timeline
             Compiler.PullLateralConstraints(obj, this);
             
+        }
+
+        protected void SetParent(string key, DTFObject obj) {
+            if(_lateralDirectory.ContainsKey(key))
+                throw new DTFObjectDefinitionException(GetType() + " attempted to add an object to key " + key + "twice");
+
+            //All lateral objects must share the same parent and key, except the parent itself
+            foreach (var lateralObject in _lateralDirectory.Values) {
+                if(lateralObject.ParentKey != null && lateralObject._lateralDirectory[lateralObject.ParentKey] != obj)
+                    throw new DTFObjectDefinitionException(GetType() + " attempted to add a parent object with key " + key + ", but lateral object " + lateralObject.GetType() + " doesn't have the same parent at the key.");
+            }
+
+            _lateralDirectory[key] = obj;
+            ParentKey = key;
+
         }
 
         internal DTFObject GetLateralObject(string key) {
