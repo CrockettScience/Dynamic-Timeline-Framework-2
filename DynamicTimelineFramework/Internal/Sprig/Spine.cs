@@ -43,6 +43,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                     if (nextTurn != null && currentBranchNode.Contains(nextTurn)) {
                         nextDiff = nextTurn;
 
+                        diffEnum.MoveNext();
                         nextTurn = diffEnum.Current;
                     }
                 }
@@ -54,10 +55,10 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 
                 //Current is looking at the branch node that comes before the spine
                 //node the new branch needs to be between. Create a new node and insert in between
-                var nextBranch = currentBranchNode[nextDiff];
-                var newBranch = new SpineBranchNode(branchDate, nextBranch.ParentSprig);
+                var nextNode = currentBranchNode[nextDiff];
+                var newBranch = new SpineBranchNode(branchDate, nextNode.Sprig);
                 currentBranchNode[nextDiff] = newBranch;
-                newBranch.AddBranch(nextBranch);
+                newBranch.AddBranch(nextNode);
                 
                 //Add the new branch to the branch node we just made
                 return newBranch.AddBranch(nextTurn);

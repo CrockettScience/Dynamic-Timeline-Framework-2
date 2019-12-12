@@ -67,12 +67,6 @@ namespace DynamicTimelineFramework.Core
             
             _pendingDiffs.Clear();
         }
-        
-        internal void ClearPendingDiff(Diff diff)
-        {
-            diff.IsExpired = true;
-            _pendingDiffs.Remove(diff);
-        }
 
         internal void AddUniverse(Universe universe)
         {
@@ -262,7 +256,7 @@ namespace DynamicTimelineFramework.Core
                     var preComputedSprigs = _objectMetaData[type].PreComputedVectors;
                     
                     //Helper methods for span creation
-                    SprigPositionVector MakeSpanVectorFromNode(HelperNode node)
+                    PositionVector MakeSpanVectorFromNode(HelperNode node)
                     {
                         var pos = node.Value;
                         var start = node.EarliestStart;
@@ -290,10 +284,10 @@ namespace DynamicTimelineFramework.Core
                             };
                         }
                         
-                        return new SprigPositionVector(default , head);
+                        return new PositionVector(default , head);
                     }
                     
-                    SprigPositionVector MakeSpanVectorFromPos(Position pos, ulong start, ulong span)
+                    PositionVector MakeSpanVectorFromPos(Position pos, ulong start, ulong span)
                     {
                         
                         PositionNode head;
@@ -318,7 +312,7 @@ namespace DynamicTimelineFramework.Core
                             };
                         }
                         
-                        return new SprigPositionVector(default , head);
+                        return new PositionVector(default , head);
                     }
 
                     //When we collapse to a position, the focal date can be anywhere from
@@ -326,7 +320,7 @@ namespace DynamicTimelineFramework.Core
                     //vector by calculating the SPAN of the states separately, then OR'ing them together
                     foreach (var positionField in typeFields) {
 
-                        var spanVectors = new List<SprigPositionVector>();
+                        var spanVectors = new List<PositionVector>();
                         var pos = (Position) positionField.GetValue(null);
                         var length = lengthsDictionary[pos];
                         var shift = length - 1;
@@ -396,7 +390,7 @@ namespace DynamicTimelineFramework.Core
                             }
 
                             //Starting at this offset we're at now, the position will remain initialPosition all the way back to the beginning
-                            spanVectors.Add(MakeSpanVectorFromPos(initialPosition, 0, index));
+                            spanVectors.Add(MakeSpanVectorFromPos(initialPosition, 0, index + 1));
 
                         }    
 
@@ -418,17 +412,17 @@ namespace DynamicTimelineFramework.Core
 
                             //Calculate forward spans, and stop when we hit a position that matches the terminal position
                             var currentPosition = forwardDictionary[pos];
-                            var repeatsforward = (currentPosition & pos).Uncertainty == 0;
+                            var repeatsForward = (currentPosition & pos).Uncertainty == 0;
 
                             //We use helper nodes to keep track of where we are on the spans
                             var forwardNodeVals = currentPosition.GetEigenstates();
                             var helperNodes = new List<HelperNode>();
 
-                            var index = SprigCenter;
+                            var index = SprigCenter + 1;
                             foreach (var forwardNodeVal in forwardNodeVals) {
                                 length = lengthsDictionary[forwardNodeVal];
                                 span = (ulong) length + (ulong) shift;
-                                helperNodes.Add(new HelperNode(forwardNodeVal, index + 1, span, shift, repeatsforward || (forwardDictionary[forwardNodeVal] & forwardNodeVal).Uncertainty == 0, false));
+                                helperNodes.Add(new HelperNode(forwardNodeVal, index, span, shift, repeatsForward || (forwardDictionary[forwardNodeVal] & forwardNodeVal).Uncertainty == 0, false));
                             }
 
                             while (!currentPosition.Equals(terminalPosition)) {
@@ -624,7 +618,6 @@ namespace DynamicTimelineFramework.Core
                 }
             }
 
-            
             public SprigBufferVector GetTimelineVector(ulong date, PositionBuffer buffer) {
                 var builder = Owner.SprigBuilder;
                 var timelineVector = new SprigBufferVector(builder.IndexedSpace);
@@ -639,9 +632,9 @@ namespace DynamicTimelineFramework.Core
                 return timelineVector;
             }
 
-            public SprigPositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
+            public PositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
             {
-                var timelineVector = new SprigPositionVector(dtfObject.SprigBuilderSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
+                var timelineVector = new PositionVector(dtfObject.SprigBuilderSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
 
                 var eigenVals = position.GetEigenstates();
 
@@ -677,12 +670,12 @@ namespace DynamicTimelineFramework.Core
                     PreComputedVectors = new Dictionary<Position, PositionMetaData>();
                 }
 
-                public SprigPositionVector Translate(string key, SprigPositionVector input, OperativeSlice outputOperativeSlice)
+                public PositionVector Translate(string key, PositionVector input, OperativeSlice outputOperativeSlice)
                 {
                      
                     var currentIn = input.Head;
                     var currentOut = new PositionNode(null, currentIn.Index, LateralTranslation[key, currentIn.SuperPosition.Copy()]);
-                    var output = new SprigPositionVector(outputOperativeSlice, currentOut);
+                    var output = new PositionVector(outputOperativeSlice, currentOut);
 
                     while (currentIn.Last != null)
                     {
@@ -704,7 +697,7 @@ namespace DynamicTimelineFramework.Core
 
                 }
 
-                public SprigPositionVector GetVector(Position pos) {
+                public PositionVector GetVector(Position pos) {
                     return PreComputedVectors[pos].TimelineVector;
 
                 }
@@ -713,11 +706,11 @@ namespace DynamicTimelineFramework.Core
 
             private class PositionMetaData {
                 
-                public SprigPositionVector TimelineVector { get; }
+                public PositionVector TimelineVector { get; }
                 
                 public long Length { get; }
                 
-                public PositionMetaData(SprigPositionVector timelineVector, long length) {
+                public PositionMetaData(PositionVector timelineVector, long length) {
                     TimelineVector = timelineVector;
                     Length = length;
                 }

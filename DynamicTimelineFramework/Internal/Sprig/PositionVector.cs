@@ -4,17 +4,17 @@ using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class SprigPositionVector : ISprigVector<Position>, IOperativeSliceProvider
+    internal class PositionVector : ISprigVector<Position>, IOperativeSliceProvider
     {
         
         #region STATIC
 
-        public static SprigPositionVector operator &(SprigPositionVector left, SprigPositionVector right) {
-            return new SprigPositionVector(left.OperativeSlice, Node<Position>.And(left.Head, right.Head));
+        public static PositionVector operator &(PositionVector left, PositionVector right) {
+            return new PositionVector(left.OperativeSlice, Node<Position>.And(left.Head, right.Head));
         }
         
-        public static SprigPositionVector operator |(SprigPositionVector left, SprigPositionVector right) {
-            return new SprigPositionVector(left.OperativeSlice, Node<Position>.Or(left.Head, right.Head));
+        public static PositionVector operator |(PositionVector left, PositionVector right) {
+            return new PositionVector(left.OperativeSlice, Node<Position>.Or(left.Head, right.Head));
         }
         
         #endregion
@@ -41,14 +41,14 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
-        public SprigPositionVector(OperativeSlice operativeSlice, Node<Position>.INode head)
+        public PositionVector(OperativeSlice operativeSlice, Node<Position>.INode head)
         {
             OperativeSlice = operativeSlice;
             Head = head;
 
         }
         
-        public SprigPositionVector(OperativeSlice operativeSlice, Type objectType, Node<PositionBuffer>.INode bufferHead)
+        public PositionVector(OperativeSlice operativeSlice, Type objectType, Node<PositionBuffer>.INode bufferHead)
         {
             OperativeSlice = operativeSlice;
             Head = new PositionNode(null, bufferHead.Index, bufferHead.SuperPosition.PositionAtSlice(objectType, operativeSlice));
@@ -79,7 +79,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
         
         public ISprigVector<Position> Copy() {
-            return new SprigPositionVector(OperativeSlice, Head.Copy());
+            return new PositionVector(OperativeSlice, Head.Copy());
         }
         
         public void ShiftForward(ulong amount) {

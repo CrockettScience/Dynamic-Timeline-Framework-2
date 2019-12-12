@@ -46,7 +46,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             Registry.Add(obj);
 
-            referenceHash = Registry.Count * 397;
+            referenceHash = Registry.Count ^ 397;
             
             Owner.ClearPendingDiffs();
 

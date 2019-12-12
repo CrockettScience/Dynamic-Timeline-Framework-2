@@ -37,15 +37,15 @@
           </e>
           <e p="Sprig" t="Include">
             <e p="BufferNode.cs" t="Include" />
+            <e p="BufferVector.cs" t="Include" />
             <e p="PositionNode.cs" t="Include" />
+            <e p="PositionVector.cs" t="Include" />
             <e p="Spine.cs" t="Include" />
             <e p="SpineBranchNode.cs" t="Include" />
             <e p="SpineHeadNode.cs" t="Include" />
             <e p="SpineNode.cs" t="Include" />
             <e p="Sprig.cs" t="Include" />
-            <e p="SprigBufferVector.cs" t="Include" />
             <e p="SprigBuilder.cs" t="Include" />
-            <e p="SprigPositionVector.cs" t="Include" />
           </e>
         </e>
         <e p="obj" t="ExcludeRecursive" />

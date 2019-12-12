@@ -18,7 +18,7 @@ namespace DynamicTimelineFramework.Internal.Interfaces
             INode head;
             var currentNew = head = left.MakeNode(null, Max(currentLeft.Index, currentRight.Index, index), (T) currentLeft.SuperPosition.And(currentRight.SuperPosition));
 
-            while (currentNew.Index > index)
+            while (currentNew.Index != index)
             {
 
                 var leftGreaterPlaceholder = currentLeft.Index;
@@ -43,7 +43,7 @@ namespace DynamicTimelineFramework.Internal.Interfaces
                 }
             }
 
-            currentNew.Last = currentNew.Index == index ? currentLeft.Last : currentLeft;
+            currentNew.Last = currentNew.Index == currentLeft.Index ? currentLeft.Last : currentLeft;
 
             return head;
         }
@@ -55,7 +55,7 @@ namespace DynamicTimelineFramework.Internal.Interfaces
             INode head;
             var currentNew = head = left.MakeNode(null, Max(currentLeft.Index, currentRight.Index, index), (T) currentLeft.SuperPosition.Or(currentRight.SuperPosition));
 
-            while (currentNew.Index > index)
+            while (currentNew.Index != index)
             {
 
                 var leftGreaterPlaceholder = currentLeft.Index;
@@ -80,7 +80,7 @@ namespace DynamicTimelineFramework.Internal.Interfaces
                 }
             }
 
-            currentNew.Last = currentNew.Index == index ? currentLeft.Last : currentLeft;
+            currentNew.Last = currentNew.Index == currentLeft.Index ? currentLeft.Last : currentLeft;
 
             return head;
         }

@@ -7,7 +7,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
     {
         private readonly Dictionary<Diff, Branch> _branchMap;
         public ulong Date { get; }
-        public override Sprig ParentSprig { get; }
+        public override Sprig Sprig { get; }
         
         public SpineNode this[Diff diff] {
             get => _branchMap[diff].Next;
@@ -18,7 +18,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public SpineBranchNode(ulong date, Sprig parentSprig) {
             _branchMap = new Dictionary<Diff, Branch>();
             Date = date;
-            ParentSprig = parentSprig;
+            Sprig = parentSprig;
         }
 
         public bool Contains(Diff diff) {
@@ -26,15 +26,15 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
 
         public Sprig AddBranch(Diff diff) {
-            var newHead = new SpineHeadNode(ParentSprig, Date, diff);
+            var newHead = new SpineHeadNode(Sprig, Date, diff);
             
-            _branchMap[diff] = new Branch(newHead, newHead.ParentSprig.Head);
-            return newHead.ParentSprig;
+            _branchMap[diff] = new Branch(newHead, newHead.Sprig.Head);
+            return newHead.Sprig;
         }
         
         public void AddBranch(SpineNode next) {
-            var diff = next.ParentSprig.Diff;
-            _branchMap[diff] = new Branch(next, next.ParentSprig.GetBufferNode(Date));
+            var diff = next.Sprig.Diff;
+            _branchMap[diff] = new Branch(next, next.Sprig.GetBufferNode(Date));
         }
 
         public override void Alloc(int space, int startIndex)
@@ -51,10 +51,34 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return _branchMap[diff];
         }
 
-        public class Branch {
-            public SpineNode Next { get; set; }
-            public BufferNode FirstNodeOnBranch { get; set; }
+        public class Branch
+        {
+
+            public BufferNode First { get; set; }
             
+            public SpineNode Next { get; set; }
+
+            public BufferNode FirstNodeOnBranch
+            {
+                get => First;
+                
+                set
+                {
+                    if (First == null || First == Next.Sprig.Head)
+                        First = value;
+
+                    else
+                    {
+                        var second = Next.Sprig.Head;
+
+                        while (second.Last != First)
+                            second = (BufferNode) second.Last;
+
+                        second.Last = First = value;
+                    }
+                }
+            }
+
             public Branch(SpineNode next, BufferNode firstNodeOnBranch) {
                 Next = next;
                 FirstNodeOnBranch = firstNodeOnBranch;

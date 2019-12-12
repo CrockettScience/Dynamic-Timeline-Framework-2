@@ -16,11 +16,11 @@ namespace DynamicTimelineFramework.Internal.Sprig
             return new SprigBufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
         }
         
-        public static SprigBufferVector operator &(SprigBufferVector left, SprigPositionVector right) {
+        public static SprigBufferVector operator &(SprigBufferVector left, PositionVector right) {
             return new SprigBufferVector(Node<PositionBuffer>.And(left.Head, right.Head));
         }
         
-        public static SprigBufferVector operator |(SprigBufferVector left, SprigPositionVector right) {
+        public static SprigBufferVector operator |(SprigBufferVector left, PositionVector right) {
             return new SprigBufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
         }
         
@@ -73,9 +73,9 @@ namespace DynamicTimelineFramework.Internal.Sprig
             return true;
         }
         
-        public SprigPositionVector ToPositionVector(DTFObject dtfObject)
+        public PositionVector ToPositionVector(DTFObject dtfObject)
         {
-            return new SprigPositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
+            return new PositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
         }
         
         public void ShiftForward(ulong amount) {

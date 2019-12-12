@@ -51,9 +51,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
         }
 
-        public SprigPositionVector ToPositionVector(DTFObject dtfObject)
+        public PositionVector ToPositionVector(DTFObject dtfObject)
         {
-            return new SprigPositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
+            return new PositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
         }
         
         public SprigBufferVector ToBufferVector()
@@ -114,7 +114,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         private void SetHeadAndRealign(ulong realignFromDateOnward, BufferNode head)
         {
-            Head = head;
             
             //Get Diff Chain
             var diffChain = Diff.GetDiffChain();
@@ -143,28 +142,31 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
                     //Realign all branches that come on or after realignFromDateOnward
                     if (branchNode.Date >= realignFromDateOnward) {
-                        foreach (var diff in branchNode) {
+                        foreach (var diff in branchNode)
+                        {
+
+                            var underneath = head.GetBufferNode(branchNode.Date);
+                            var branch = branchNode.GetBranch(diff);
 
                             //If it's the branch we're moving to next, we need to change the first node to the correct one on the new head
                             if (Equals(diff, nextDiff)) {
-                                branchNode.GetBranch(diff).FirstNodeOnBranch = GetBufferNode(branchNode.Date);
+                                branchNode.GetBranch(diff).First = underneath;
                             }
 
                             //If it's a different branch, we need to change the first node's previous to reflect the new structure
                             else if (branchNode.Date > 0) {
-                                var branch = branchNode.GetBranch(diff);
+                                var branchSprig = branch.Next.Sprig;
+                                var last = underneath.Index == branchNode.Date ? underneath.Last : underneath;
+                                
+                                //If the first node on the branch has the same value as the node "underneath" it on the new head, just replace it
+                                if (branch.FirstNodeOnBranch.SuperPosition.Equals(underneath.SuperPosition))
+                                    branch.FirstNodeOnBranch = underneath;
 
-                                var firstNodeOnBranch = branch.FirstNodeOnBranch;
-                                var previousNode = GetBufferNode(branchNode.Date - 1);
-
-                                while (previousNode.Index >= firstNodeOnBranch.Index)
-                                    previousNode = (BufferNode) previousNode.Last;
-
-                                firstNodeOnBranch.Last = previousNode;
-
+                                else
+                                    branch.FirstNodeOnBranch = new BufferNode(last, branchNode.Date, branch.FirstNodeOnBranch.SuperPosition);
+                                
                                 //Mask the other branch here to reflect the change
-                                var timelineVector = Builder.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, GetBufferNode(branchNode.Date - 1).SuperPosition);
-                                var branchSprig = branch.Next.ParentSprig;
+                                var timelineVector = Builder.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, last.SuperPosition);
                                 var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date + 1);
 
                                 if(!newBranchHead.Equals(branchSprig.Head))
@@ -174,6 +176,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                     }
                 }
             }
+            
+            Head = head;
         }
     }
 }

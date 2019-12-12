@@ -34,5 +34,19 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         {
             return new BufferNode((BufferNode) Last.Copy(), Index, SuperPosition.Copy());
         }
+        
+        
+        
+        public BufferNode GetBufferNode(ulong date)
+        {
+            var current = this;
+
+            while (current.Index > date)
+            {
+                current = (BufferNode) current.Last;
+            }
+
+            return current;
+        }
     }
 }
