@@ -4,24 +4,24 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal.Sprig
 {
-    internal class SprigBufferVector : ISprigVector<PositionBuffer>
+    internal class BufferVector : ISprigVector<PositionBuffer>
     {
         #region STATIC
 
-        public static SprigBufferVector operator &(SprigBufferVector left, SprigBufferVector right) {
-            return new SprigBufferVector(Node<PositionBuffer>.And(left.Head, right.Head));
+        public static BufferVector operator &(BufferVector left, BufferVector right) {
+            return new BufferVector(Node<PositionBuffer>.And(left.Head, right.Head));
         }
         
-        public static SprigBufferVector operator |(SprigBufferVector left, SprigBufferVector right) {
-            return new SprigBufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
+        public static BufferVector operator |(BufferVector left, BufferVector right) {
+            return new BufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
         }
         
-        public static SprigBufferVector operator &(SprigBufferVector left, PositionVector right) {
-            return new SprigBufferVector(Node<PositionBuffer>.And(left.Head, right.Head));
+        public static BufferVector operator &(BufferVector left, PositionVector right) {
+            return new BufferVector(Node<PositionBuffer>.And(left.Head, right.Head));
         }
         
-        public static SprigBufferVector operator |(SprigBufferVector left, PositionVector right) {
-            return new SprigBufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
+        public static BufferVector operator |(BufferVector left, PositionVector right) {
+            return new BufferVector(Node<PositionBuffer>.Or(left.Head, right.Head));
         }
         
         #endregion
@@ -33,7 +33,7 @@ namespace DynamicTimelineFramework.Internal.Sprig
 
         public Node<PositionBuffer>.INode Head { get; private set; }
         
-        public SprigBufferVector(Node<PositionBuffer>.INode head)
+        public BufferVector(Node<PositionBuffer>.INode head)
         {
 
             Head = head;
@@ -52,19 +52,19 @@ namespace DynamicTimelineFramework.Internal.Sprig
             return current;
         }
         
-        public SprigBufferVector(int size, bool defaultValue = false)
+        public BufferVector(int size, bool defaultValue = false)
         {
             Head = new BufferNode(null, 0, new PositionBuffer(size, defaultValue));
         }
 
         public ISprigVector<PositionBuffer> Copy()
         {
-            return new SprigBufferVector(Head.Copy());
+            return new BufferVector(Head.Copy());
         }
 
-        public bool Validate(SprigBuilder builder)
+        public bool Validate(SprigManager manager)
         {
-            foreach (var dtfObject in builder.Registry)
+            foreach (var dtfObject in manager.Registry)
             {
                 if (!((PositionNode) ToPositionVector(dtfObject).Head).Validate())
                     return false;
@@ -75,9 +75,9 @@ namespace DynamicTimelineFramework.Internal.Sprig
         
         public PositionVector ToPositionVector(DTFObject dtfObject)
         {
-            return new PositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
+            return new PositionVector(dtfObject.SprigManagerSlice, dtfObject.GetType(), Head);
         }
-        
+
         public void ShiftForward(ulong amount) {
             //Shift up all indices, and let the excess "fall off." Edge nodes are assumed to "stretch"
             var current = Head;

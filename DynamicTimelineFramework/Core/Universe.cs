@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
@@ -13,6 +14,8 @@ namespace DynamicTimelineFramework.Core
         internal readonly Diff Diff;
         internal Multiverse Owner { get; }
         internal Sprig Sprig { get; set; }
+        
+        private Queue<EnqueuedConstraintTasks> _constraintTasks = new Queue<EnqueuedConstraintTasks>();
 
         /// <summary>
         /// The other universe that this universe's timeline branches off from. This may or may NOT be the universe
@@ -34,14 +37,14 @@ namespace DynamicTimelineFramework.Core
             
             Diff = diff;
             Owner = diff.Parent.Owner;
-            Sprig = Owner.SprigBuilder.BuildSprig(diff);
+            Sprig = Owner.SprigManager.BuildSprig(diff);
             Owner.AddUniverse(this);
 
             Owner.ClearPendingDiffs();
         }
         internal Universe(Multiverse multiverse)
         {
-            Diff = new Diff(0, null, new SprigBufferVector(0));
+            Diff = new Diff(0, null, new BufferVector(0));
             Owner = multiverse;
         }
         
@@ -53,6 +56,17 @@ namespace DynamicTimelineFramework.Core
         public Continuity GetContinuity (DTFObject dtfObject)
         {
             return new Continuity(this, dtfObject);
+        }
+
+        internal void EnqueueConstraintTask(DTFObject source, DTFObject dest, Multiverse.ObjectCompiler.TypeMetaData meta)
+        {
+            _constraintTasks.Enqueue(new EnqueuedConstraintTasks(source, dest, meta, this));
+        }
+
+        internal void ClearConstraintTasks()
+        {
+            while(_constraintTasks.Count > 0)
+                _constraintTasks.Dequeue().Execute();
         }
 
         public override bool Equals(object obj)
@@ -68,6 +82,45 @@ namespace DynamicTimelineFramework.Core
         public override int GetHashCode()
         {
             return Diff.GetHashCode();
+        }
+
+        private struct EnqueuedConstraintTasks
+        {
+            private DTFObject _source;
+            private DTFObject _dest;
+            private Multiverse.ObjectCompiler.TypeMetaData _meta;
+            private Universe _universe;
+
+            public EnqueuedConstraintTasks(DTFObject source, DTFObject dest, Multiverse.ObjectCompiler.TypeMetaData meta, Universe universe)
+            {
+                _source = source;
+                _dest = dest;
+                _meta = meta;
+                _universe = universe;
+            }
+
+            public void Execute()
+            {
+                //Get the key that maps to dest
+                foreach (var key in _source.GetLateralKeys())
+                {
+                    if (_source.GetLateralObject(key) == _dest)
+                    {
+                        //If the constraint results in a change, validate the state of the universe's timeline and
+                        //make sure a no bridging errors occured
+                        if (_universe.Owner.Compiler.ConstrainLateralObject(_source, key, _meta, _universe))
+                        {
+                            //Push lateral constraints and validate timeline
+                            _universe.Owner.Compiler.PushLateralConstraints(_dest, _universe);
+                                
+                            if(!_universe.Sprig.Validate())
+                                throw new InvalidBridgingException();
+                        }
+
+                        break;
+                    }
+                }
+            }
         }
     }
 }

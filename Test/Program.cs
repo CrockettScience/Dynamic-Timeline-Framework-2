@@ -1,4 +1,6 @@
-﻿using DynamicTimelineFramework.Core;
+﻿using System;
+using System.Diagnostics;
+using DynamicTimelineFramework.Core;
 
 namespace Test
 {
@@ -9,27 +11,26 @@ namespace Test
             var universe = multiverse.BaseUniverse;
             
             var galaxy = new Galaxy(multiverse);
-            for (var i = 0; i < 1000; i++)
-            {
-                var star = new Star(galaxy, multiverse);
+            var star = new Star(galaxy, multiverse);
+            
+            var rootStarContinuity = universe.GetContinuity(star);
+            rootStarContinuity.Constrain(1001, Star.Birth, out _);
 
-                var rootStarContinuity = universe.GetContinuity(star);
+            
+            var timer = new Stopwatch();
+
+            for (ulong i = 100; i > 0; i--)
+            {
+                timer.Start();
 
                 //Test branching multiverse
-                rootStarContinuity.Constrain(10_000_000_000, Star.Proto, out _);
-                rootStarContinuity.Constrain(11_000_000_000, Star.MainSequence, out _);
-                rootStarContinuity.Constrain(11_000_000_000, Star.Massive, out var massiveStarDiff);
+                rootStarContinuity.Constrain(i, Star.Birth, out var massiveStarDiff);
 
                 var massiveStarUniverse = new Universe(massiveStarDiff);
-                var massiveStarContinuity = massiveStarUniverse.GetContinuity(star);
-
-                massiveStarContinuity.Constrain(13_000_000_351, Star.BlackHole, out _);
-                massiveStarContinuity.Constrain(13_000_000_351, Star.Neutron, out var neutronStarDiff);
-
-                var neutronStarUniverse = new Universe(neutronStarDiff);
+                
+                timer.Stop();
+                Console.WriteLine(timer.ElapsedMilliseconds);
             }
-
-            var a = 10;
         }
     }
 }

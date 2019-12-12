@@ -22,7 +22,16 @@ namespace DynamicTimelineFramework.Core
         /// Position.GetEigenstates() to break the superposition up into it's singular components
         /// </summary>
         /// <param name="date">The date to get the position of</param>
-        public Position this[ulong date] => _universe.Sprig[date, _dtfObject];
+        public Position this[ulong date]
+        {
+            get
+            {
+                //Dequeue constraint Tasks
+                _universe.ClearConstraintTasks();
+                
+                return _universe.Sprig[date, _dtfObject];
+            }
+        } 
 
         internal Continuity(Universe universe, DTFObject dtfObject)
         {
@@ -46,6 +55,9 @@ namespace DynamicTimelineFramework.Core
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
         public bool Constrain(ulong date, Position pos, out Diff outDiff)
         {
+            //Dequeue constraint Tasks
+            _universe.ClearConstraintTasks();
+            
             //Create a copy of the position with the correct operative slice
             var deltaPosition = new Position(_dtfObject.GetType(), pos.ReferenceSlice)
             {
@@ -71,7 +83,7 @@ namespace DynamicTimelineFramework.Core
                     //Not transitionable
                     throw new UnresolvableParadoxException();
 
-                outDiff = new Diff(date, _universe, new SprigBufferVector(_universe.Owner.SprigBuilder.IndexedSpace, true) & timelineVector);
+                outDiff = new Diff(date, _universe, new BufferVector(_universe.Owner.SprigManager.BitCount, true) & timelineVector);
                 return false;
             }
 

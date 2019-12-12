@@ -17,29 +17,29 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             return (PositionBuffer) left.Or(right);
         }
 
-        public BitArray Flag { get; }
+        public BitArray Bits { get; }
 
-        public int Length => Flag.Length;
+        public int Length => Bits.Length;
 
         public PositionBuffer() {
-            Flag = new BitArray(0);
+            Bits = new BitArray(0);
         }
         
-        public PositionBuffer(BitArray flag)
+        public PositionBuffer(BitArray bits)
         {
-            Flag = flag;
+            Bits = bits;
         }
 
         public PositionBuffer(int size, bool defaultValue)
         {
-            Flag = new BitArray(size, defaultValue);
+            Bits = new BitArray(size, defaultValue);
         }
 
         public Position Alloc(Type type, bool defaultValue = false) {
             var objDef = (DTFObjectDefinitionAttribute) type.GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
             
             var space = objDef.PositionCount;
-            var leftBound = Flag.Length;
+            var leftBound = Bits.Length;
             
             Alloc(space, defaultValue);
             
@@ -48,38 +48,38 @@ namespace DynamicTimelineFramework.Internal.Buffer {
 
         public void Alloc(int space, bool defaultValue = false)
         {
-            var targetSize = Flag.Length + space;
+            var targetSize = Bits.Length + space;
             
             //Increasing the count sets them to false by default
             if (defaultValue)
             {
-                var startingSize = Flag.Length;
-                Flag.Length = targetSize;
+                var startingSize = Bits.Length;
+                Bits.Length = targetSize;
 
                 for (var i = startingSize; i < targetSize; i++)
                 {
-                    Flag[i] = true;
+                    Bits[i] = true;
                 }
             }
 
             else
             {
-                Flag.Length = targetSize;
+                Bits.Length = targetSize;
             }
         }
 
         public bool this[int index] {
-            get => Flag[index];
-            set => Flag[index] = value;
+            get => Bits[index];
+            set => Bits[index] = value;
         }
 
         public PositionBuffer Copy()
         {
-            var flag = new BitArray(Flag.Length);
+            var flag = new BitArray(Bits.Length);
 
             for (var i = 0; i < flag.Length; i++)
             {
-                flag[i] = Flag[i];
+                flag[i] = Bits[i];
             }
             
             return new PositionBuffer(flag);
@@ -162,8 +162,8 @@ namespace DynamicTimelineFramework.Internal.Buffer {
         {
             if (!(obj is PositionBuffer other)) return false;
 
-            for (var i = 0; i < Flag.Count; i++) {
-                if (Flag[i] ^ other.Flag[i])
+            for (var i = 0; i < Bits.Count; i++) {
+                if (Bits[i] ^ other.Bits[i])
                     return false;
             }
 

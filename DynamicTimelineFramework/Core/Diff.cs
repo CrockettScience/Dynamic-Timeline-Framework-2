@@ -20,11 +20,11 @@ namespace DynamicTimelineFramework.Core
         internal ulong Date { get; }
         internal Universe Parent { get; }
         
-        private SprigBufferVector _delta;
+        private BufferVector _delta;
 
         public bool IsExpired { get; internal set; }
 
-        internal Diff(ulong date, Universe allegingParent, SprigBufferVector delta)
+        internal Diff(ulong date, Universe allegingParent, BufferVector delta)
         {
             Date = date;
             _delta = delta;
@@ -98,7 +98,7 @@ namespace DynamicTimelineFramework.Core
             //Combine the delta's and validate
             var combined = _delta & otherDiff._delta;
 
-            if (!combined.Validate(Parent.Owner.SprigBuilder))
+            if (!combined.Validate(Parent.Owner.SprigManager))
                 return false;
             
             //Combine into this

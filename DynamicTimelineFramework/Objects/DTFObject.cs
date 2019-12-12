@@ -18,7 +18,7 @@ namespace DynamicTimelineFramework.Objects {
 
         internal readonly int ReferenceHash;
 
-        internal OperativeSlice SprigBuilderSlice { get; }
+        internal OperativeSlice SprigManagerSlice { get; }
         private Multiverse.ObjectCompiler Compiler { get; }
 
         protected DTFObject(Multiverse owner) {
@@ -28,7 +28,7 @@ namespace DynamicTimelineFramework.Objects {
             OperativeSliceProvider = new DTFOOperativeSliceProvider(this);
 
             //Register object with the timeline
-            SprigBuilderSlice = owner.SprigBuilder.RegisterObject(this, out var hash);
+            SprigManagerSlice = owner.SprigManager.RegisterObject(this, out var hash);
             ReferenceHash = hash;
             Compiler = owner.Compiler;
         }
@@ -52,7 +52,12 @@ namespace DynamicTimelineFramework.Objects {
             _lateralKeys.Add(key);
             
             //Subscribe to the other object's directory and add a proxy
-            var backKey = key + "-BACK_REFERENCE" + GetHashCode();
+            var backKey = key + "-BACK_REFERENCE-" + ReferenceHash;
+
+
+            for (var i = 1; obj._lateralDirectory.ContainsKey(backKey); i++)
+                backKey = key + "-BACK_REFERENCE-" + (ReferenceHash ^ (i * 967));
+            
             obj._lateralDirectory[backKey] = this;
             obj._lateralKeys.Add(backKey);
             Compiler.AddLateralProxy(obj.GetType(), GetType(), backKey, key);
@@ -75,7 +80,7 @@ namespace DynamicTimelineFramework.Objects {
         {
             private readonly DTFObject _proxyOwner;
 
-            public OperativeSlice OperativeSlice => _proxyOwner.SprigBuilderSlice;
+            public OperativeSlice OperativeSlice => _proxyOwner.SprigManagerSlice;
 
             public DTFOOperativeSliceProvider(DTFObject proxyOwner)
             {

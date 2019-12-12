@@ -54,12 +54,13 @@
     <Compile Include="Internal\Interfaces\Node.cs" />
     <Compile Include="Internal\Interfaces\ISprigVector.cs" />
     <Compile Include="Internal\Sprig\BufferVector.cs" />
+    <Compile Include="Internal\Sprig\BufferVectorBuilder.cs" />
     <Compile Include="Internal\Sprig\SpineBranchNode.cs" />
     <Compile Include="Internal\Sprig\SpineHeadNode.cs" />
     <Compile Include="Internal\Sprig\Spine.cs" />
     <Compile Include="Internal\Sprig\SpineNode.cs" />
     <Compile Include="Internal\Sprig\Sprig.cs" />
-    <Compile Include="Internal\Sprig\SprigBuilder.cs" />
+    <Compile Include="Internal\Sprig\SprigManager.cs" />
     <Compile Include="Internal\Sprig\BufferNode.cs" />
     <Compile Include="Internal\Sprig\PositionVector.cs" />
     <Compile Include="Internal\Buffer\PositionBuffer.cs" />

@@ -12,7 +12,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             {
                 var bNode = GetBufferNode(date);
 
-                var slice = new ReferenceSlice(bNode.SuperPosition, obj.SprigBuilderSlice.LeftBound, obj.SprigBuilderSlice.RightBound);
+                var slice = new ReferenceSlice(bNode.SuperPosition, obj.SprigManagerSlice.LeftBound, obj.SprigManagerSlice.RightBound);
             
                 return new Position(obj.GetType(), slice);
             }
@@ -20,7 +20,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public Diff Diff { get; }
         
-        public SprigBuilder Builder { get; set; }
+        public SprigManager Manager { get; set; }
         
         public BufferNode Head { get; private set; }
 
@@ -32,7 +32,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 Head = new BufferNode(null, branchIndex, new PositionBuffer());
             else
                 Head = new BufferNode(root.GetBufferNode(branchIndex - 1), branchIndex,
-                    new PositionBuffer(root.Builder.IndexedSpace, true));
+                    new PositionBuffer(root.Manager.BitCount, true));
         }
 
         public void Alloc(int space, int startIndex)
@@ -53,12 +53,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public PositionVector ToPositionVector(DTFObject dtfObject)
         {
-            return new PositionVector(dtfObject.SprigBuilderSlice, dtfObject.GetType(), Head);
+            return new PositionVector(dtfObject.SprigManagerSlice, dtfObject.GetType(), Head);
         }
         
-        public SprigBufferVector ToBufferVector()
+        public BufferVector ToBufferVector()
         {
-            return new SprigBufferVector(Head);
+            return new BufferVector(Head);
         }
         
         public BufferNode GetBufferNode(ulong date)
@@ -75,7 +75,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public bool Validate()
         {
-            foreach (var dtfObject in Builder.Registry)
+            foreach (var dtfObject in Manager.Registry)
             {
                 if (!((PositionNode) ToPositionVector(dtfObject).Head).Validate())
                     return false;
@@ -119,7 +119,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             var diffChain = Diff.GetDiffChain();
 
             //Get Spine
-            var spine = Builder.Spine;
+            var spine = Manager.Spine;
             
             //Use the Diff Chain to navigate through the Spine tree and realign the branch references
             using (var diffEnum = diffChain.GetEnumerator()) {
@@ -166,7 +166,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                                     branch.FirstNodeOnBranch = new BufferNode(last, branchNode.Date, branch.FirstNodeOnBranch.SuperPosition);
                                 
                                 //Mask the other branch here to reflect the change
-                                var timelineVector = Builder.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, last.SuperPosition);
+                                var timelineVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, last.SuperPosition);
                                 var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date + 1);
 
                                 if(!newBranchHead.Equals(branchSprig.Head))

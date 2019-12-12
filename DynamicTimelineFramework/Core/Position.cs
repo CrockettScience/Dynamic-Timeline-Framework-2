@@ -112,7 +112,7 @@ namespace DynamicTimelineFramework.Core
         public int Uncertainty
         {
             get {
-                var flag = ReferenceSlice.Head.Flag;
+                var flag = ReferenceSlice.Head.Bits;
 
                 var lb = ReferenceSlice.LeftBound;
                 var rb = ReferenceSlice.RightBound;
@@ -151,7 +151,7 @@ namespace DynamicTimelineFramework.Core
             var buffer = new PositionBuffer();
             
             //Iterate through and make positions for each set bit
-            var flag = ReferenceSlice.Head.Flag;
+            var flag = ReferenceSlice.Head.Bits;
 
             var lb = ReferenceSlice.LeftBound;
             var rb = ReferenceSlice.RightBound;

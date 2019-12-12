@@ -6,19 +6,19 @@ using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class SprigBuilder {
+    internal class SprigManager {
         public Spine Spine { get; }
-        public int IndexedSpace { get; private set; }
+        public int BitCount { get; private set; }
         
         public readonly List<DTFObject> Registry = new List<DTFObject>();
 
         public Multiverse Owner;
         
-        public SprigBuilder(Diff rootDiff, Universe rootUniverse)
+        public SprigManager(Diff rootDiff, Universe rootUniverse)
         {
             Spine = new Spine(rootDiff, rootUniverse);
-            rootUniverse.Sprig.Builder = this;
-            IndexedSpace = 0;
+            rootUniverse.Sprig.Manager = this;
+            BitCount = 0;
             Owner = rootUniverse.Owner;
         }
 
@@ -26,7 +26,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         {
             var newSprig = Spine.AddBranch(diff.GetDiffChain());
 
-            newSprig.Builder = this;
+            newSprig.Manager = this;
             
             diff.InstallChanges(newSprig);
             
@@ -39,8 +39,8 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             var objDef = (DTFObjectDefinitionAttribute) obj.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
             var space = objDef.PositionCount;
 
-            var leftBound = IndexedSpace;
-            IndexedSpace += space;
+            var leftBound = BitCount;
+            BitCount += space;
             
             Spine.Alloc(space, leftBound);
             
@@ -50,7 +50,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             Owner.ClearPendingDiffs();
 
-            return new OperativeSlice(leftBound, IndexedSpace);
+            return new OperativeSlice(leftBound, BitCount);
 
         }
     }

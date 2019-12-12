@@ -22,7 +22,7 @@ namespace DynamicTimelineFramework.Core
 
         private readonly Dictionary<Diff, Universe> _multiverse = new Dictionary<Diff, Universe>();
         
-        internal SprigBuilder SprigBuilder { get; }
+        internal SprigManager SprigManager { get; }
         
         internal ObjectCompiler Compiler { get; }
         
@@ -45,7 +45,7 @@ namespace DynamicTimelineFramework.Core
             BaseUniverse = new Universe(this);
             
             //Instantiate the multiverse timeline
-            SprigBuilder = new SprigBuilder(BaseUniverse.Diff, BaseUniverse);
+            SprigManager = new SprigManager(BaseUniverse.Diff, BaseUniverse);
             
         }
 
@@ -578,12 +578,12 @@ namespace DynamicTimelineFramework.Core
                 
             }
 
-            private bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Universe universe)
+            internal bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Universe universe)
             {
                 var dest = source.GetLateralObject(lateralKey);
                 
                 //Get the translation vector
-                var translationVector = lateralMetaData.Translate(lateralKey, universe.Sprig.ToPositionVector(source), dest.SprigBuilderSlice);
+                var translationVector = lateralMetaData.Translate(lateralKey, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
                 
                 //AND the sprig with the translation vector and return whether or not a change was made
                 return universe.Sprig.And(translationVector);
@@ -596,45 +596,28 @@ namespace DynamicTimelineFramework.Core
                 //Iterate through each universe and pull constraints into the timelines
                 foreach (var universe in Owner._multiverse.Values)
                 {
-                    //Get the key that maps to dest
-                    foreach (var key in source.GetLateralKeys())
-                    {
-                        if (source.GetLateralObject(key) == dest)
-                        {
-                            //If the constraint results in a change, validate the state of the universe's timeline and
-                            //make sure a no bridging errors occured
-                            if (ConstrainLateralObject(source, key, meta, universe))
-                            {
-                                //Push lateral constraints and validate timeline
-                                PushLateralConstraints(dest, universe);
-                                
-                                if(!universe.Sprig.Validate())
-                                    throw new InvalidBridgingException();
-                            }
-
-                            break;
-                        }
-                    }
+                    universe.EnqueueConstraintTask(source, dest, meta);
                 }
             }
 
-            public SprigBufferVector GetTimelineVector(ulong date, PositionBuffer buffer) {
-                var builder = Owner.SprigBuilder;
-                var timelineVector = new SprigBufferVector(builder.IndexedSpace);
+            public BufferVector GetTimelineVector(ulong date, PositionBuffer buffer) {
+                var manager = Owner.SprigManager;
 
-                var registry = builder.Registry;
+                var registry = manager.Registry;
+                
+                var bufferBuilder = new BufferVectorBuilder(manager.BitCount);
 
                 foreach (var dtfObject in registry)
                 {
-                    timelineVector |= GetTimelineVector(dtfObject, date, buffer.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigBuilderSlice));
+                    bufferBuilder.Add(GetTimelineVector(dtfObject, date, buffer.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice)));
                 }
 
-                return timelineVector;
+                return bufferBuilder.Or();
             }
 
             public PositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
             {
-                var timelineVector = new PositionVector(dtfObject.SprigBuilderSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
+                var timelineVector = new PositionVector(dtfObject.SprigManagerSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
 
                 var eigenVals = position.GetEigenstates();
 
@@ -658,7 +641,7 @@ namespace DynamicTimelineFramework.Core
 
             #endregion
 
-            private class TypeMetaData
+            internal class TypeMetaData
             {
                 public LateralTranslation LateralTranslation { get; }
                 
@@ -704,7 +687,7 @@ namespace DynamicTimelineFramework.Core
             }
 
 
-            private class PositionMetaData {
+            internal class PositionMetaData {
                 
                 public PositionVector TimelineVector { get; }
                 
@@ -717,7 +700,7 @@ namespace DynamicTimelineFramework.Core
             }
 
 
-            private class LateralTranslation {
+            internal class LateralTranslation {
                 public readonly Dictionary<string, Dictionary<Position, Position>> Map = new Dictionary<string, Dictionary<Position, Position>>();
                 private readonly Dictionary<string, string> _proxy = new Dictionary<string, string>();
 
