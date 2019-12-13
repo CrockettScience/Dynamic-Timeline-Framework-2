@@ -13,9 +13,18 @@ namespace DynamicTimelineFramework.Core
     {
         internal readonly Diff Diff;
         internal Multiverse Owner { get; }
-        internal Sprig Sprig { get; set; }
-        
+
+        internal Sprig Sprig {
+            get {
+                ClearConstraintTasks();
+                return _sprig;
+            }
+            
+            set => _sprig = value;
+        }
+
         private Queue<EnqueuedConstraintTasks> _constraintTasks = new Queue<EnqueuedConstraintTasks>();
+        private Sprig _sprig;
 
         /// <summary>
         /// The other universe that this universe's timeline branches off from. This may or may NOT be the universe
@@ -42,6 +51,7 @@ namespace DynamicTimelineFramework.Core
 
             Owner.ClearPendingDiffs();
         }
+        
         internal Universe(Multiverse multiverse)
         {
             Diff = new Diff(0, null, new BufferVector(0), null);
@@ -107,13 +117,13 @@ namespace DynamicTimelineFramework.Core
                     if (_source.GetLateralObject(key) == _dest)
                     {
                         //If the constraint results in a change, validate the state of the universe's timeline and
-                        //make sure a no bridging errors occured
-                        if (_universe.Owner.Compiler.ConstrainLateralObject(_source, key, _meta, _universe))
+                        //make sure no bridging errors occured
+                        if (_universe.Owner.Compiler.ConstrainLateralObject(_source, key, _meta, _universe.Sprig))
                         {
                             //Push lateral constraints and validate timeline
-                            _universe.Owner.Compiler.PushLateralConstraints(_dest, _universe, false);
-                                
-                            if(!_universe.Sprig.Validate())
+                            _universe.Owner.Compiler.PushLateralConstraints(_dest, _universe.Sprig, false);
+                            
+                            if(_universe.Owner.ValidateOperations && !_universe.Sprig.Validate())
                                 throw new InvalidBridgingException();
                         }
 

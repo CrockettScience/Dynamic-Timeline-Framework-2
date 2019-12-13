@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Sprig;
 using DynamicTimelineFramework.Objects;
@@ -59,10 +60,15 @@ namespace DynamicTimelineFramework.Core
             
             //Constrain the new sprig to establish the changes defined by the diff
             newSprig.And(_delta, InstigatingObjects.ToArray());
+
+            var affectedLatObjects = new HashSet<DTFObject>();
+            foreach (var dtfObject in InstigatingObjects) {
+                mvCompiler.PushLateralConstraints(dtfObject, newSprig, true, affectedLatObjects);
+            }
             
             //Constrain the parent sprig to back-propagate the new certainty signature
-            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], InstigatingObjects);
-            Parent.Sprig.And(newCertaintySignature, InstigatingObjects.ToArray());
+            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], InstigatingObjects.Concat(affectedLatObjects));
+            Parent.Sprig.And(newCertaintySignature, InstigatingObjects.Concat(affectedLatObjects).ToArray());
 
         }
 
@@ -102,7 +108,7 @@ namespace DynamicTimelineFramework.Core
             //Combine the delta's and validate
             var combined = _delta & otherDiff._delta;
 
-            if (!combined.Validate(Parent.Owner.SprigManager))
+            if (!combined.Validate(Parent.Owner.SprigManager, InstigatingObjects.Concat(otherDiff.InstigatingObjects).ToArray()))
                 return false;
             
             //Combine into this

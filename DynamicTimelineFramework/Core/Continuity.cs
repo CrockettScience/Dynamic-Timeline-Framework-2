@@ -95,7 +95,7 @@ namespace DynamicTimelineFramework.Core
 
             //Constrain the position
             _universe.Sprig.And(timelineVector, _dtfObject);
-            _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe, true);
+            _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe.Sprig, true);
             
             //Clear pending diffs
             _universe.Owner.ClearPendingDiffs();

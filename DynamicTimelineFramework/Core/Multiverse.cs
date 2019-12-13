@@ -27,6 +27,14 @@ namespace DynamicTimelineFramework.Core
         internal ObjectCompiler Compiler { get; }
         
         private readonly HashSet<Diff> _pendingDiffs = new HashSet<Diff>();
+
+        /// <summary>
+        /// Whether or not to validate operations made to the timeline. Turning this off will
+        /// increase performance, but make it more difficult to detect invalid bridging exceptions
+        /// definitions. It's recommended to leave this on if you are testing new DTFObjects with
+        /// lateral definitions. It is turned ON by default
+        /// </summary>
+        public bool ValidateOperations { get; set; }
         
         /// <summary>
         /// The core universe that all other universes branch off of.
@@ -36,17 +44,20 @@ namespace DynamicTimelineFramework.Core
         /// <summary>
         /// Instantiates a new multiverse with a blank base universe and compiles the system of objects.
         /// </summary>
-        public Multiverse()
+        public Multiverse(bool validateOps = true)
         {
-            //Run the Compiler
+            //Compile all states from the calling assembly
             Compiler = new ObjectCompiler(Assembly.GetCallingAssembly(), this);
             
-            // Set up the big bang diff
+            //Set up the initial universe
             BaseUniverse = new Universe(this);
             
             //Instantiate the multiverse timeline
             SprigManager = new SprigManager(BaseUniverse.Diff, BaseUniverse);
             
+            //Whether or not to validate ops
+            ValidateOperations = validateOps;
+
         }
 
         /// <summary>
@@ -559,39 +570,68 @@ namespace DynamicTimelineFramework.Core
                 _objectMetaData[destType].LateralTranslation.AddProxy(inputKey, sourceKey + "-BACK_REFERENCE" + sourceType.Name);
             }
             
-            internal void PushLateralConstraints(DTFObject dtfObj, Universe universe, bool pushToParent)
+            internal void PushLateralConstraints(DTFObject dtfObj, Sprig universeSprig, bool pushToParent)
             {
+                //Setup affected objects
+                
                 //Get the metadata object
                 var meta = _objectMetaData[dtfObj.GetType()];
 
                 //Constrain up the parent tree
-                if (pushToParent && dtfObj.ParentKey != null && ConstrainLateralObject(dtfObj, dtfObj.ParentKey, meta, universe))
-                    PushLateralConstraints(dtfObj.Parent, universe, true);
-                    
-                
+                if (pushToParent && dtfObj.ParentKey != null && ConstrainLateralObject(dtfObj, dtfObj.ParentKey, meta, universeSprig))
+                    PushLateralConstraints(dtfObj.Parent, universeSprig, true);
+
                 //Iterate through the rest of the keys and recursively constrain
                 var keys = dtfObj.GetLateralKeys();
                 foreach (var key in keys) {
                     
                     var dest = dtfObj.GetLateralObject(key);
                     
-                    if (!ConstrainLateralObject(dtfObj, key, meta, universe)) continue;
+                    
+                    if (!ConstrainLateralObject(dtfObj, key, meta, universeSprig)) continue;
                     
                     //If the constraint results in change, then push it's constraints as well
                     //Since all lateral objects have the same parent, don't need to push to parent every time
-                    PushLateralConstraints(dest, universe, false);
+                    PushLateralConstraints(dest, universeSprig, false);
+                }
+            }
+            
+            internal void PushLateralConstraints(DTFObject dtfObj, Sprig universeSprig, bool pushToParent, HashSet<DTFObject> affectedObjects)
+            {
+                
+                //Get the metadata object
+                var meta = _objectMetaData[dtfObj.GetType()];
+
+                //Constrain up the parent tree
+                if (pushToParent && dtfObj.ParentKey != null && ConstrainLateralObject(dtfObj, dtfObj.ParentKey, meta, universeSprig)) {
+                    affectedObjects.Add(dtfObj.Parent);
+                    PushLateralConstraints(dtfObj.Parent, universeSprig, true, affectedObjects);
+                }
+
+                //Iterate through the rest of the keys and recursively constrain
+                var keys = dtfObj.GetLateralKeys();
+                foreach (var key in keys) {
+                    
+                    var dest = dtfObj.GetLateralObject(key);
+
+                    if (!ConstrainLateralObject(dtfObj, key, meta, universeSprig)) continue;
+                    
+                    //If the constraint results in change, then push it's constraints as well
+                    //Since all lateral objects have the same parent, don't need to push to parent every time
+                    affectedObjects.Add(dest);
+                    PushLateralConstraints(dest, universeSprig, false, affectedObjects);
                 }
             }
 
-            internal bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Universe universe)
+            internal bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Sprig universeSprig)
             {
                 var dest = source.GetLateralObject(lateralKey);
                 
                 //Get the translation vector
-                var translationVector = lateralMetaData.Translate(lateralKey, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
+                var translationVector = lateralMetaData.Translate(lateralKey, universeSprig.ToPositionVector(source), dest.SprigManagerSlice);
                 
                 //AND the sprig with the translation vector and return whether or not a change was made
-                return universe.Sprig.And(translationVector, dest);
+                return universeSprig.And(translationVector, dest);
             }
 
             public void PullLateralConstraints(DTFObject source, DTFObject dest)
@@ -621,7 +661,7 @@ namespace DynamicTimelineFramework.Core
                     var translationVector = meta.Translate(dest.ParentKey + "-BACK_REFERENCE-" + dest.GetType().Name, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
                     
                     if(universe.Sprig.And(translationVector, dest))
-                        PushLateralConstraints(dest, universe, false);
+                        PushLateralConstraints(dest, universe.Sprig, false);
                 }
 
             }
@@ -651,7 +691,7 @@ namespace DynamicTimelineFramework.Core
                 }
                 
                 //Check for invalid bridging
-                if(!((PositionNode) timelineVector.Head).Validate())
+                if(Owner.ValidateOperations && !((PositionNode) timelineVector.Head).Validate())
                     throw new InvalidBridgingException();
                 
                 if(date < SprigCenter)

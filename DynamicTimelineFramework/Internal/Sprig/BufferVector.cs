@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
@@ -62,9 +63,9 @@ namespace DynamicTimelineFramework.Internal.Sprig
             return new BufferVector(Head.Copy());
         }
 
-        public bool Validate(SprigManager manager)
+        public bool Validate(SprigManager manager, params DTFObject[] objects)
         {
-            foreach (var dtfObject in manager.Registry)
+            foreach (var dtfObject in objects)
             {
                 if (!((PositionNode) ToPositionVector(dtfObject).Head).Validate())
                     return false;
@@ -76,6 +77,18 @@ namespace DynamicTimelineFramework.Internal.Sprig
         public PositionVector ToPositionVector(DTFObject dtfObject)
         {
             return new PositionVector(dtfObject.SprigManagerSlice, dtfObject.GetType(), Head);
+        }
+
+        public void Clear(IEnumerable<DTFObject> objects, bool value = false) {
+            var current = Head;
+
+            while (current != null) {
+                foreach (var dtfObject in objects) {
+                    current.SuperPosition.Clear(dtfObject.SprigManagerSlice, value);
+                }
+                
+                current = current.Last;
+            }
         }
 
         public void ShiftForward(ulong amount) {

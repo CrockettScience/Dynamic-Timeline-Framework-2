@@ -73,16 +73,9 @@ namespace DynamicTimelineFramework.Internal.Buffer {
             set => Bits[index] = value;
         }
 
-        public PositionBuffer Copy()
-        {
-            var flag = new BitArray(Bits.Length);
-
-            for (var i = 0; i < flag.Length; i++)
-            {
-                flag[i] = Bits[i];
-            }
+        public PositionBuffer Copy() {
             
-            return new PositionBuffer(flag);
+            return new PositionBuffer((BitArray) Bits.Clone());
         }
 
         internal override BinaryPosition And(BinaryPosition other)
@@ -104,11 +97,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
                 
                 case PositionBuffer otherBuff:
                 {
-                    for (var i = 0; i < Length; i++)
-                    {
-                        buffer[i] &= otherBuff[i];
-                    }
-
+                    buffer.Bits.And(otherBuff.Bits);
                     break;
                 }
                 
@@ -138,11 +127,7 @@ namespace DynamicTimelineFramework.Internal.Buffer {
                 
                 case PositionBuffer otherBuff:
                 {
-                    for (var i = 0; i < Length; i++)
-                    {
-                        buffer[i] |= otherBuff[i];
-                    }
-
+                    buffer.Bits.Or(otherBuff.Bits);
                     break;
                 }
                 
@@ -156,6 +141,12 @@ namespace DynamicTimelineFramework.Internal.Buffer {
         public Position PositionAtSlice(Type type, ISlice slice)
         {
             return new Position(type, new ReferenceSlice(this, slice.LeftBound, slice.RightBound));
+        }
+
+        public void Clear(OperativeSlice address, bool value = false) {
+            for (var i = address.LeftBound; i < address.RightBound; i++) {
+                this[i] = value;
+            }
         }
 
         public override bool Equals(object obj)

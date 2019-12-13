@@ -217,16 +217,12 @@ namespace DynamicTimelineFramework.Core
         /// Duplicates the object
         /// </summary>
         /// <returns>A copy of the position</returns>
-        public Position Copy()
-        {
-            var pos = Alloc(Type);
+        public Position Copy() {
+            var newReference = ReferenceSlice.Head.Copy();
 
-            for (var i = 0; i < Length; i++)
-            {
-                pos[i] = this[i];
-            }
-
-            pos.OperativeSliceProvider = OperativeSliceProvider;
+            var pos = new Position(Type, new ReferenceSlice(newReference, ReferenceSlice.LeftBound, ReferenceSlice.RightBound)) {
+                OperativeSliceProvider = OperativeSliceProvider
+            };
 
             return pos;
         }
