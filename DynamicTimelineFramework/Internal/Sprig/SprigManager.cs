@@ -12,7 +12,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public readonly List<DTFObject> Registry = new List<DTFObject>();
 
-        public Multiverse Owner;
+        public readonly Multiverse Owner;
         
         public SprigManager(Diff rootDiff, Universe rootUniverse)
         {

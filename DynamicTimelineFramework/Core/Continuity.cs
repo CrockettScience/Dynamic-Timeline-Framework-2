@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Sprig;
@@ -88,12 +89,12 @@ namespace DynamicTimelineFramework.Core
                     //Not transitionable
                     throw new UnresolvableParadoxException();
 
-                outDiff = new Diff(date, _universe, new BufferVector(_universe.Owner.SprigManager.BitCount, true) & timelineVector);
+                outDiff = new Diff(date, _universe, new BufferVector(_universe.Owner.SprigManager.BitCount, true) & timelineVector, _dtfObject);
                 return false;
             }
 
             //Constrain the position
-            _universe.Sprig.And(timelineVector);
+            _universe.Sprig.And(timelineVector, _dtfObject);
             _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe, true);
             
             //Clear pending diffs

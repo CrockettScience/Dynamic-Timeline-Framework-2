@@ -130,9 +130,16 @@ namespace DynamicTimelineFramework.Internal.Sprig
             public PositionBuffer Or()
             {
                 
-                var buffer = new PositionBuffer(_size, false);
+                var buffer = new PositionBuffer(_size, true);
 
-                return _positions.Aggregate(buffer, (current, position) => current | position);
+                var result = buffer;
+
+                foreach (var position in _positions) {
+                    result |= position & Position.Alloc(position.Type, true);
+                }
+
+
+                return result;
             }
         }
     }

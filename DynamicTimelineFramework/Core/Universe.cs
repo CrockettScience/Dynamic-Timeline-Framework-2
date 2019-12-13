@@ -44,7 +44,7 @@ namespace DynamicTimelineFramework.Core
         }
         internal Universe(Multiverse multiverse)
         {
-            Diff = new Diff(0, null, new BufferVector(0));
+            Diff = new Diff(0, null, new BufferVector(0), null);
             Owner = multiverse;
         }
         

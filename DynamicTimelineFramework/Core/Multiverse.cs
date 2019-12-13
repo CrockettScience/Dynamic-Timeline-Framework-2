@@ -591,7 +591,7 @@ namespace DynamicTimelineFramework.Core
                 var translationVector = lateralMetaData.Translate(lateralKey, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
                 
                 //AND the sprig with the translation vector and return whether or not a change was made
-                return universe.Sprig.And(translationVector);
+                return universe.Sprig.And(translationVector, dest);
             }
 
             public void PullLateralConstraints(DTFObject source, DTFObject dest)
@@ -620,20 +620,18 @@ namespace DynamicTimelineFramework.Core
                     //Constrain from parent and push if changes were found
                     var translationVector = meta.Translate(dest.ParentKey + "-BACK_REFERENCE-" + dest.GetType().Name, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
                     
-                    if(universe.Sprig.And(translationVector))
+                    if(universe.Sprig.And(translationVector, dest))
                         PushLateralConstraints(dest, universe, false);
                 }
 
             }
 
-            public BufferVector GetTimelineVector(ulong date, PositionBuffer buffer) {
+            public BufferVector GetTimelineVector(ulong date, PositionBuffer buffer, IEnumerable<DTFObject> objects) {
                 var manager = Owner.SprigManager;
-
-                var registry = manager.Registry;
                 
                 var bufferBuilder = new BufferVectorBuilder(manager.BitCount);
 
-                foreach (var dtfObject in registry)
+                foreach (var dtfObject in objects)
                 {
                     bufferBuilder.Add(GetTimelineVector(dtfObject, date, buffer.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice)));
                 }

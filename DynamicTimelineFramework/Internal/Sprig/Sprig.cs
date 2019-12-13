@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
@@ -91,28 +92,28 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
             {
-                SetHeadAndRealign(0, (BufferNode) newHead);
+                SetHeadAndRealign(0, (BufferNode) newHead, Manager.Registry);
                 return true;
             }
 
             return false;
         }
         
-        public bool Or<T>(ISprigVector<T> other) where T : BinaryPosition
+        public bool And<T>(ISprigVector<T> other, params DTFObject[] objects) where T : BinaryPosition
         {
-            var newHead = Node<PositionBuffer>.Or(Head, other.Head);
+            var newHead = Node<PositionBuffer>.And(Head, other.Head);
             
             //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
             {
-                SetHeadAndRealign(0, (BufferNode) newHead);
-                return false;
+                SetHeadAndRealign(0, (BufferNode) newHead, objects);
+                return true;
             }
 
-            return true;
+            return false;
         }
 
-        private void SetHeadAndRealign(ulong realignFromDateOnward, BufferNode head)
+        private void SetHeadAndRealign(ulong realignFromDateOnward, BufferNode head, IReadOnlyCollection<DTFObject> objects)
         {
             
             //Get Diff Chain
@@ -166,11 +167,11 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                                     branch.FirstNodeOnBranch = new BufferNode(last, branchNode.Date, branch.FirstNodeOnBranch.SuperPosition);
                                 
                                 //Mask the other branch here to reflect the change
-                                var timelineVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, last.SuperPosition);
+                                var timelineVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, last.SuperPosition, objects);
                                 var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date + 1);
 
                                 if(!newBranchHead.Equals(branchSprig.Head))
-                                    branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead);
+                                    branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead, objects);
                             }
                         }
                     }

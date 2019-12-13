@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Sprig;
+using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
 {  
@@ -21,13 +22,17 @@ namespace DynamicTimelineFramework.Core
         internal Universe Parent { get; }
         
         private BufferVector _delta;
+        
+        public List<DTFObject> InstigatingObjects { get; }
 
         public bool IsExpired { get; internal set; }
 
-        internal Diff(ulong date, Universe allegingParent, BufferVector delta)
+        internal Diff(ulong date, Universe allegingParent, BufferVector delta, DTFObject instigatingObject)
         {
             Date = date;
             _delta = delta;
+            
+            InstigatingObjects = new List<DTFObject> {instigatingObject};
 
             var parent = allegingParent;
             
@@ -48,16 +53,16 @@ namespace DynamicTimelineFramework.Core
             var mvCompiler = Parent.Owner.Compiler;
 
             //Constrain the new sprig to establish the shared certainty signature
-            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.GetBufferNode(Date - 1).SuperPosition);
+            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.GetBufferNode(Date - 1).SuperPosition, Parent.Owner.SprigManager.Registry);
 
             newSprig.And(priorCertaintySignature);
             
             //Constrain the new sprig to establish the changes defined by the diff
-            newSprig.And(_delta);
+            newSprig.And(_delta, InstigatingObjects.ToArray());
             
             //Constrain the parent sprig to back-propagate the new certainty signature
-            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1]);
-            Parent.Sprig.And(newCertaintySignature);
+            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], InstigatingObjects);
+            Parent.Sprig.And(newCertaintySignature, InstigatingObjects.ToArray());
 
         }
 
@@ -102,6 +107,7 @@ namespace DynamicTimelineFramework.Core
             
             //Combine into this
             _delta = combined;
+            InstigatingObjects.AddRange(otherDiff.InstigatingObjects);
             return true;
         }
 
