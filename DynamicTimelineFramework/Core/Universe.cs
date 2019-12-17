@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
 using DynamicTimelineFramework.Internal.Sprig;
@@ -9,10 +10,10 @@ namespace DynamicTimelineFramework.Core
     /// Represents a single, non-branching timeline in the multiverse. Universes are constructed with Diff objects;
     /// objects that encode changes made to a parent universe's timeline that are incompatible with the universe's state
     /// </summary>
-    public class Universe
+    public class Universe : IDisposable
     {
         internal readonly Diff Diff;
-        internal Multiverse Owner { get; }
+        internal Multiverse Multiverse { get; }
 
         internal Sprig Sprig {
             get {
@@ -45,17 +46,17 @@ namespace DynamicTimelineFramework.Core
                 throw new DiffExpiredException();
             
             Diff = diff;
-            Owner = diff.Parent.Owner;
-            Sprig = Owner.SprigManager.BuildSprig(diff);
-            Owner.AddUniverse(this);
+            Multiverse = diff.Parent.Multiverse;
+            Sprig = Multiverse.SprigManager.BuildSprig(diff);
+            Multiverse.AddUniverse(this);
 
-            Owner.ClearPendingDiffs();
+            Multiverse.ClearPendingDiffs();
         }
         
         internal Universe(Multiverse multiverse)
         {
             Diff = new Diff(0, null, new BufferVector(0), null);
-            Owner = multiverse;
+            Multiverse = multiverse;
         }
         
         /// <summary>
@@ -94,6 +95,18 @@ namespace DynamicTimelineFramework.Core
             return Diff.GetHashCode();
         }
 
+        public void Dispose() {
+            //Remove the Diff
+            Diff.Remove();
+            
+            //Unmap from the multiverse
+            Multiverse.RemoveUniverse(this);
+            
+            //Inform the sprig manager to remove the node from the sprig tree
+            Multiverse.SprigManager.UnregisterDiff(Diff);
+        }
+
+
         private struct EnqueuedConstraintTasks
         {
             private DTFObject _source;
@@ -118,12 +131,12 @@ namespace DynamicTimelineFramework.Core
                     {
                         //If the constraint results in a change, validate the state of the universe's timeline and
                         //make sure no bridging errors occured
-                        if (_universe.Owner.Compiler.ConstrainLateralObject(_source, key, _meta, _universe.Sprig))
+                        if (_universe.Multiverse.Compiler.ConstrainLateralObject(_source, key, _meta, _universe.Sprig))
                         {
                             //Push lateral constraints and validate timeline
-                            _universe.Owner.Compiler.PushLateralConstraints(_dest, _universe.Sprig, false);
+                            _universe.Multiverse.Compiler.PushLateralConstraints(_dest, _universe.Sprig, false);
                             
-                            if(_universe.Owner.ValidateOperations && !_universe.Sprig.Validate())
+                            if(_universe.Multiverse.ValidateOperations && !_universe.Sprig.Validate())
                                 throw new InvalidBridgingException();
                         }
 

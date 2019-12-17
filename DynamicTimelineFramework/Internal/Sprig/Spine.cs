@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 
@@ -63,6 +64,37 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 //Add the new branch to the branch node we just made
                 return newBranch.AddBranch(nextTurn);
             }
+        }
+
+        public void RemoveBranch(LinkedList<Diff> diffChain) {
+            //Use the diff chain to follow the chain of diffs to the branch node just before the head node
+            
+            //Todo - needs to track where the original "branch" from the parent diff took place, then "graft" all branches ahead to the original parent point
+
+            using (var diffEnum = diffChain.GetEnumerator()) {
+                
+                diffEnum.MoveNext();
+                var nextDiff = diffEnum.Current;
+
+                diffEnum.MoveNext();
+                var nextTurn = diffEnum.Current;
+                
+                var currentBranchNode = RootBranch;
+
+                while (currentBranchNode[nextDiff] is SpineBranchNode nextBranchNode) {
+                    
+                    currentBranchNode = nextBranchNode;
+                    
+                    if (nextTurn != null && currentBranchNode.Contains(nextTurn)) {
+                        nextDiff = nextTurn;
+
+                        diffEnum.MoveNext();
+                        nextTurn = diffEnum.Current;
+                    }
+                }
+            }
+            
+            throw new NotImplementedException();
         }
     }
 }

@@ -83,6 +83,10 @@ namespace DynamicTimelineFramework.Core
         {
             _multiverse[universe.Diff] = universe;
         }
+
+        internal void RemoveUniverse(Universe universe) {
+            _multiverse.Remove(universe.Diff);
+        }
         
         internal class ObjectCompiler
         {

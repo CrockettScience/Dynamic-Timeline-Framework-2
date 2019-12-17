@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Core;
@@ -19,7 +20,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             Spine = new Spine(rootDiff, rootUniverse);
             rootUniverse.Sprig.Manager = this;
             BitCount = 0;
-            Owner = rootUniverse.Owner;
+            Owner = rootUniverse.Multiverse;
         }
 
         public Sprig BuildSprig(Diff diff)
@@ -52,6 +53,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
             return new OperativeSlice(leftBound, BitCount);
 
+        }
+
+        public void UnregisterDiff(Diff diff) {
+            
+            //Remove the branch from the spine
+            Spine.RemoveBranch(diff.GetDiffChain());
         }
     }
 }

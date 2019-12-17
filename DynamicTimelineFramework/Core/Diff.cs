@@ -19,10 +19,12 @@ namespace DynamicTimelineFramework.Core
     /// </summary>
     public class Diff
     {
-        internal ulong Date { get; }
-        internal Universe Parent { get; }
+        internal ulong Date { get; private set; }
+        internal Universe Parent { get; private set; }
         
         private BufferVector _delta;
+
+        private List<Diff> _children;
         
         public List<DTFObject> InstigatingObjects { get; }
 
@@ -32,6 +34,7 @@ namespace DynamicTimelineFramework.Core
         {
             Date = date;
             _delta = delta;
+            _children = new List<Diff>();
             
             InstigatingObjects = new List<DTFObject> {instigatingObject};
 
@@ -44,17 +47,20 @@ namespace DynamicTimelineFramework.Core
 
             if (parent == null) return;
             
-            Parent.Owner.AddDiffPending(this);
+            Parent.Multiverse.AddDiffPending(this);
 
             IsExpired = false;
         }
 
         internal void InstallChanges(Sprig newSprig) {
             //This command installs the changes given by the diff.
-            var mvCompiler = Parent.Owner.Compiler;
+            var mvCompiler = Parent.Multiverse.Compiler;
+            
+            //Add to the parent's children
+            Parent.Diff._children.Add(this);
 
             //Constrain the new sprig to establish the shared certainty signature
-            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.GetBufferNode(Date - 1).SuperPosition, Parent.Owner.SprigManager.Registry);
+            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.GetBufferNode(Date - 1).SuperPosition, Parent.Multiverse.SprigManager.Registry);
 
             newSprig.And(priorCertaintySignature);
             
@@ -108,7 +114,7 @@ namespace DynamicTimelineFramework.Core
             //Combine the delta's and validate
             var combined = _delta & otherDiff._delta;
 
-            if (!combined.Validate(Parent.Owner.SprigManager, InstigatingObjects.Concat(otherDiff.InstigatingObjects).ToArray()))
+            if (!combined.Validate(Parent.Multiverse.SprigManager, InstigatingObjects.Concat(otherDiff.InstigatingObjects).ToArray()))
                 return false;
             
             //Combine into this
@@ -117,30 +123,21 @@ namespace DynamicTimelineFramework.Core
             return true;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Diff other)) return false;
+        internal void Remove() {
+            //Iterate through the children and merge this diff into them
+            Parent.Diff._children.Remove(this);
             
-            //Two diffs are equal if:
-            //The same positions have the same deltas
-            //The deltas happened on the same date
-            //The deltas happened in the same universe (parent)
+            foreach (var child in _children) {
+                child.Parent = Parent;
+                Parent.Diff._children.Add(child);
                 
-            if (Date != other.Date)
-                return false;
-                
-            //We check the parent universe by reference as well; The Multiverse creates the universes by Diff definition
-            if (Parent != other.Parent)
-                return false;
+                foreach (var instigatingObject in InstigatingObjects) {
+                    child.InstigatingObjects.Add(instigatingObject);
+                }
 
-            return _delta.Equals(other._delta);
-
-        }
-
-        public override int GetHashCode()
-        {
-
-            return Date.GetHashCode() ^ _delta.Head.SuperPosition.GetHashCode() * 397;
+                child._delta &= _delta;
+                child.Date = Date;
+            }
         }
     }
 }

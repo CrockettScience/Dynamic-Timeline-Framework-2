@@ -55,7 +55,7 @@ namespace DynamicTimelineFramework.Core
         /// <exception cref="UnresolvableParadoxException">If the given position results in a paradox that cannot be transitioned to</exception>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
         public bool Constrain(ulong date, Position pos, out Diff outDiff) {
-            var multiverse = _universe.Owner;
+            var multiverse = _universe.Multiverse;
             var compiler = multiverse.Compiler;
             
             //Dequeue constraint Tasks
@@ -71,7 +71,7 @@ namespace DynamicTimelineFramework.Core
             };
 
             //Get timeline position vector
-            var timelineVector = _universe.Owner.Compiler.GetTimelineVector(_dtfObject, date, deltaPosition);
+            var timelineVector = _universe.Multiverse.Compiler.GetTimelineVector(_dtfObject, date, deltaPosition);
 
             //Check if it's possible to constrain the position
             var existingVector = _universe.Sprig.ToPositionVector(_dtfObject);
@@ -89,16 +89,16 @@ namespace DynamicTimelineFramework.Core
                     //Not transitionable
                     throw new UnresolvableParadoxException();
 
-                outDiff = new Diff(date, _universe, new BufferVector(_universe.Owner.SprigManager.BitCount, true) & timelineVector, _dtfObject);
+                outDiff = new Diff(date, _universe, new BufferVector(_universe.Multiverse.SprigManager.BitCount, true) & timelineVector, _dtfObject);
                 return false;
             }
 
             //Constrain the position
             _universe.Sprig.And(timelineVector, _dtfObject);
-            _universe.Owner.Compiler.PushLateralConstraints(_dtfObject, _universe.Sprig, true);
+            _universe.Multiverse.Compiler.PushLateralConstraints(_dtfObject, _universe.Sprig, true);
             
             //Clear pending diffs
-            _universe.Owner.ClearPendingDiffs();
+            _universe.Multiverse.ClearPendingDiffs();
             
             outDiff = null;
             return true;
