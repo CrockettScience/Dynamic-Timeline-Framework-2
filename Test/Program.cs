@@ -9,37 +9,53 @@ namespace Test
     {
         public static void Main(string[] args) {
             var multiverse = new Multiverse(false);
-            var universe = multiverse.BaseUniverse;
             
             var galaxy = new Galaxy(multiverse);
             var star = new Star(galaxy, multiverse);
             var rootStarContinuity = multiverse.BaseUniverse.GetContinuity(star);
+            var rootGalaxyContinuity = multiverse.BaseUniverse.GetContinuity(galaxy);
+
+            Console.WindowWidth = 256;
+            
+            //Galaxy in full superposition
+            Console.WriteLine("Before Star Constraints:");
+            Console.WriteLine("Year 11,000,000,000 - " + rootGalaxyContinuity[11_000_000_000]);
 
             //Test branching multiverse
-            rootStarContinuity.Constrain(10_000_000_000, Star.Proto, out _);
-            rootStarContinuity.Constrain(10_999_999_999, Star.Proto, out _);
             rootStarContinuity.Constrain(11_000_000_000, Star.MainSequence, out _);
             rootStarContinuity.Constrain(11_000_000_000, Star.Massive, out var massiveStarDiff);
             
             var massiveStarUniverse = new Universe(massiveStarDiff);
             var massiveStarContinuity = massiveStarUniverse.GetContinuity(star);
 
+            massiveStarContinuity.Constrain(13_000_000_000, Star.Supernova, out _);
             massiveStarContinuity.Constrain(13_000_000_351, Star.BlackHole, out _);
             massiveStarContinuity.Constrain(13_000_000_351, Star.Neutron, out var neutronStarDiff);
             
             var neutronStarUniverse = new Universe(neutronStarDiff);
             var neutronStarContinuity = neutronStarUniverse.GetContinuity(star);
-
-            var testPosition = rootStarContinuity[14_000_000_001];   //White Dwarf
-            testPosition = rootStarContinuity[13_000_000_351];       //Planetary Nebula
-            testPosition = massiveStarContinuity[13_000_000_351];    //Black Hole
-            testPosition = neutronStarContinuity[13_000_000_351];    //Neutron Star
             
-            //Remove MassiveStarUniverse while preserving NeutronStarUniverse
-            massiveStarUniverse.Dispose();
+            //Even though the galaxy was never directly constrained, there WAS a change in
+            //certainty; We know it exists now and has not degenerated, because at least 1 star
+            //exist in it
+            Console.WriteLine();
+            Console.WriteLine("After Star Constraints:");
+            Console.WriteLine("Year 11,000,000,000 - " + rootGalaxyContinuity[11_000_000_000]);
+            Console.WriteLine("Year 11,000,000,000 - " + rootStarContinuity[11_000_000_000]);       //Main Sequence
+            Console.WriteLine("Year 13,000,000,000 - " + rootStarContinuity[13_000_000_000]);       //Planetary Nebula
+            Console.WriteLine("Year 15,000,000,000 - " + rootStarContinuity[15_000_000_000]);       //White Dwarf
             
-            testPosition = neutronStarContinuity[13_000_000_351];    //Neutron Star
-            testPosition = massiveStarContinuity[13_000_000_351];    //Exception
+            Console.WriteLine();
+            Console.WriteLine("Parallel Universe where the star became a massive star, and went supernova instead of burning off in a nebula, and ended up as a black hole:");
+            Console.WriteLine("Year 11,000,000,000 - " + massiveStarContinuity[11_000_000_000]);    //Massive
+            Console.WriteLine("Year 13,000,000,000 - " + massiveStarContinuity[13_000_000_000]);    //Supernova
+            Console.WriteLine("Year 14,000,000,000 - " + massiveStarContinuity[14_000_000_000]);    //Black Hole
+            
+            Console.WriteLine();
+            Console.WriteLine("Parallel Universe where the star also became a massive star and went supernova, but instead devolved into a Neutron Star:");
+            Console.WriteLine("Year 11,000,000,000 - " + neutronStarContinuity[11_000_000_000]);    //Massive
+            Console.WriteLine("Year 13,000,000,000 - " + neutronStarContinuity[13_000_000_000]);    //Supernova
+            Console.WriteLine("Year 14,000,000,000 - " + neutronStarContinuity[14_000_000_000]);     //Neutron Star
         }
 
         public static void Constrain_X_ObjectCount(int count, Stopwatch timer, Galaxy galaxy, Multiverse multiverse) {

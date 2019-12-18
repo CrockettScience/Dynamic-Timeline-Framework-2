@@ -115,7 +115,7 @@ namespace DynamicTimelineFramework.Core
                 {
                     if (!type.IsSubclassOf(typeof(DTFObject))) continue;
 
-                    if (!(type.GetCustomAttribute(DTFObjectDefAttr) is DTFObjectDefinitionAttribute definitionAttr))
+                    if (!(type.GetCustomAttribute(DTFObjectDefAttr) is DTFObjectDefinitionAttribute))
                         throw new DTFObjectCompilerException(type.Name + " is assignable from " + DTFObjectType.Name +
                                                              " but does not have a " + DTFObjectDefAttr.Name +
                                                              " defined.");

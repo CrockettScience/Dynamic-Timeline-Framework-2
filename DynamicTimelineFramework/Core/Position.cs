@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Reflection;
 using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
+using DynamicTimelineFramework.Objects.Attributes;
 
 namespace DynamicTimelineFramework.Core
 {
@@ -225,6 +227,25 @@ namespace DynamicTimelineFramework.Core
             };
 
             return pos;
+        }
+
+        public override string ToString() {
+            var stringOut = "Type: " + Type.Name + ", Value: ";
+
+            if (Uncertainty == -1)
+                return stringOut + "IN PARADOX";
+
+            foreach (var field in Type.GetFields()) {
+                //If it has a position attribute
+                if (field.GetCustomAttribute(typeof(PositionAttribute)) is PositionAttribute) {
+                    
+                    //Add it's name if it's part of the superposition
+                    if (((Position) field.GetValue(null) & this).Uncertainty != -1)
+                        stringOut += field.Name + " ";
+                }
+            }
+
+            return stringOut;
         }
 
         internal override BinaryPosition And(BinaryPosition other)
