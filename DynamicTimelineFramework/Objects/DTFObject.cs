@@ -69,6 +69,17 @@ namespace DynamicTimelineFramework.Objects {
             
         }
 
+        /// <summary>
+        /// Can be called during the inherited constructor to define and set a single, special lateral object that exists
+        /// as a "Parent" to this object. Parent objects don't inform child objects of changes that occur on them when
+        /// they happen, but instead, child objects will pull from them when needed. This makes using parents crucial to
+        /// performance when dealing with objects that can end up with many, many lateral objects.
+        ///
+        /// ALL LATERAL OBJECTS MUST SHARE THE SAME PARENT.
+        /// </summary>
+        /// <param name="key">The key that identifies the set of lateral constraints defined by LateralConstraintAttributes</param>
+        /// <param name="obj">The object to set</param>
+        /// <exception cref="DTFObjectDefinitionException">When the key passed is taken, or when lateral objects do not share the same parent</exception>
         protected void SetParent(string key, DTFObject obj) {
             if(_lateralDirectory.ContainsKey(key))
                 throw new DTFObjectDefinitionException(GetType() + " attempted to add an object to key " + key + "twice");

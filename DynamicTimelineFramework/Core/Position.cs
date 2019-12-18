@@ -235,13 +235,17 @@ namespace DynamicTimelineFramework.Core
             if (Uncertainty == -1)
                 return stringOut + "IN PARADOX";
 
+            var firstField = true;
+            
             foreach (var field in Type.GetFields()) {
                 //If it has a position attribute
                 if (field.GetCustomAttribute(typeof(PositionAttribute)) is PositionAttribute) {
                     
                     //Add it's name if it's part of the superposition
-                    if (((Position) field.GetValue(null) & this).Uncertainty != -1)
-                        stringOut += field.Name + " ";
+                    if (((Position) field.GetValue(null) & this).Uncertainty != -1) {
+                        stringOut += (firstField ? "" : "/") + field.Name;
+                        firstField = false;
+                    }
                 }
             }
 
