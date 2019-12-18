@@ -26,6 +26,7 @@ namespace DynamicTimelineFramework.Core
 
         private Queue<EnqueuedConstraintTasks> _constraintTasks = new Queue<EnqueuedConstraintTasks>();
         private Sprig _sprig;
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// The other universe that this universe's timeline branches off from. This may or may NOT be the universe
@@ -51,12 +52,15 @@ namespace DynamicTimelineFramework.Core
             Multiverse.AddUniverse(this);
 
             Multiverse.ClearPendingDiffs();
+            IsDisposed = false;
         }
         
         internal Universe(Multiverse multiverse)
         {
             Diff = new Diff(0, null, new BufferVector(0), null);
             Multiverse = multiverse;
+
+            IsDisposed = false;
         }
         
         /// <summary>
@@ -66,6 +70,9 @@ namespace DynamicTimelineFramework.Core
         /// <returns>The Continuity</returns>
         public Continuity GetContinuity (DTFObject dtfObject)
         {
+            if(IsDisposed)
+                throw new ObjectDisposedException("Universe");
+            
             return new Continuity(this, dtfObject);
         }
 
@@ -95,7 +102,13 @@ namespace DynamicTimelineFramework.Core
             return Diff.GetHashCode();
         }
 
+        /// <summary>
+        /// Disposes of a universe, and removes it from the multiverse without affecting the
+        /// universes that were "spawned" from this universe's continuities
+        /// </summary>
         public void Dispose() {
+            IsDisposed = true;
+            
             //Remove the Diff
             Diff.Remove();
             

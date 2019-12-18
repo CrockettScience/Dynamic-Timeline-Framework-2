@@ -27,6 +27,9 @@ namespace DynamicTimelineFramework.Core
         {
             get
             {
+                if(_universe.IsDisposed)
+                    throw new ObjectDisposedException("Universe");
+                
                 //Dequeue constraint Tasks
                 _universe.ClearConstraintTasks();
                 
@@ -55,6 +58,9 @@ namespace DynamicTimelineFramework.Core
         /// <exception cref="UnresolvableParadoxException">If the given position results in a paradox that cannot be transitioned to</exception>
         /// <returns>True if the collapse was successful; false if the resultant position was a paradox</returns>
         public bool Constrain(ulong date, Position pos, out Diff outDiff) {
+            if(_universe.IsDisposed)
+                throw new ObjectDisposedException("Universe");
+            
             var multiverse = _universe.Multiverse;
             var compiler = multiverse.Compiler;
             
@@ -115,6 +121,9 @@ namespace DynamicTimelineFramework.Core
         /// <param name="date">The date to select the eigenstate at.</param>
         public void Select(ulong date)
         {
+            if(_universe.IsDisposed)
+                throw new ObjectDisposedException("Universe");
+            
             //The only data seeding the selection is the date and a reference hashed that's serialized (coming soon)
             //with the object reference. If that's not available, iterate through the indices until one is.
             var rand = new Random(((int) date * 967) ^ _dtfObject.ReferenceHash);

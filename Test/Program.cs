@@ -12,8 +12,10 @@ namespace Test
             var universe = multiverse.BaseUniverse;
             
             var galaxy = new Galaxy(multiverse);
+            var star = new Star(galaxy, multiverse);
+            var rootStarContinuity = multiverse.BaseUniverse.GetContinuity(star);
 
-            /*Test branching multiverse
+            //Test branching multiverse
             rootStarContinuity.Constrain(10_000_000_000, Star.Proto, out _);
             rootStarContinuity.Constrain(10_999_999_999, Star.Proto, out _);
             rootStarContinuity.Constrain(11_000_000_000, Star.MainSequence, out _);
@@ -32,7 +34,12 @@ namespace Test
             testPosition = rootStarContinuity[13_000_000_351];       //Planetary Nebula
             testPosition = massiveStarContinuity[13_000_000_351];    //Black Hole
             testPosition = neutronStarContinuity[13_000_000_351];    //Neutron Star
-            */
+            
+            //Remove MassiveStarUniverse while preserving NeutronStarUniverse
+            massiveStarUniverse.Dispose();
+            
+            testPosition = neutronStarContinuity[13_000_000_351];    //Neutron Star
+            testPosition = massiveStarContinuity[13_000_000_351];    //Exception
         }
 
         public static void Constrain_X_ObjectCount(int count, Stopwatch timer, Galaxy galaxy, Multiverse multiverse) {

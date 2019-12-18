@@ -67,10 +67,9 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         }
 
         public void RemoveBranch(LinkedList<Diff> diffChain) {
-            //Use the diff chain to follow the chain of diffs to the branch node just before the head node
-            
-            //Todo - needs to track where the original "branch" from the parent diff took place, then "graft" all branches ahead to the original parent point
+            //Use the diff chain to follow the chain of diffs to the first place where the diff breaks off
 
+            var diffToLookFor = diffChain.Last.Value;
             using (var diffEnum = diffChain.GetEnumerator()) {
                 
                 diffEnum.MoveNext();
@@ -81,20 +80,32 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 
                 var currentBranchNode = RootBranch;
 
-                while (currentBranchNode[nextDiff] is SpineBranchNode nextBranchNode) {
+                while (nextDiff != diffToLookFor) {
                     
-                    currentBranchNode = nextBranchNode;
+                    currentBranchNode = (SpineBranchNode) currentBranchNode[nextDiff];
                     
                     if (nextTurn != null && currentBranchNode.Contains(nextTurn)) {
                         nextDiff = nextTurn;
 
-                        diffEnum.MoveNext();
-                        nextTurn = diffEnum.Current;
+                        nextTurn = diffEnum.MoveNext() ? diffEnum.Current : null;
                     }
                 }
+                
+                //We're at the "graft" point of the branch
+                var graftPoint = currentBranchNode;
+                
+                //Navigate along this diff strand and graft each other branch to the graft point
+                while (graftPoint.Contains(diffToLookFor)) {
+                    
+                    //Remove the nextBranch and replace it with the nextBranch's next branches
+                    var nextNode = graftPoint.RemoveBranch(diffToLookFor);
+
+                    //If it's a branch node, we need to graft it's children to the graft point. Else, we can let it rot
+                    if (nextNode is SpineBranchNode nextBranchNode) 
+                        graftPoint.GraftBranches(nextBranchNode);
+
+                }
             }
-            
-            throw new NotImplementedException();
         }
     }
 }

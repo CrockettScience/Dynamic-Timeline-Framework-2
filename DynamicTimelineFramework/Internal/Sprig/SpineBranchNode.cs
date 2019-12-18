@@ -28,13 +28,25 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public Sprig AddBranch(Diff diff) {
             var newHead = new SpineHeadNode(Sprig, Date, diff);
             
-            _branchMap[diff] = new Branch(newHead, newHead.Sprig.Head);
+            _branchMap[diff] = new Branch(newHead, this);
             return newHead.Sprig;
         }
         
         public void AddBranch(SpineNode next) {
             var diff = next.Sprig.Diff;
-            _branchMap[diff] = new Branch(next, next.Sprig.GetBufferNode(Date));
+            _branchMap[diff] = new Branch(next, this);
+        }
+
+        public SpineNode RemoveBranch(Diff diff) {
+            var branch = _branchMap[diff].Next;
+            _branchMap.Remove(diff);
+            return branch;
+        }
+
+        public void GraftBranches(SpineBranchNode graftFrom) {
+            foreach (var branch in graftFrom._branchMap.Values) {
+                AddBranch(branch.Next);
+            }
         }
 
         public override void Alloc(int space, int startIndex)
@@ -53,38 +65,34 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         public class Branch
         {
+            private readonly SpineBranchNode _owner;
 
-            public BufferNode First { get; set; }
-            
             public SpineNode Next { get; set; }
 
             public BufferNode FirstNodeOnBranch
             {
-                get => First;
+                get => Next.Sprig.Head.GetBufferNode(_owner.Date);
                 
-                set
-                {
-                    if (First == null || First == Next.Sprig.Head)
-                        First = value;
+                set {
+                    var first = FirstNodeOnBranch;
+                    
+                    if(first != Next.Sprig.Head){
 
-                    else
-                    {
                         var second = Next.Sprig.Head;
 
-                        while (second.Last != First)
+                        while (second.Last != first)
                             second = (BufferNode) second.Last;
 
-                        second.Last = First = value;
+                        second.Last = value;
                     }
                 }
             }
 
-            public Branch(SpineNode next, BufferNode firstNodeOnBranch) {
+            public Branch(SpineNode next, SpineBranchNode owner) {
                 Next = next;
-                FirstNodeOnBranch = firstNodeOnBranch;
+                _owner = owner;
             }
         }
-
 
         public IEnumerator<Diff> GetEnumerator() {
             return _branchMap.Keys.GetEnumerator();
