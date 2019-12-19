@@ -21,7 +21,7 @@ The important benefit to this framework is that, as mentioned before, operations
 
 ![T(n) graphs](https://i.imgur.com/KFbEC3N.png)
 
-It's important to note that the most costly growth variable by far is the number of universes active in the multiverse. It's important to keep this number low, especially if theres going to be a lot of objects and want to keep preformance high. Universe's therefore implement the IDisposable interface. When disposed, the Universe is removed from the multiverse, the continuities created by the universe become invalid, and all universes that branch off of it **are preserved**.
+It's important to note that the most costly growth variable by far is the number of universes active in the multiverse. It's important to keep this number low, especially if there's going to be a lot of objects and want to keep performance high. Universe's therefore implement the IDisposable interface. When disposed, the Universe is removed from the multiverse, the continuities created by the universe become invalid, and all universes that branch off of it **are preserved**.
 
 ### Todo List
 
