@@ -11,17 +11,17 @@ Additionally, this framework is DYNAMIC: meaning you can CHANGE states in the ti
 
 Universes are contained by an object called a **Multiverse**. A Multiverse is an object that represents the collection of parallel universes, and is the first object that needs to be created when running the framework. The multiverse is initially created with 1 "Base" universe, which all parallel universes will branch from.
 
-The primary form of interaction with the timeline comes from objects called "**Continuitys**." A Continuity is an object that can be created by a universe that represents a single object's timeline in that universe. All objects are created in "full" superposition, meaning that there is no certainty to any of the states. In order to actually get those states, you must "Constrain" them, using a Continuity. The Constrain() method will need a date, a position to constain (That may or **may not** be a possible Position for the date), and an output variable.
+The primary form of interaction with the timeline comes from objects called "**Continuities**." A Continuity is an object that can be created by a universe that represents a single object's timeline in that universe. All objects are created in "full" superposition, meaning that there is no certainty to any of the states. In order to actually get those states, you must "Constrain" them, using a Continuity. The Constrain() method will need a date, a position to constain (That may or **may not** be a possible Position for the date), and an output variable.
 
 The output variable of the Constrain() method is a "**Diff**" object. When the Constrain() method attempts to constrain to a Position or SuperPosition that is not possible, but the Position given is transitionable from the Position at Date - 1, a Diff object is created and assigned to the output variable. A Diff object represents the "difference" between the universe that Continuity belongs to and a potential new parallel universe that embodies that difference. Therefore, Diff's are used by the Universe constructor, and upon doing so, the universe becomes part of the multiverse.
 
 ### On The Order of Growth
 
-The important benefit to this framwork is that, as mentioned before, operations have virtually constant O(n) in terms of finding what the state of an object is on the timeline. However, there is some changes in the order of growth of the number of Objects and the number of Universes. The set of graphs below illustrate the various T(n) operations measured on my machine.
+The important benefit to this framework is that, as mentioned before, operations have virtually constant O(n)'s in terms of finding what the state of an object is on the timeline. However, there is some changes in the order of growth of the number of Objects and the number of Universes. The set of graphs below illustrate the various T(n) operations measured on my machine.
 
 ![T(n) graphs](https://i.imgur.com/KFbEC3N.png)
 
-It's important to note that the most costly growth variable by far is the number of universes active in the multiverse. It's important to keep this number low, especially if theres going to be a lot of objects and want to keep preformance high. Universe's therefore implement the IDisposable interface. When disposed, the Universe is removed from the multiverse, the continuity's created by the universe become invalid, and all universes that branch off **are preserved**.
+It's important to note that the most costly growth variable by far is the number of universes active in the multiverse. It's important to keep this number low, especially if theres going to be a lot of objects and want to keep preformance high. Universe's therefore implement the IDisposable interface. When disposed, the Universe is removed from the multiverse, the continuities created by the universe become invalid, and all universes that branch off of it **are preserved**.
 
 ### Todo List
 
