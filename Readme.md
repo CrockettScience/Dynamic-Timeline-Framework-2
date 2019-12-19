@@ -1,7 +1,7 @@
 # DynamicTimelineFramework 2
 ### Overview
 
-This library provides a framework for procedurally generating near-boundless (2^64) timelines over any set of object with programmable, discreet states. Finding the objects state, represented by a Position object, at any given time t is a CONSTANT time process in terms of t. In other words, it takes the same amount of time to find the state of any object at time 10 as it takes to find it at time 10 billion.
+This library provides a framework for procedurally generating near-boundless (2^64) timelines over any set of objects with programmable, discreet states. Finding the objects state, represented by a Position object, at any given time t is a CONSTANT time process in terms of t. In other words, it takes the same amount of time to find the state of any object at time 10 as it takes to find it at time 10 billion.
 
 **Objects** in the timeline are objects that inherit from abstract class "**DTFObject**." An object represents a handle, and the definition requires a set of special attributes. Objects all define a set of possible positions the object can be in at any given time. The object can also set "Lateral" and "Parent" objects, both of which are informed of constraints and changes that occur in the timeline of the object, and who's states therefore are inextricably "tied" to the states of this object.
 
