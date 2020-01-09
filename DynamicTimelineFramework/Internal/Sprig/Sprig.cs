@@ -155,7 +155,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                                 var last = underneath.Index == branchNode.Date ? underneath.Last : underneath;
                                 
                                 //Mask the other branch here to reflect the change
-                                var timelineVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, last.SuperPosition, objects);
+                                var timelineVector = Manager.Owner.Compiler.GetTimelineSignatureForForwardConstraints(branchNode.Date - 1, this, objects);
                                 var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date);
 
                                 if(!newBranchHead.Equals(branchSprig.Head))

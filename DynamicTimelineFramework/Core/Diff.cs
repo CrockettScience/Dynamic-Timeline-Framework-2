@@ -60,7 +60,7 @@ namespace DynamicTimelineFramework.Core
             Parent.Diff._children.Add(this);
 
             //Constrain the new sprig to establish the shared certainty signature
-            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.GetBufferNode(Date - 1).SuperPosition, Parent.Multiverse.SprigManager.Registry);
+            var priorCertaintySignature = mvCompiler.GetTimelineSignatureForForwardConstraints(Date - 1, Parent.Sprig, Parent.Multiverse.SprigManager.Registry);
 
             newSprig.And(priorCertaintySignature);
             
@@ -76,6 +76,9 @@ namespace DynamicTimelineFramework.Core
             var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], InstigatingObjects.Concat(affectedLatObjects));
             Parent.Sprig.And(newCertaintySignature, InstigatingObjects.Concat(affectedLatObjects).ToArray());
 
+            if (Parent.Multiverse.ValidateOperations)
+                if(!newSprig.Validate() || !Parent.Sprig.Validate())
+                    throw new InvalidBridgingException();
         }
 
         /// <summary>

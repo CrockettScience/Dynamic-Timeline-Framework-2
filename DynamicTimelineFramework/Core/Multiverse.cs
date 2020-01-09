@@ -707,6 +707,36 @@ namespace DynamicTimelineFramework.Core
                 return timelineVector;
             }
 
+            public BufferVector GetTimelineSignatureForForwardConstraints(ulong date, Sprig sprig, IEnumerable<DTFObject> objects) {
+                var node = sprig.GetBufferNode(date);
+                var manager = Owner.SprigManager;
+                var bufferBuilder = new BufferVectorBuilder(manager.BitCount);
+                
+                foreach (var dtfObject in objects) {
+                    var superPosition = node.SuperPosition.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice);
+                    
+                    foreach (var eigenstate in superPosition.GetEigenstates()) {
+                        //Find the start of the eigenstate
+                        var start = node.Index;
+                        var startNode = node;
+
+                        while (startNode.Last != null && (startNode.Last.SuperPosition.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice) & eigenstate).Uncertainty == 0) {
+                            startNode = (BufferNode) startNode.Last;
+                            start = startNode.Index;
+                        }
+                        
+                        //Collapse at the date, the start where the state first appears,
+                        //and by the prior position before start to establish in the signature
+                        //that's where it starts
+                        bufferBuilder.Add(GetTimelineVector(dtfObject, start, eigenstate) & 
+                                          GetTimelineVector(dtfObject, date, eigenstate) & 
+                                          GetTimelineVector(dtfObject, start - 1, sprig.GetBufferNode(start - 1).SuperPosition.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice)));
+                    }
+                }
+                
+                return bufferBuilder.Or();
+            }
+
             #endregion
 
             internal class TypeMetaData

@@ -8,7 +8,7 @@ namespace Test
     internal class Program
     {
         public static void Main(string[] args) {
-            var multiverse = new Multiverse(false);
+            var multiverse = new Multiverse();
             
             var galaxy = new Galaxy(multiverse);
             var star = new Star(galaxy, multiverse);

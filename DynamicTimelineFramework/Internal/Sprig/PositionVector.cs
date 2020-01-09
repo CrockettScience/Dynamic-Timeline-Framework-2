@@ -56,13 +56,19 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             var bufferCurrent = bufferHead.Last;
             var vectorCurrent = Head;
 
-            while (bufferCurrent != null)
-            {
-                vectorCurrent.Last = new PositionNode(null, bufferCurrent.Index, bufferCurrent.SuperPosition.PositionAtSlice(objectType, operativeSlice));
+            while (bufferCurrent != null) {
+                var posAtSlice = bufferCurrent.SuperPosition.PositionAtSlice(objectType, operativeSlice);
 
-                vectorCurrent = (PositionNode) vectorCurrent.Last;
-                bufferCurrent = bufferCurrent.Last;
+                if (vectorCurrent.SuperPosition.Equals(posAtSlice))
+                    vectorCurrent.Index = bufferCurrent.Index;
+
+                else {
+                    vectorCurrent.Last = new PositionNode(null, bufferCurrent.Index, posAtSlice);
+                    vectorCurrent = (PositionNode) vectorCurrent.Last;
+                }
                 
+                bufferCurrent = bufferCurrent.Last;
+
             }
         }
 
