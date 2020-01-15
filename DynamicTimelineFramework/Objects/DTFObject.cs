@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal.Buffer;
-using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Objects {
     
@@ -13,24 +11,17 @@ namespace DynamicTimelineFramework.Objects {
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
 
-        internal readonly DTFOOperativeSliceProvider OperativeSliceProvider;
-
         internal readonly int ReferenceHash;
-        internal OperativeSlice SprigManagerSlice { get; }
         private Multiverse.ObjectCompiler Compiler { get; }
-
-
         public string ParentKey { get; set; }
         public DTFObject Parent => ParentKey == null ? null : _lateralDirectory[ParentKey];
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Dictionary<string, DTFObject>();
-            
-            OperativeSliceProvider = new DTFOOperativeSliceProvider(this);
 
             //Register object with the timeline
-            SprigManagerSlice = owner.SprigManager.RegisterObject(this, out var hash);
+            owner.SprigManager.RegisterObject(this, out var hash);
             ReferenceHash = hash;
             Compiler = owner.Compiler;
         }
@@ -102,18 +93,6 @@ namespace DynamicTimelineFramework.Objects {
         internal List<string> GetLateralKeys()
         {
             return _lateralKeys;
-        }
-
-        internal class DTFOOperativeSliceProvider : IOperativeSliceProvider
-        {
-            private readonly DTFObject _proxyOwner;
-
-            public OperativeSlice OperativeSlice => _proxyOwner.SprigManagerSlice;
-
-            public DTFOOperativeSliceProvider(DTFObject proxyOwner)
-            {
-                _proxyOwner = proxyOwner;
-            }
         }
     }
 }

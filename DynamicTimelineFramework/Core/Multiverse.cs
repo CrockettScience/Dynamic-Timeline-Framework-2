@@ -19,6 +19,13 @@ namespace DynamicTimelineFramework.Core
     /// </summary>
     public class Multiverse
     {
+        //Reengineer Sprig System Todo's
+        //Done - Remove Position Buffer and related classes
+        //Done - Reengineer Position to be independent
+        //Done - Degeneralize Node ops
+        //Todo - Reengineer sprig system
+        //Todo - Cleanup
+        //Todo - Optimize
 
         private readonly Dictionary<Diff, Universe> _multiverse = new Dictionary<Diff, Universe>();
         

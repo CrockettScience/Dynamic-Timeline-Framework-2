@@ -71,10 +71,7 @@ namespace DynamicTimelineFramework.Core
             compiler.PullParentConstraints(_dtfObject, _universe);
             
             //Create a copy of the position with the correct operative slice
-            var deltaPosition = new Position(_dtfObject.GetType(), pos.ReferenceSlice)
-            {
-                OperativeSliceProvider = _dtfObject.OperativeSliceProvider
-            };
+            var deltaPosition = new Position(_dtfObject.GetType());
 
             //Get timeline position vector
             var timelineVector = _universe.Multiverse.Compiler.GetTimelineVector(_dtfObject, date, deltaPosition);

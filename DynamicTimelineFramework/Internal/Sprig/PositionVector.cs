@@ -1,20 +1,17 @@
-using System;
 using DynamicTimelineFramework.Core;
-using DynamicTimelineFramework.Internal.Buffer;
-using DynamicTimelineFramework.Internal.Interfaces;
 
 namespace DynamicTimelineFramework.Internal.Sprig {
-    internal class PositionVector : ISprigVector<Position>, IOperativeSliceProvider
+    internal class PositionVector
     {
         
         #region STATIC
 
         public static PositionVector operator &(PositionVector left, PositionVector right) {
-            return new PositionVector(left.OperativeSlice, Node<Position>.And(left.Head, right.Head));
+            return new PositionVector(PositionNode.And(left.Head, right.Head));
         }
         
         public static PositionVector operator |(PositionVector left, PositionVector right) {
-            return new PositionVector(left.OperativeSlice, Node<Position>.Or(left.Head, right.Head));
+            return new PositionVector(PositionNode.Or(left.Head, right.Head));
         }
         
         #endregion
@@ -24,52 +21,12 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             get => GetPositionNode(date).SuperPosition;
         }
 
-        private PositionNode _head;
+        public PositionNode Head { get; set; }
 
-        public OperativeSlice OperativeSlice { get; }
-
-        public Node<Position>.INode Head
+        public PositionVector(PositionNode head)
         {
-            get => _head;
-
-            set
-            {
-                _head = (PositionNode) value;
-                
-                if(_head.OperativeSliceProvider != this)
-                    _head.OperativeSliceProvider = this;
-            }
-        }
-
-        public PositionVector(OperativeSlice operativeSlice, Node<Position>.INode head)
-        {
-            OperativeSlice = operativeSlice;
             Head = head;
 
-        }
-        
-        public PositionVector(OperativeSlice operativeSlice, Type objectType, Node<PositionBuffer>.INode bufferHead)
-        {
-            OperativeSlice = operativeSlice;
-            Head = new PositionNode(null, bufferHead.Index, bufferHead.SuperPosition.PositionAtSlice(objectType, operativeSlice));
-            
-            var bufferCurrent = bufferHead.Last;
-            var vectorCurrent = Head;
-
-            while (bufferCurrent != null) {
-                var posAtSlice = bufferCurrent.SuperPosition.PositionAtSlice(objectType, operativeSlice);
-
-                if (vectorCurrent.SuperPosition.Equals(posAtSlice))
-                    vectorCurrent.Index = bufferCurrent.Index;
-
-                else {
-                    vectorCurrent.Last = new PositionNode(null, bufferCurrent.Index, posAtSlice);
-                    vectorCurrent = (PositionNode) vectorCurrent.Last;
-                }
-                
-                bufferCurrent = bufferCurrent.Last;
-
-            }
         }
 
         private PositionNode GetPositionNode(ulong date)
@@ -82,10 +39,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
 
             return current;
-        }
-        
-        public ISprigVector<Position> Copy() {
-            return new PositionVector(OperativeSlice, Head.Copy());
         }
         
         public void ShiftForward(ulong amount) {
@@ -120,5 +73,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                 current = current.Last;
             }
         }
+        
+        
     }
 }

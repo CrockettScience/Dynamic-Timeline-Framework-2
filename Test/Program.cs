@@ -55,7 +55,7 @@ namespace Test
             Console.WriteLine("Parallel Universe where the star also became a massive star and went supernova, but instead devolved into a Neutron Star:");
             Console.WriteLine("Year 11,000,000,000 - " + neutronStarContinuity[11_000_000_000]);    //Massive
             Console.WriteLine("Year 13,000,000,000 - " + neutronStarContinuity[13_000_000_000]);    //Supernova
-            Console.WriteLine("Year 14,000,000,000 - " + neutronStarContinuity[14_000_000_000]);     //Neutron Star
+            Console.WriteLine("Year 14,000,000,000 - " + neutronStarContinuity[14_000_000_000]);    //Neutron Star
         }
 
         public static void Constrain_X_ObjectCount(int count, Stopwatch timer, Galaxy galaxy, Multiverse multiverse) {
