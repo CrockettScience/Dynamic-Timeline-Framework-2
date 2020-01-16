@@ -45,20 +45,35 @@
     <Compile Include="Exception\DiffExpiredException.cs" />
     <Compile Include="Exception\DTFObjectDefinitionException.cs" />
     <Compile Include="Exception\UnresolvableParadoxException.cs" />
-    <Compile Include="Internal\Sprig\SpineBranchNode.cs" />
-    <Compile Include="Internal\Sprig\SpineHeadNode.cs" />
-    <Compile Include="Internal\Sprig\Spine.cs" />
-    <Compile Include="Internal\Sprig\SpineNode.cs" />
-    <Compile Include="Internal\Sprig\Sprig.cs" />
-    <Compile Include="Internal\Sprig\SprigManager.cs" />
-    <Compile Include="Internal\Sprig\PositionVector.cs" />
+    <Compile Include="Internal\Node.cs" />
+    <Compile Include="Internal\PositionNode.cs">
+      <DependentUpon>PositionVector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\PositionVector.cs" />
+    <Compile Include="Internal\Spine.cs" />
+    <Compile Include="Internal\SpineBranchNode.cs">
+      <DependentUpon>Spine.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\SpineHeadNode.cs">
+      <DependentUpon>Spine.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\SpineNode.cs">
+      <DependentUpon>Spine.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\Sprig.cs" />
     <Compile Include="Core\Continuity.cs" />
     <Compile Include="Core\Diff.cs" />
     <Compile Include="Core\Multiverse.cs" />
     <Compile Include="Core\Position.cs" />
     <Compile Include="Core\Universe.cs" />
     <Compile Include="Exception\DTFObjectCompilerException.cs" />
-    <Compile Include="Internal\Sprig\PositionNode.cs" />
+    <Compile Include="Internal\SprigManager.cs" />
+    <Compile Include="Internal\SprigNode.cs">
+      <DependentUpon>Sprig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Internal\SprigVector.cs">
+      <DependentUpon>Sprig.cs</DependentUpon>
+    </Compile>
     <Compile Include="Objects\Attributes\DTFObjectDefinitionAttribute.cs" />
     <Compile Include="Objects\Attributes\PositionAttribute.cs" />
     <Compile Include="Objects\Attributes\LateralConstraintAttribute.cs" />

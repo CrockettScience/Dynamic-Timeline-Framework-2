@@ -1,30 +1,8 @@
+using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 
-namespace DynamicTimelineFramework.Internal.Sprig
-{
-    internal class PositionNode
-    {
-        public Position SuperPosition { get; }
-
-        public PositionNode Last { get; set; }
-
-        public ulong Index { get; set; }
-
-        public PositionNode(PositionNode last, ulong index, Position superPosition)
-        {
-            Last = last;
-            Index = index;
-            SuperPosition = superPosition;
-        }
-
-        public bool Validate()
-        {
-            if (SuperPosition.Uncertainty == -1)
-                return false;
-
-            return Last == null || ((PositionNode) Last).Validate();
-        }
-        
+namespace DynamicTimelineFramework.Internal {
+    internal class Node {
         /*
          * The AND & OR functions perform the task that can be thought of as performing the operation STRAIGHT across
          * two INode structures. All usages assume left and right are the node heads of their respective structures.
@@ -32,12 +10,12 @@ namespace DynamicTimelineFramework.Internal.Sprig
          * to the remaining portion prior to index on left, preserving those node references.
          */
         
-        public static PositionNode And(PositionNode left, PositionNode right, ulong index = 0) {
+        public static T And<T>(T left, T right, ulong index = 0) where T : INode{
             var currentLeft = left;
             var currentRight = right;
 
-            PositionNode head;
-            var currentNew = head = new PositionNode(null, Max(currentLeft.Index, currentRight.Index, index), currentLeft.SuperPosition & currentRight.SuperPosition);
+            INode head;
+            var currentNew = head = (T) left.AndFactory(currentLeft, currentRight, index);
 
             while (currentNew.Index != index)
             {
@@ -45,16 +23,16 @@ namespace DynamicTimelineFramework.Internal.Sprig
                 var leftGreaterPlaceholder = currentLeft.Index;
             
                 if (currentLeft.Index >= currentRight.Index)
-                    currentLeft = currentLeft.Last;
+                    currentLeft = (T) currentLeft.Last;
             
                 if (currentRight.Index >= leftGreaterPlaceholder)
-                    currentRight = currentRight.Last;
+                    currentRight = (T) currentRight.Last;
                 
                 //AND the positions and set the index to the greater of the nodes
-                var newNode = new PositionNode(null, Max(currentLeft.Index, currentRight.Index, index), currentLeft.SuperPosition & currentRight.SuperPosition);
+                var newNode = (T) left.AndFactory(currentLeft, currentRight, index);
 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
-                if (newNode.SuperPosition.Equals(currentNew.SuperPosition))
+                if (newNode.IsSamePosition(currentNew))
                     currentNew.Index = newNode.Index;
 
                 else
@@ -66,15 +44,15 @@ namespace DynamicTimelineFramework.Internal.Sprig
 
             currentNew.Last = currentNew.Index == currentLeft.Index ? currentLeft.Last : currentLeft;
 
-            return head;
+            return (T) head;
         }
 
-        public static PositionNode Or(PositionNode left, PositionNode right, ulong index = 0) {
+        public static T Or<T>(T left, T right, ulong index = 0) where T : INode{
             var currentLeft = left;
             var currentRight = right;
 
-            PositionNode head;
-            var currentNew = head = new PositionNode(null, Max(currentLeft.Index, currentRight.Index, index),  currentLeft.SuperPosition | currentRight.SuperPosition);
+            INode head;
+            var currentNew = head = (T) left.OrFactory(currentLeft, currentRight, index);
 
             while (currentNew.Index != index)
             {
@@ -82,16 +60,16 @@ namespace DynamicTimelineFramework.Internal.Sprig
                 var leftGreaterPlaceholder = currentLeft.Index;
             
                 if (currentLeft.Index >= currentRight.Index)
-                    currentLeft = currentLeft.Last;
+                    currentLeft = (T) currentLeft.Last;
             
                 if (currentRight.Index >= leftGreaterPlaceholder)
-                    currentRight = currentRight.Last;
+                    currentRight = (T) currentRight.Last;
                 
                 //AND the positions and set the index to the greater of the nodes
-                var newNode = new PositionNode(null, Max(currentLeft.Index, currentRight.Index, index), currentLeft.SuperPosition | currentRight.SuperPosition);
+                var newNode = (T) left.OrFactory(currentLeft, currentRight, index);
 
                 //If the new position is equal to the current node in the new list, then just update the start position of the new list
-                if (newNode.SuperPosition.Equals(currentNew.SuperPosition))
+                if (newNode.IsSamePosition(currentNew))
                     currentNew.Index = newNode.Index;
 
                 else
@@ -103,10 +81,10 @@ namespace DynamicTimelineFramework.Internal.Sprig
 
             currentNew.Last = currentNew.Index == currentLeft.Index ? currentLeft.Last : currentLeft;
 
-            return head;
+            return (T) head;
         }
 
-        private static ulong Max(ulong i1, ulong i2, ulong i3)
+        public static ulong Max(ulong i1, ulong i2, ulong i3)
         {
             var num = 0UL;
 
@@ -126,6 +104,21 @@ namespace DynamicTimelineFramework.Internal.Sprig
             }
 
             return num;
+        }
+        
+        internal interface INode
+        {
+            INode Last { get; set; }
+
+            ulong Index { get; set; }
+
+            bool Validate();
+
+            INode AndFactory(INode left, INode right, ulong index);
+            
+            INode OrFactory(INode left, INode right, ulong index);
+
+            bool IsSamePosition(INode other);
         }
     }
 }

@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 
-namespace DynamicTimelineFramework.Internal.Sprig {
+namespace DynamicTimelineFramework.Internal {
     internal class Spine {
         public SpineBranchNode RootBranch { get; }
 
@@ -11,12 +10,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             RootBranch = new SpineBranchNode(0, null);
             
             rootUniverse.Sprig = RootBranch.AddBranch(rootDiff);
-        }
-
-        public void Alloc(int space, int startIndex)
-        {
-            //Though somewhat recursive, basically amounts to a Depth-First iteration of the spine tree
-            RootBranch.Alloc(space, startIndex);
         }
 
         public Sprig AddBranch(LinkedList<Diff> diffChain) 

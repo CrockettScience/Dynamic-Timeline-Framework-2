@@ -1,17 +1,17 @@
 using DynamicTimelineFramework.Core;
 
-namespace DynamicTimelineFramework.Internal.Sprig {
+namespace DynamicTimelineFramework.Internal {
     internal class PositionVector
     {
         
         #region STATIC
 
         public static PositionVector operator &(PositionVector left, PositionVector right) {
-            return new PositionVector(PositionNode.And(left.Head, right.Head));
+            return new PositionVector(Node.And(left.Head, right.Head));
         }
         
         public static PositionVector operator |(PositionVector left, PositionVector right) {
-            return new PositionVector(PositionNode.Or(left.Head, right.Head));
+            return new PositionVector(Node.Or(left.Head, right.Head));
         }
         
         #endregion
@@ -31,7 +31,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
 
         private PositionNode GetPositionNode(ulong date)
         {
-            var current = (PositionNode) Head;
+            var current = Head;
 
             while (current.Index > date)
             {
@@ -47,14 +47,14 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             
             while (ulong.MaxValue - current.Index < amount) {
                 
-                current = current.Last;
+                current = (PositionNode) current.Last;
                 Head = current;
             }
 
             while (current.Last != null) {
                 
                 current.Index += amount;
-                current = current.Last;
+                current = (PositionNode) current.Last;
             }
         }
         
@@ -70,7 +70,7 @@ namespace DynamicTimelineFramework.Internal.Sprig {
                     return;
                 }
 
-                current = current.Last;
+                current = (PositionNode) current.Last;
             }
         }
         

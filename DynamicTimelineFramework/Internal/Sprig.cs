@@ -1,21 +1,17 @@
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
-using DynamicTimelineFramework.Internal.Buffer;
-using DynamicTimelineFramework.Internal.Interfaces;
 using DynamicTimelineFramework.Objects;
 
-namespace DynamicTimelineFramework.Internal.Sprig {
+namespace DynamicTimelineFramework.Internal {
     internal class Sprig
     {
         public Position this[ulong date, DTFObject obj]
         {
             get
             {
-                var bNode = GetBufferNode(date);
-
-                var slice = new ReferenceSlice(bNode.SuperPosition, obj.SprigManagerSlice.LeftBound, obj.SprigManagerSlice.RightBound);
-            
-                return new Position(obj.GetType(), slice);
+                var sNode = GetSprigNode(date);
+                
+                return sNode.HasPosition(obj) ? sNode.GetPosition(obj) : Diff.Parent.Sprig[date, obj];
             }
         }
         
@@ -23,55 +19,41 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         
         public SprigManager Manager { get; set; }
         
-        public BufferNode Head { get; private set; }
+        public SprigNode Head { get; private set; }
 
         public Sprig(ulong branchIndex, Sprig root, Diff diff)
         {
             Diff = diff;
             
             if(root == null)
-                Head = new BufferNode(null, branchIndex, new PositionBuffer());
-            else
-                Head = new BufferNode(root.GetBufferNode(branchIndex - 1), branchIndex,
-                    new PositionBuffer(root.Manager.BitCount, true));
+                Head = new SprigNode(null, branchIndex);
+            //else
+            //Todo - Use info from diff to instantiate positions for relevent objects
+                //Head = new BufferNode(root.GetBufferNode(branchIndex - 1), branchIndex, new PositionBuffer(root.Manager.BitCount, true));
         }
 
-        public void Alloc(int space, int startIndex)
-        {
-            var current = Head;
-            var buffer = current.SuperPosition;
+        public PositionVector ToPositionVector(DTFObject dtfObject) {
+            PositionNode currentPNode;
+            var pHead = currentPNode = new PositionNode(null, Head.Index, Head.GetPosition(dtfObject));
+
+            var currentSNode = Head.Last;
             
-            //Don't allocate if the buffer is already allocated
-            while (buffer != null && buffer.Length == startIndex)
-            {
-                buffer.Alloc(space, true);
+            while (currentSNode != null) {
+                var newPNode = new PositionNode(null, currentSNode.Index, Head.GetPosition(dtfObject));
+
+                if (newPNode.SuperPosition.Equals(currentPNode.SuperPosition))
+                    currentPNode.Index = newPNode.Index;
+                else
+                    currentPNode = currentPNode.Last = newPNode; 
                 
-                //Perform the same on the last
-                current = (BufferNode) current.Last;
-                buffer = current?.SuperPosition;
+                currentSNode = currentSNode.Last;
             }
-        }
-
-        public PositionVector ToPositionVector(DTFObject dtfObject)
-        {
-            return new PositionVector(dtfObject.SprigManagerSlice, dtfObject.GetType(), Head);
+            
+            return new PositionVector(pHead);
         }
         
-        public BufferVector ToBufferVector()
-        {
-            return new BufferVector(Head);
-        }
-        
-        public BufferNode GetBufferNode(ulong date)
-        {
-            var current = Head;
-
-            while (current.Index > date)
-            {
-                current = (BufferNode) current.Last;
-            }
-
-            return current;
+        public SprigNode GetSprigNode(ulong date) {
+            return Head.GetSprigNode(date);
         }
 
         public bool Validate()
@@ -83,20 +65,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             }
 
             return true;
-        }
-        
-        public bool And<T>(ISprigVector<T> other) where T : BinaryPosition
-        {
-            var newHead = Node<PositionBuffer>.And(Head, other.Head);
-            
-            //We only should assign the new head if any changes were made
-            if (!Head.Equals(newHead))
-            {
-                SetHeadAndRealign(0, (BufferNode) newHead, Manager.Registry);
-                return true;
-            }
-
-            return false;
         }
         
         public bool And<T>(ISprigVector<T> other, params DTFObject[] objects) where T : BinaryPosition

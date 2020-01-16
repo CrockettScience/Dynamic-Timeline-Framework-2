@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal.Sprig;
+using DynamicTimelineFramework.Internal;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
@@ -57,7 +57,7 @@ namespace DynamicTimelineFramework.Core
         
         internal Universe(Multiverse multiverse)
         {
-            Diff = new Diff(0, null, new BufferVector(0), null);
+            Diff = new Diff(0, null, new SprigVector(), null);
             Multiverse = multiverse;
 
             IsDisposed = false;
@@ -85,6 +85,10 @@ namespace DynamicTimelineFramework.Core
         {
             while(_constraintTasks.Count > 0)
                 _constraintTasks.Dequeue().Execute();
+        }
+
+        internal void RootObject(DTFObject obj) {
+            //Todo
         }
 
         public override bool Equals(object obj)
@@ -118,7 +122,6 @@ namespace DynamicTimelineFramework.Core
             //Inform the sprig manager to remove the node from the sprig tree
             Multiverse.SprigManager.UnregisterDiff(Diff);
         }
-
 
         private struct EnqueuedConstraintTasks
         {

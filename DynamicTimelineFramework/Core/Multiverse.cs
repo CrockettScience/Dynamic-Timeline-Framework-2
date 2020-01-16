@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal.Buffer;
-using DynamicTimelineFramework.Internal.Sprig;
+using DynamicTimelineFramework.Internal;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 

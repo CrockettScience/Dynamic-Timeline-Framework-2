@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal.Sprig;
+using DynamicTimelineFramework.Internal;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Core
@@ -22,21 +22,22 @@ namespace DynamicTimelineFramework.Core
         internal ulong Date { get; private set; }
         internal Universe Parent { get; private set; }
         
-        private BufferVector _delta;
+        private SprigVector _delta;
 
         private List<Diff> _children;
         
-        public List<DTFObject> InstigatingObjects { get; }
+        public List<DTFObject> AffectedObjects { get; }
 
         public bool IsExpired { get; internal set; }
 
-        internal Diff(ulong date, Universe allegingParent, BufferVector delta, DTFObject instigatingObject)
+        internal Diff(ulong date, Universe allegingParent, SprigVector delta, DTFObject changedObject)
         {
             Date = date;
             _delta = delta;
             _children = new List<Diff>();
             
-            InstigatingObjects = new List<DTFObject> {instigatingObject};
+            //Todo - Identify all affected objects
+            AffectedObjects = new List<DTFObject> {changedObject};
 
             var parent = allegingParent;
             
@@ -53,6 +54,7 @@ namespace DynamicTimelineFramework.Core
         }
 
         internal void InstallChanges(Sprig newSprig) {
+            /*Todo - 
             //This command installs the changes given by the diff.
             var mvCompiler = Parent.Multiverse.Compiler;
             
@@ -65,20 +67,21 @@ namespace DynamicTimelineFramework.Core
             newSprig.And(priorCertaintySignature);
             
             //Constrain the new sprig to establish the changes defined by the diff
-            newSprig.And(_delta, InstigatingObjects.ToArray());
+            newSprig.And(_delta, AffectedObjects.ToArray());
 
             var affectedLatObjects = new HashSet<DTFObject>();
-            foreach (var dtfObject in InstigatingObjects) {
+            foreach (var dtfObject in AffectedObjects) {
                 mvCompiler.PushLateralConstraints(dtfObject, newSprig, true, affectedLatObjects);
             }
             
             //Constrain the parent sprig to back-propagate the new certainty signature
-            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], InstigatingObjects.Concat(affectedLatObjects));
-            Parent.Sprig.And(newCertaintySignature, InstigatingObjects.Concat(affectedLatObjects).ToArray());
+            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], AffectedObjects.Concat(affectedLatObjects));
+            Parent.Sprig.And(newCertaintySignature, AffectedObjects.Concat(affectedLatObjects).ToArray());
 
             if (Parent.Multiverse.ValidateOperations)
                 if(!newSprig.Validate() || !Parent.Sprig.Validate())
                     throw new InvalidBridgingException();
+                    */
         }
 
         /// <summary>
@@ -117,12 +120,12 @@ namespace DynamicTimelineFramework.Core
             //Combine the delta's and validate
             var combined = _delta & otherDiff._delta;
 
-            if (!combined.Validate(Parent.Multiverse.SprigManager, InstigatingObjects.Concat(otherDiff.InstigatingObjects).ToArray()))
+            if (!combined.Validate())
                 return false;
             
             //Combine into this
             _delta = combined;
-            InstigatingObjects.AddRange(otherDiff.InstigatingObjects);
+            AffectedObjects.AddRange(otherDiff.AffectedObjects);
             return true;
         }
 
@@ -134,8 +137,8 @@ namespace DynamicTimelineFramework.Core
                 child.Parent = Parent;
                 Parent.Diff._children.Add(child);
                 
-                foreach (var instigatingObject in InstigatingObjects) {
-                    child.InstigatingObjects.Add(instigatingObject);
+                foreach (var instigatingObject in AffectedObjects) {
+                    child.AffectedObjects.Add(instigatingObject);
                 }
 
                 child._delta &= _delta;

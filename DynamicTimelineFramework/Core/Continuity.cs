@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Exception;
-using DynamicTimelineFramework.Internal.Sprig;
+using DynamicTimelineFramework.Internal;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 

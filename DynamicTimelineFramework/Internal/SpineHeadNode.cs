@@ -1,6 +1,6 @@
 using DynamicTimelineFramework.Core;
 
-namespace DynamicTimelineFramework.Internal.Sprig {
+namespace DynamicTimelineFramework.Internal {
     internal class SpineHeadNode : SpineNode
     {
         public override Sprig Sprig { get; }
@@ -8,11 +8,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public SpineHeadNode(Sprig root, ulong index, Diff diff)
         {
             Sprig = new Sprig(index, root, diff);
-        }
-
-        public override void Alloc(int space, int startIndex)
-        {
-            Sprig.Alloc(space, startIndex);
         }
     }
 }

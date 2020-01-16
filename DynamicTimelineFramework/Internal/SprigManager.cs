@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using DynamicTimelineFramework.Core;
-using DynamicTimelineFramework.Internal.Buffer;
 using DynamicTimelineFramework.Objects;
 using DynamicTimelineFramework.Objects.Attributes;
 
-namespace DynamicTimelineFramework.Internal.Sprig {
+namespace DynamicTimelineFramework.Internal {
     internal class SprigManager {
         public Spine Spine { get; }
-        public int BitCount { get; private set; }
         
         public readonly List<DTFObject> Registry = new List<DTFObject>();
 
@@ -19,7 +17,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         {
             Spine = new Spine(rootDiff, rootUniverse);
             rootUniverse.Sprig.Manager = this;
-            BitCount = 0;
             Owner = rootUniverse.Multiverse;
         }
 
@@ -34,24 +31,16 @@ namespace DynamicTimelineFramework.Internal.Sprig {
             return newSprig;
         }
 
-        public OperativeSlice RegisterObject(DTFObject obj, out int referenceHash)
+        public void RegisterObject(DTFObject obj, out int referenceHash)
         {
-            //Allocate space for every sprig in the tree
-            var objDef = (DTFObjectDefinitionAttribute) obj.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
-            var space = objDef.PositionCount;
-
-            var leftBound = BitCount;
-            BitCount += space;
-            
-            Spine.Alloc(space, leftBound);
+            //Root the object in the root universe
+            Owner.BaseUniverse.RootObject(obj);
             
             Registry.Add(obj);
 
             referenceHash = Registry.Count ^ 397;
             
             Owner.ClearPendingDiffs();
-
-            return new OperativeSlice(leftBound, BitCount);
 
         }
 

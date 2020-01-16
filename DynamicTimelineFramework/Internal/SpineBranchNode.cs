@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 
-namespace DynamicTimelineFramework.Internal.Sprig {
+namespace DynamicTimelineFramework.Internal {
     internal class SpineBranchNode : SpineNode, IEnumerable<Diff>
     {
         private readonly Dictionary<Diff, Branch> _branchMap;
@@ -46,16 +46,6 @@ namespace DynamicTimelineFramework.Internal.Sprig {
         public void GraftBranches(SpineBranchNode graftFrom) {
             foreach (var branch in graftFrom._branchMap.Values) {
                 AddBranch(branch.Next);
-            }
-        }
-
-        public override void Alloc(int space, int startIndex)
-        {
-            var nexts = _branchMap.Values;
-            
-            foreach (var next in nexts)
-            {
-                next.Next.Alloc(space, startIndex);
             }
         }
 

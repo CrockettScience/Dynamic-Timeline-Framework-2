@@ -10,15 +10,20 @@ namespace DynamicTimelineFramework.Objects {
     public abstract class DTFObject {
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
+        private List<DTFObject> _children;
+        private Multiverse.ObjectCompiler Compiler { get; }
+        public List<Universe> RootedUniverses { get; }
 
         internal readonly int ReferenceHash;
-        private Multiverse.ObjectCompiler Compiler { get; }
+        
         public string ParentKey { get; set; }
         public DTFObject Parent => ParentKey == null ? null : _lateralDirectory[ParentKey];
+        public bool HasChildren => _children != null;
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
             _lateralDirectory = new Dictionary<string, DTFObject>();
+            RootedUniverses = new List<Universe>();
 
             //Register object with the timeline
             owner.SprigManager.RegisterObject(this, out var hash);
@@ -83,6 +88,11 @@ namespace DynamicTimelineFramework.Objects {
 
             _lateralDirectory[key] = obj;
             ParentKey = key;
+            
+            if(!obj.HasChildren)
+                obj._children = new List<DTFObject>();
+            
+            obj._children.Add(this);
 
         }
 
