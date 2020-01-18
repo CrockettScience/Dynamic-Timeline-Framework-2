@@ -59,9 +59,9 @@ namespace DynamicTimelineFramework.Internal {
 
             public SpineNode Next { get; set; }
 
-            public BufferNode FirstNodeOnBranch
+            public SprigNode FirstNodeOnBranch
             {
-                get => Next.Sprig.Head.GetBufferNode(_owner.Date);
+                get => Next.Sprig.Head.GetSprigNode(_owner.Date);
                 
                 set {
                     var first = FirstNodeOnBranch;
@@ -71,7 +71,7 @@ namespace DynamicTimelineFramework.Internal {
                         var second = Next.Sprig.Head;
 
                         while (second.Last != first)
-                            second = (BufferNode) second.Last;
+                            second = (SprigNode) second.Last;
 
                         second.Last = value;
                     }

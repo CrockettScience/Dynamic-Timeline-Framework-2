@@ -24,20 +24,21 @@ namespace DynamicTimelineFramework.Core
         
         private SprigVector _delta;
 
-        private List<Diff> _children;
+        private readonly List<Diff> _children;
         
-        public List<DTFObject> AffectedObjects { get; }
+        public HashSet<DTFObject> AffectedObjects { get; }
 
         public bool IsExpired { get; internal set; }
 
-        internal Diff(ulong date, Universe allegingParent, SprigVector delta, DTFObject changedObject)
+        internal Diff(ulong date, Universe allegingParent, Position newPosition, DTFObject changedObject)
         {
             Date = date;
-            _delta = delta;
             _children = new List<Diff>();
+
+            var timelineVector = Parent.Multiverse.Compiler.GetTimelineVector(changedObject, date, newPosition);
             
-            //Todo - Identify all affected objects
-            AffectedObjects = new List<DTFObject> {changedObject};
+            //Identify all affected objects and compute total delta
+            AffectedObjects = GetAllAffectedLateralObjectsInNetwork(changedObject, timelineVector, _delta);
 
             var parent = allegingParent;
             
@@ -52,9 +53,16 @@ namespace DynamicTimelineFramework.Core
 
             IsExpired = false;
         }
+        
+        internal Diff()
+        {
+            Date = 0;
+            _children = new List<Diff>();
+            Parent = null;
+        }
 
         internal void InstallChanges(Sprig newSprig) {
-            /*Todo - 
+            /*Todo - After adjustments to Sprig
             //This command installs the changes given by the diff.
             var mvCompiler = Parent.Multiverse.Compiler;
             
@@ -125,7 +133,7 @@ namespace DynamicTimelineFramework.Core
             
             //Combine into this
             _delta = combined;
-            AffectedObjects.AddRange(otherDiff.AffectedObjects);
+            AffectedObjects.UnionWith(otherDiff.AffectedObjects);
             return true;
         }
 
@@ -143,6 +151,42 @@ namespace DynamicTimelineFramework.Core
 
                 child._delta &= _delta;
                 child.Date = Date;
+            }
+        }
+        
+        private HashSet<DTFObject> GetAllAffectedLateralObjectsInNetwork(DTFObject obj, PositionVector timelineVector, SprigVector delta) {
+            var lats = new HashSet<DTFObject> {obj};
+            delta.Add(obj, timelineVector);
+
+            //Add all in current network
+            AddAffectedLateralObjects(obj, timelineVector, lats, delta);
+            
+            //Add if needed from parent network
+            if (obj.Parent != null && Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, obj.ParentKey, timelineVector, Parent.Sprig, out var result)) {
+                lats.Add(obj.Parent);
+                delta.Add(obj.Parent, result);
+                GetAllAffectedLateralObjectsInNetwork(obj.Parent, result, delta);
+            }
+
+
+            return lats;
+        }
+
+        private void AddAffectedLateralObjects(DTFObject obj, PositionVector timelineVector, HashSet<DTFObject> lats, SprigVector delta) {
+            foreach (var key in obj.GetLateralKeys()) {
+                var lat = obj.GetLateralObject(key);
+
+                if (!lats.Contains(lat)) {
+                    
+                    //Get lateral translation and see if it's compatible with the current timeline
+                    if (!Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, key, timelineVector, Parent.Sprig, out var result)) {
+                        
+                        lats.Add(lat);
+                        delta.Add(lat, result);
+                        AddAffectedLateralObjects(lat, result, lats, delta);
+                    }
+                }
+
             }
         }
     }

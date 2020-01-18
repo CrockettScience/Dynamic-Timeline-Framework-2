@@ -73,7 +73,10 @@ namespace DynamicTimelineFramework.Internal {
                 current = (PositionNode) current.Last;
             }
         }
-        
+
+        public bool Validate() {
+            return Head.Validate();
+        }
         
     }
 }

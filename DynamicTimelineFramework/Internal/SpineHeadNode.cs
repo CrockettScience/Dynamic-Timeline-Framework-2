@@ -5,9 +5,8 @@ namespace DynamicTimelineFramework.Internal {
     {
         public override Sprig Sprig { get; }
 
-        public SpineHeadNode(Sprig root, ulong index, Diff diff)
-        {
-            Sprig = new Sprig(index, root, diff);
+        public SpineHeadNode(Sprig root, ulong index, Diff diff) {
+            Sprig = index == 0 ? new Sprig(diff) : new Sprig(index, root, diff);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Objects;
@@ -8,22 +9,6 @@ namespace DynamicTimelineFramework.Internal {
         public Node.INode Last { get; set; }
         
         public ulong Index { get; set; }
-        
-        public bool Validate() {
-            throw new System.NotImplementedException();
-        }
-
-        public Node.INode AndFactory(Node.INode left, Node.INode right, ulong index) {
-            throw new System.NotImplementedException();
-        }
-
-        public Node.INode OrFactory(Node.INode left, Node.INode right, ulong index) {
-            throw new System.NotImplementedException();
-        }
-
-        public bool IsSamePosition(Node.INode other) {
-            throw new System.NotImplementedException();
-        }
 
         private readonly Dictionary<DTFObject, Position> _positions;
 
@@ -56,6 +41,10 @@ namespace DynamicTimelineFramework.Internal {
                 _positions[pair.Key] = pair.Value;
         }
 
+        public bool Contains(DTFObject obj) {
+            return _positions.ContainsKey(obj);
+        }
+
         public Position GetPosition(DTFObject obj) {
             return _positions[obj];
         }
@@ -74,6 +63,63 @@ namespace DynamicTimelineFramework.Internal {
             }
 
             return current;
+        }
+        
+        public bool Validate() {
+            foreach (var pair in _positions) {
+                if (pair.Value.Uncertainty == -1)
+                    return false;
+            }
+
+            return true;    
+        }
+
+        public Node.INode AndFactory(Node.INode left, Node.INode right, ulong index) {
+            var leftNode = (SprigNode) left;
+            var rightNode = (SprigNode) right;
+
+            var newNode = leftNode.Copy();
+
+            foreach (var rPair in rightNode._positions) {
+                if (newNode._positions.ContainsKey(rPair.Key))
+                    newNode._positions[rPair.Key] &= rPair.Value;
+
+                else
+                    newNode._positions[rPair.Key] = rPair.Value;
+            }
+
+            return newNode;
+        }
+
+        public Node.INode OrFactory(Node.INode left, Node.INode right, ulong index) {
+            var leftNode = (SprigNode) left;
+            var rightNode = (SprigNode) right;
+
+            var newNode = leftNode.Copy();
+
+            foreach (var rPair in rightNode._positions) {
+                if (newNode._positions.ContainsKey(rPair.Key))
+                    newNode._positions[rPair.Key] |= rPair.Value;
+
+                else
+                    newNode._positions[rPair.Key] = rPair.Value;
+            }
+
+            return newNode;
+        }
+
+        public bool IsSamePosition(Node.INode other) {
+            return _positions.Equals(((SprigNode) other)._positions);
+        }
+
+        private SprigNode Copy() {
+            var copy = new SprigNode(null, Index);
+
+            foreach (var pair in _positions) {
+                copy._positions[pair.Key] = pair.Value;
+            }
+
+            return copy;
         }
 
         public override bool Equals(object obj) {

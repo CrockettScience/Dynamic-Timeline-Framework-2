@@ -57,7 +57,7 @@ namespace DynamicTimelineFramework.Core
         
         internal Universe(Multiverse multiverse)
         {
-            Diff = new Diff(0, null, new SprigVector(), null);
+            Diff = new Diff(0, null, null, null);
             Multiverse = multiverse;
 
             IsDisposed = false;
@@ -88,7 +88,7 @@ namespace DynamicTimelineFramework.Core
         }
 
         internal void RootObject(DTFObject obj) {
-            //Todo
+            Sprig.RootObject(obj);
         }
 
         public override bool Equals(object obj)

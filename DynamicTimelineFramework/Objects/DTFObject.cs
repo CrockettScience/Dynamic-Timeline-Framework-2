@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Exception;
+using DynamicTimelineFramework.Internal;
 
 namespace DynamicTimelineFramework.Objects {
     
@@ -10,7 +11,6 @@ namespace DynamicTimelineFramework.Objects {
     public abstract class DTFObject {
         private readonly Dictionary<string, DTFObject> _lateralDirectory;
         private readonly List<string> _lateralKeys;
-        private List<DTFObject> _children;
         private Multiverse.ObjectCompiler Compiler { get; }
         public List<Universe> RootedUniverses { get; }
 
@@ -18,7 +18,6 @@ namespace DynamicTimelineFramework.Objects {
         
         public string ParentKey { get; set; }
         public DTFObject Parent => ParentKey == null ? null : _lateralDirectory[ParentKey];
-        public bool HasChildren => _children != null;
 
         protected DTFObject(Multiverse owner) {
             _lateralKeys = new List<string>();
@@ -88,11 +87,6 @@ namespace DynamicTimelineFramework.Objects {
 
             _lateralDirectory[key] = obj;
             ParentKey = key;
-            
-            if(!obj.HasChildren)
-                obj._children = new List<DTFObject>();
-            
-            obj._children.Add(this);
 
         }
 

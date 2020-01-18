@@ -67,7 +67,8 @@ namespace DynamicTimelineFramework.Core
             _universe.ClearConstraintTasks();
             
             //Pull parent constraints
-            compiler.PullParentConstraints(_dtfObject, _universe);
+            ////Todo - If an object is not "rooted" in the universe, but it's parent is, check to see if object needs to be rooted as well as the rest of it's lateral network
+            compiler.PullParentInformation(_dtfObject, _universe);
             
             //Create a copy of the position with the correct operative slice
             var deltaPosition = new Position(_dtfObject.GetType());
@@ -78,20 +79,20 @@ namespace DynamicTimelineFramework.Core
             //Check if it's possible to constrain the position
             var existingVector = _universe.Sprig.ToPositionVector(_dtfObject);
 
-            if (!((PositionNode) (existingVector & timelineVector).Head).Validate()) {
+            if (!(existingVector & timelineVector).Validate()) {
                 //Not possible to constrain, check if it's transitionable
 
                 while (existingVector.Head.Index >= date)
-                    existingVector.Head = existingVector.Head.Last;
+                    existingVector.Head = (PositionNode) existingVector.Head.Last;
 
                 existingVector.Head = new PositionNode(existingVector.Head, date, Position.Alloc(_dtfObject.GetType(), true));
 
-                if (!((PositionNode) (existingVector & timelineVector).Head).Validate())
+                if (!(existingVector & timelineVector).Validate())
 
                     //Not transitionable
                     throw new UnresolvableParadoxException();
 
-                outDiff = new Diff(date, _universe, new BufferVector(_universe.Multiverse.SprigManager.BitCount, true) & timelineVector, _dtfObject);
+                outDiff = new Diff(date, _universe, pos, _dtfObject);
                 return false;
             }
 

@@ -305,7 +305,7 @@ namespace DynamicTimelineFramework.Core
                             };
                         }
                         
-                        return new PositionVector(default , head);
+                        return new PositionVector(head);
                     }
                     
                     PositionVector MakeSpanVectorFromPos(Position pos, ulong start, ulong span)
@@ -333,7 +333,7 @@ namespace DynamicTimelineFramework.Core
                             };
                         }
                         
-                        return new PositionVector(default , head);
+                        return new PositionVector(head);
                     }
 
                     //When we collapse to a position, the focal date can be anywhere from
@@ -606,45 +606,28 @@ namespace DynamicTimelineFramework.Core
                 }
             }
             
-            internal void PushLateralConstraints(DTFObject dtfObj, Sprig universeSprig, bool pushToParent, HashSet<DTFObject> affectedObjects)
-            {
-                
-                //Get the metadata object
-                var meta = _objectMetaData[dtfObj.GetType()];
-
-                //Constrain up the parent tree
-                if (pushToParent && dtfObj.ParentKey != null && ConstrainLateralObject(dtfObj, dtfObj.ParentKey, meta, universeSprig)) {
-                    affectedObjects.Add(dtfObj.Parent);
-                    PushLateralConstraints(dtfObj.Parent, universeSprig, true, affectedObjects);
-                }
-
-                //Iterate through the rest of the keys and recursively constrain
-                var keys = dtfObj.GetLateralKeys();
-                foreach (var key in keys) {
-                    
-                    var dest = dtfObj.GetLateralObject(key);
-
-                    if (!ConstrainLateralObject(dtfObj, key, meta, universeSprig)) continue;
-                    
-                    //If the constraint results in change, then push it's constraints as well
-                    //Since all lateral objects have the same parent, don't need to push to parent every time
-                    affectedObjects.Add(dest);
-                    PushLateralConstraints(dest, universeSprig, false, affectedObjects);
-                }
-            }
-
             internal bool ConstrainLateralObject(DTFObject source, string lateralKey, TypeMetaData lateralMetaData, Sprig universeSprig)
             {
                 var dest = source.GetLateralObject(lateralKey);
                 
                 //Get the translation vector
-                var translationVector = lateralMetaData.Translate(lateralKey, universeSprig.ToPositionVector(source), dest.SprigManagerSlice);
+                var translationVector = lateralMetaData.Translate(lateralKey, universeSprig.ToPositionVector(source));
                 
                 //AND the sprig with the translation vector and return whether or not a change was made
                 return universeSprig.And(translationVector, dest);
             }
 
-            public void PullLateralConstraints(DTFObject source, DTFObject dest)
+            internal bool CanConstrainLateralObject(DTFObject source, string lateralKey, PositionVector input, Sprig sprig, out PositionVector output) {
+                var dest = source.GetLateralObject(lateralKey);
+                var meta = _objectMetaData[source.GetType()];
+
+                var translation = meta.Translate(lateralKey, input);
+                output = sprig.ToPositionVector(dest);
+
+                return (translation & output).Validate();
+            }
+            
+            internal void PullLateralConstraints(DTFObject source, DTFObject dest)
             {
                 //Get the metadata object
                 var meta = _objectMetaData[source.GetType()];
@@ -656,11 +639,11 @@ namespace DynamicTimelineFramework.Core
                 }
             }
             
-            public void PullParentConstraints(DTFObject dest, Universe universe)
+            internal void PullParentInformation(DTFObject dest, Universe universe)
             {
                 //Recursively pull up
                 if (dest.Parent != null) {
-                    PullParentConstraints(dest.Parent, universe);
+                    PullParentInformation(dest.Parent, universe);
 
                     var source = dest.Parent;
 
@@ -668,7 +651,7 @@ namespace DynamicTimelineFramework.Core
                     var meta = _objectMetaData[source.GetType()];
 
                     //Constrain from parent and push if changes were found
-                    var translationVector = meta.Translate(dest.ParentKey + "-BACK_REFERENCE-" + dest.GetType().Name, universe.Sprig.ToPositionVector(source), dest.SprigManagerSlice);
+                    var translationVector = meta.Translate(dest.ParentKey + "-BACK_REFERENCE-" + dest.GetType().Name, universe.Sprig.ToPositionVector(source));
                     
                     if(universe.Sprig.And(translationVector, dest))
                         PushLateralConstraints(dest, universe.Sprig, false);
@@ -676,22 +659,9 @@ namespace DynamicTimelineFramework.Core
 
             }
 
-            public BufferVector GetTimelineVector(ulong date, PositionBuffer buffer, IEnumerable<DTFObject> objects) {
-                var manager = Owner.SprigManager;
-                
-                var bufferBuilder = new BufferVectorBuilder(manager.BitCount);
-
-                foreach (var dtfObject in objects)
-                {
-                    bufferBuilder.Add(GetTimelineVector(dtfObject, date, buffer.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice)));
-                }
-
-                return bufferBuilder.Or();
-            }
-
-            public PositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
+            internal PositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
             {
-                var timelineVector = new PositionVector(dtfObject.SprigManagerSlice, new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
+                var timelineVector = new PositionVector(new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
 
                 var eigenVals = position.GetEigenstates();
 
@@ -713,36 +683,6 @@ namespace DynamicTimelineFramework.Core
                 return timelineVector;
             }
 
-            public BufferVector GetTimelineSignatureForForwardConstraints(ulong date, Sprig sprig, IEnumerable<DTFObject> objects) {
-                var node = sprig.GetBufferNode(date);
-                var manager = Owner.SprigManager;
-                var bufferBuilder = new BufferVectorBuilder(manager.BitCount);
-                
-                foreach (var dtfObject in objects) {
-                    var superPosition = node.SuperPosition.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice);
-                    
-                    foreach (var eigenstate in superPosition.GetEigenstates()) {
-                        //Find the start of the eigenstate
-                        var start = node.Index;
-                        var startNode = node;
-
-                        while (startNode.Last != null && (startNode.Last.SuperPosition.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice) & eigenstate).Uncertainty == 0) {
-                            startNode = (BufferNode) startNode.Last;
-                            start = startNode.Index;
-                        }
-                        
-                        //Collapse at the date, the start where the state first appears,
-                        //and by the prior position before start to establish in the signature
-                        //that's where it starts
-                        bufferBuilder.Add(GetTimelineVector(dtfObject, start, eigenstate) & 
-                                          GetTimelineVector(dtfObject, date, eigenstate) & 
-                                          GetTimelineVector(dtfObject, start - 1, sprig.GetBufferNode(start - 1).SuperPosition.PositionAtSlice(dtfObject.GetType(), dtfObject.SprigManagerSlice)));
-                    }
-                }
-                
-                return bufferBuilder.Or();
-            }
-
             #endregion
 
             internal class TypeMetaData
@@ -757,16 +697,16 @@ namespace DynamicTimelineFramework.Core
                     PreComputedVectors = new Dictionary<Position, PositionMetaData>();
                 }
 
-                public PositionVector Translate(string key, PositionVector input, OperativeSlice outputOperativeSlice)
+                public PositionVector Translate(string key, PositionVector input)
                 {
                      
                     var currentIn = input.Head;
                     var currentOut = new PositionNode(null, currentIn.Index, LateralTranslation[key, currentIn.SuperPosition.Copy()]);
-                    var output = new PositionVector(outputOperativeSlice, currentOut);
+                    var output = new PositionVector(currentOut);
 
                     while (currentIn.Last != null)
                     {
-                        currentIn = currentIn.Last;
+                        currentIn = (PositionNode) currentIn.Last;
 
                         var lastTranslate = LateralTranslation[key, currentIn.SuperPosition.Copy()];
 
