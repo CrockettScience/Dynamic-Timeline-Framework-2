@@ -617,8 +617,7 @@ namespace DynamicTimelineFramework.Core
                 return universeSprig.And(translationVector, dest);
             }
 
-            internal bool CanConstrainLateralObject(DTFObject source, string lateralKey, PositionVector input, Sprig sprig, out PositionVector output) {
-                var dest = source.GetLateralObject(lateralKey);
+            internal bool CanConstrainLateralObject(DTFObject source, DTFObject dest, string lateralKey, PositionVector input, Sprig sprig, out PositionVector output) {
                 var meta = _objectMetaData[source.GetType()];
 
                 var translation = meta.Translate(lateralKey, input);

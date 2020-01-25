@@ -46,6 +46,9 @@ namespace DynamicTimelineFramework.Internal {
         }
 
         public PositionVector ToPositionVector(DTFObject dtfObject) {
+            if (!IsRooted(dtfObject))
+                return Diff.Parent.Sprig.ToPositionVector(dtfObject);
+            
             PositionNode currentPNode;
             var pHead = currentPNode = new PositionNode(null, Head.Index, Head.GetPosition(dtfObject));
 
@@ -86,14 +89,24 @@ namespace DynamicTimelineFramework.Internal {
             if (Head.Contains(dtfObject))
                 return true;
 
+            //Only other case is if parent is rooted but child hasn't been checked yet
             //Check if parent is rooted
             if (dtfObject.Parent != null & IsRooted(dtfObject.Parent)) {
-                //Check to see if the child needs to be rooted as well
+                //Get timeline as it is in this universe
                 var timeline = ToPositionVector(dtfObject.Parent);
-                
-                //Todo
+
+                //Check to see if the child needs to be rooted as well
+                if (!Manager.Owner.Compiler.CanConstrainLateralObject(dtfObject.Parent, dtfObject, dtfObject.ParentKey + "-BACK_REFERENCE-" + dtfObject.GetType().Name, timeline, this, out var result)) {
+                    //It does
+                    var lats = new HashSet<DTFObject> {dtfObject};
+                    Diff.AddToDelta(dtfObject, result);
+                    Diff.AddAffectedLateralObjects(dtfObject, result, lats);
+
+                    return true;
+                }
             }
-                
+
+            return false;
         }
 
         public bool Validate()

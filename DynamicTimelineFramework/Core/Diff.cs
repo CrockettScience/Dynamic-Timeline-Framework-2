@@ -34,11 +34,12 @@ namespace DynamicTimelineFramework.Core
         {
             Date = date;
             _children = new List<Diff>();
+            _delta = new SprigVector();
 
             var timelineVector = Parent.Multiverse.Compiler.GetTimelineVector(changedObject, date, newPosition);
             
             //Identify all affected objects and compute total delta
-            AffectedObjects = GetAllAffectedLateralObjectsInNetwork(changedObject, timelineVector, _delta);
+            AffectedObjects = GetAllAffectedLateralObjectsInNetwork(changedObject, timelineVector);
 
             var parent = allegingParent;
             
@@ -59,6 +60,11 @@ namespace DynamicTimelineFramework.Core
             Date = 0;
             _children = new List<Diff>();
             Parent = null;
+            _delta = new SprigVector();
+        }
+
+        internal void AddToDelta(DTFObject obj, PositionVector deltaVector) {
+            _delta.Add(obj, deltaVector);
         }
 
         internal void InstallChanges(Sprig newSprig) {
@@ -154,39 +160,34 @@ namespace DynamicTimelineFramework.Core
             }
         }
         
-        private HashSet<DTFObject> GetAllAffectedLateralObjectsInNetwork(DTFObject obj, PositionVector timelineVector, SprigVector delta) {
+        private HashSet<DTFObject> GetAllAffectedLateralObjectsInNetwork(DTFObject obj, PositionVector timelineVector) {
             var lats = new HashSet<DTFObject> {obj};
-            delta.Add(obj, timelineVector);
+            _delta.Add(obj, timelineVector);
 
             //Add all in current network
-            AddAffectedLateralObjects(obj, timelineVector, lats, delta);
+            AddAffectedLateralObjects(obj, timelineVector, lats);
             
             //Add if needed from parent network
-            if (obj.Parent != null && Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, obj.ParentKey, timelineVector, Parent.Sprig, out var result)) {
+            if (obj.Parent != null && Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, obj.Parent, obj.ParentKey, timelineVector, Parent.Sprig, out var result)) {
                 lats.Add(obj.Parent);
-                delta.Add(obj.Parent, result);
-                GetAllAffectedLateralObjectsInNetwork(obj.Parent, result, delta);
+                _delta.Add(obj.Parent, result);
+                GetAllAffectedLateralObjectsInNetwork(obj.Parent, result);
             }
-
 
             return lats;
         }
 
-        private void AddAffectedLateralObjects(DTFObject obj, PositionVector timelineVector, HashSet<DTFObject> lats, SprigVector delta) {
+        internal void AddAffectedLateralObjects(DTFObject obj, PositionVector timelineVector, HashSet<DTFObject> lats) {
             foreach (var key in obj.GetLateralKeys()) {
                 var lat = obj.GetLateralObject(key);
 
-                if (!lats.Contains(lat)) {
-                    
-                    //Get lateral translation and see if it's compatible with the current timeline
-                    if (!Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, key, timelineVector, Parent.Sprig, out var result)) {
+                //Get lateral translation and see if it's compatible with the current timeline
+                if (!lats.Contains(lat) && !Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, lat, key, timelineVector, Parent.Sprig, out var result)) {
                         
-                        lats.Add(lat);
-                        delta.Add(lat, result);
-                        AddAffectedLateralObjects(lat, result, lats, delta);
-                    }
+                    lats.Add(lat);
+                    _delta.Add(lat, result);
+                    AddAffectedLateralObjects(lat, result, lats);
                 }
-
             }
         }
     }

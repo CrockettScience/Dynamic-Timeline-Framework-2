@@ -51,7 +51,6 @@ namespace DynamicTimelineFramework.Objects {
             //Subscribe to the other object's directory and add a proxy
             var backKey = key + "-BACK_REFERENCE-" + ReferenceHash;
 
-
             for (var i = 1; obj._lateralDirectory.ContainsKey(backKey); i++)
                 backKey = key + "-BACK_REFERENCE-" + (ReferenceHash ^ (i * 967));
             
