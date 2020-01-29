@@ -66,8 +66,10 @@ namespace DynamicTimelineFramework.Core
             //Dequeue constraint Tasks
             _universe.ClearConstraintTasks();
             
-            //Pull parent constraints
-            ////Todo - If an object is not "rooted" in the universe, but it's parent is, check to see if object needs to be rooted as well as the rest of it's lateral network
+            //First, ask sprig if object is rooted to trigger rooting if needed
+            _universe.Sprig.IsRooted(_dtfObject);
+            
+            //Pull parent constraints.
             compiler.PullParentInformation(_dtfObject, _universe);
             
             //Create a copy of the position with the correct operative slice

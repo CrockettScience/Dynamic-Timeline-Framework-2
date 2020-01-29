@@ -79,6 +79,7 @@ namespace DynamicTimelineFramework.Internal {
             var currentBuilderNode = _pointer;
 
             while (currentBuilderNode.Index > Diff.Date) {
+                //Todo - fix
                 currentBuilderNode.Add(obj, initPosition);
 
                 currentBuilderNode = (SprigNode) currentBuilderNode.Last;
@@ -107,6 +108,10 @@ namespace DynamicTimelineFramework.Internal {
             }
 
             return false;
+        }
+
+        public IEnumerable<DTFObject> GetRootedObjects() {
+            return Head.GetRootedObjects();
         }
 
         public bool Validate()
@@ -172,28 +177,47 @@ namespace DynamicTimelineFramework.Internal {
                     if (branchNode.Date >= realignFromDateOnward) {
                         foreach (var diff in branchNode)
                         {
-
-                            var underneath = head.GetBufferNode(branchNode.Date);
+                            var underneath = head.GetSprigNode(branchNode.Date);
                             var branch = branchNode.GetBranch(diff);
-
-                            //If it's a different branch, we need to change the first node's previous to reflect the new structure
+                            
                             if (branchNode.Date > 0) {
                                 var branchSprig = branch.Next.Sprig;
-                                var last = underneath.Index == branchNode.Date ? underneath.Last : underneath;
+                                var last = (SprigNode) (underneath.Index == branchNode.Date ? underneath.Last : underneath);
+                                
                                 
                                 //Mask the other branch here to reflect the change
-                                var timelineVector = Manager.Owner.Compiler.GetTimelineSignatureForForwardConstraints(branchNode.Date - 1, this, objects);
-                                var newBranchHead = (BufferNode) Node<PositionBuffer>.And(branchSprig.Head, timelineVector.Head, branchNode.Date);
+                                var maskNode = new SprigNode(null, 0);
+                                
+                                //The mask needs to encode all objects that are rooted in the child sprig with the positions
+                                //they have on the new parent replacement sprig (THIS sprig)
+                                //Todo - fix
+                                foreach (var rootedObject in branchNode.Sprig.GetRootedObjects()) {
+                                    if(head.Contains(rootedObject))
+                                        maskNode.Add(rootedObject, head.GetSprigNode(branchNode.Date - 1).GetPosition(rootedObject));
+                                    
+                                    else
+                                        maskNode.Add(rootedObject, Position.Alloc(rootedObject.GetType(), true));
+                                }
 
+                                var maskVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, maskNode);
+                                var newBranchHead = Node.And(branchSprig.Head, maskVector.Head, branchNode.Date);
+
+                                //Apply the mask only if we need to. If no changes occured, don't change anything
                                 if(!newBranchHead.Equals(branchSprig.Head))
-                                    branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead, objects);
+                                    branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead);
+                                
+                                //Change the first node's previous to reflect the new structure
 
-                                //If the first node on the branch has the same value as the node "underneath" it on the new head, just replace it
-                                if (branch.FirstNodeOnBranch.SuperPosition.Equals(underneath.SuperPosition))
+                                //If the first node on the branch has the same position as the node "underneath" it on the new head, just replace it
+                                if (branch.FirstNodeOnBranch.IsSamePosition(underneath))
                                     branch.FirstNodeOnBranch = underneath;
 
-                                else
-                                    branch.FirstNodeOnBranch = new BufferNode(last, branchNode.Date, branch.FirstNodeOnBranch.SuperPosition);
+                                //Else, create a "new" node to represent that position
+                                else {
+                                    var oldFirst = branch.FirstNodeOnBranch;
+                                    branch.FirstNodeOnBranch = new SprigNode(last, branchNode.Date);
+                                    branch.FirstNodeOnBranch.Add(oldFirst);
+                                }
                             }
                         }
                     }

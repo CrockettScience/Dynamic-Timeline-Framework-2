@@ -68,14 +68,14 @@ namespace DynamicTimelineFramework.Core
         }
 
         internal void InstallChanges(Sprig newSprig) {
-            /*Todo - After adjustments to Sprig
+            //Todo - Reengineer Diff installation
             //This command installs the changes given by the diff.
             var mvCompiler = Parent.Multiverse.Compiler;
             
             //Add to the parent's children
             Parent.Diff._children.Add(this);
 
-            //Constrain the new sprig to establish the shared certainty signature
+            //Constrain the new sprig to establish the shared certainty signature for the affected objects
             var priorCertaintySignature = mvCompiler.GetTimelineSignatureForForwardConstraints(Date - 1, Parent.Sprig, Parent.Multiverse.SprigManager.Registry);
 
             newSprig.And(priorCertaintySignature);
@@ -95,7 +95,6 @@ namespace DynamicTimelineFramework.Core
             if (Parent.Multiverse.ValidateOperations)
                 if(!newSprig.Validate() || !Parent.Sprig.Validate())
                     throw new InvalidBridgingException();
-                    */
         }
 
         /// <summary>

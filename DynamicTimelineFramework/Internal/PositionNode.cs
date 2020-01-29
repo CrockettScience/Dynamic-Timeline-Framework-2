@@ -4,7 +4,7 @@ namespace DynamicTimelineFramework.Internal
 {
     internal class PositionNode : Node.INode
     {
-        public Position SuperPosition { get; }
+        public Position SuperPosition { get; set; }
 
         public Node.INode Last { get; set; }
 

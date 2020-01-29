@@ -22,7 +22,7 @@ namespace DynamicTimelineFramework.Core
         //Done - Remove Position Buffer and related classes
         //Done - Reengineer Position to be independent
         //Done - Degeneralize Node ops
-        //Todo - Reengineer sprig system
+        //Done - Reengineer sprig system
         //Todo - Cleanup
         //Todo - Optimize
 
@@ -680,6 +680,23 @@ namespace DynamicTimelineFramework.Core
                     timelineVector.ShiftForward(date - SprigCenter);
 
                 return timelineVector;
+            }
+            
+            internal SprigVector GetTimelineVector(ulong date, SprigNode node)
+            {
+                var vector = new SprigVector();
+                
+                foreach (var obj in node.GetRootedObjects()) {
+                    var start = node.GetPositionNode(obj).Index;
+                    
+                    //Collapse at the date and the start where the state first appears
+                    var positionVector = GetTimelineVector(obj, start, node.GetPosition(obj)) &
+                                         GetTimelineVector(obj, date, node.GetPosition(obj));
+                    
+                    vector.Add(obj, positionVector);
+                }
+
+                return vector;
             }
 
             #endregion
