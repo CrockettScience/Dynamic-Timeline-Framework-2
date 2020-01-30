@@ -10,13 +10,13 @@ namespace DynamicTimelineFramework.Internal {
         
         public ulong Index { get; set; }
 
-        private readonly Dictionary<DTFObject, PositionNode> _positions;
+        private readonly Dictionary<DTFObject, Position> _positions;
 
-        public SprigNode(SprigNode last, ulong index, DTFObject obj, PositionNode pos)
+        public SprigNode(SprigNode last, ulong index, DTFObject obj, Position pos)
         {
             Index = index;
             Last = last;
-            _positions = new Dictionary<DTFObject, PositionNode>();
+            _positions = new Dictionary<DTFObject, Position>();
             
             if(pos != null)
                 _positions[obj] = pos;
@@ -26,14 +26,14 @@ namespace DynamicTimelineFramework.Internal {
         {
             Index = index;
             Last = last;
-            _positions = new Dictionary<DTFObject, PositionNode>();
+            _positions = new Dictionary<DTFObject, Position>();
         }
 
         public IEnumerable<DTFObject> GetRootedObjects() {
             return _positions.Keys;
         }
 
-        public void Add(DTFObject obj, PositionNode pos)
+        public void Add(DTFObject obj, Position pos)
         {
             _positions[obj] = pos;
         }
@@ -50,10 +50,6 @@ namespace DynamicTimelineFramework.Internal {
         }
 
         public Position GetPosition(DTFObject obj) {
-            return _positions[obj].SuperPosition;
-        }
-        
-        public PositionNode GetPositionNode(DTFObject obj) {
             return _positions[obj];
         }
         
@@ -75,7 +71,7 @@ namespace DynamicTimelineFramework.Internal {
         
         public bool Validate() {
             foreach (var pair in _positions) {
-                if (pair.Value.SuperPosition.Uncertainty == -1)
+                if (pair.Value.Uncertainty == -1)
                     return false;
             }
 
@@ -90,10 +86,7 @@ namespace DynamicTimelineFramework.Internal {
 
             foreach (var rPair in rightNode._positions) {
                 if (newNode._positions.ContainsKey(rPair.Key))
-                    newNode._positions[rPair.Key].SuperPosition &= rPair.Value.SuperPosition;
-
-                else
-                    newNode._positions[rPair.Key] = rPair.Value;
+                    newNode._positions[rPair.Key] &= rPair.Value;
             }
 
             return newNode;
@@ -107,10 +100,7 @@ namespace DynamicTimelineFramework.Internal {
 
             foreach (var rPair in rightNode._positions) {
                 if (newNode._positions.ContainsKey(rPair.Key))
-                    newNode._positions[rPair.Key].SuperPosition |= rPair.Value.SuperPosition;
-
-                else
-                    newNode._positions[rPair.Key] = rPair.Value;
+                    newNode._positions[rPair.Key] |= rPair.Value;
             }
 
             return newNode;

@@ -53,6 +53,28 @@ namespace DynamicTimelineFramework.Internal {
             }
         }
 
+        public PositionVector ToPositionVector(DTFObject obj) {
+            var currentS = (SprigNode) _pointer.Last;
+            PositionNode currentP;
+            var posHead = currentP = new PositionNode(null, currentS.Index, currentS.GetPosition(obj));
+
+            currentS = (SprigNode) currentS.Last;
+
+            while (currentS != null) {
+                var newP = new PositionNode(null, currentS.Index, currentS.GetPosition(obj));
+
+                if (newP.IsSamePosition(currentP))
+                    currentP.Index = newP.Index;
+
+                else 
+                    currentP = (PositionNode) (currentP.Last = newP);
+                
+                currentS = (SprigNode) currentS.Last;
+            }
+            
+            return new PositionVector(posHead);
+        }
+
         public bool Validate() {
             return Head.Validate();
         }

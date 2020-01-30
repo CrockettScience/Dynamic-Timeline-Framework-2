@@ -18,13 +18,6 @@ namespace DynamicTimelineFramework.Core
     /// </summary>
     public class Multiverse
     {
-        //Reengineer Sprig System Todo's
-        //Done - Remove Position Buffer and related classes
-        //Done - Reengineer Position to be independent
-        //Done - Degeneralize Node ops
-        //Done - Reengineer sprig system
-        //Todo - Cleanup
-        //Todo - Optimize
 
         private readonly Dictionary<Diff, Universe> _multiverse = new Dictionary<Diff, Universe>();
         
@@ -682,21 +675,34 @@ namespace DynamicTimelineFramework.Core
                 return timelineVector;
             }
             
-            internal SprigVector GetTimelineVector(ulong date, SprigNode node)
-            {
-                var vector = new SprigVector();
+            internal SprigVector GetTimelineVector(ulong date, SprigNode head) {
+                var objects = head.GetRootedObjects();
+                var node = head.GetSprigNode(date);
+                var sprigVector = new SprigVector();
                 
-                foreach (var obj in node.GetRootedObjects()) {
-                    var start = node.GetPositionNode(obj).Index;
+                foreach (var dtfObject in objects) {
+                    var superPosition = node.GetPosition(dtfObject);
                     
-                    //Collapse at the date and the start where the state first appears
-                    var positionVector = GetTimelineVector(obj, start, node.GetPosition(obj)) &
-                                         GetTimelineVector(obj, date, node.GetPosition(obj));
-                    
-                    vector.Add(obj, positionVector);
+                    foreach (var eigenstate in superPosition.GetEigenstates()) {
+                        //Find the start of the eigenstate
+                        var start = node.Index;
+                        var startNode = node;
+
+                        while (startNode.Last != null && (((SprigNode) startNode.Last).GetPosition(dtfObject) & eigenstate).Uncertainty == 0) {
+                            startNode = (SprigNode) startNode.Last;
+                            start = startNode.Index;
+                        }
+                        
+                        //Collapse at the date, the start where the state first appears,
+                        //and by the prior position before start to establish in the signature
+                        //that's where it starts
+                        sprigVector.Add(dtfObject, GetTimelineVector(dtfObject, start, eigenstate) & 
+                                                        GetTimelineVector(dtfObject, date, eigenstate) & 
+                                                        GetTimelineVector(dtfObject, start - 1, head.GetSprigNode(start - 1).GetPosition(dtfObject)));
+                    }
                 }
 
-                return vector;
+                return sprigVector;
             }
 
             #endregion

@@ -68,7 +68,6 @@ namespace DynamicTimelineFramework.Core
         }
 
         internal void InstallChanges(Sprig newSprig) {
-            //Todo - Reengineer Diff installation
             //This command installs the changes given by the diff.
             var mvCompiler = Parent.Multiverse.Compiler;
             
@@ -76,21 +75,16 @@ namespace DynamicTimelineFramework.Core
             Parent.Diff._children.Add(this);
 
             //Constrain the new sprig to establish the shared certainty signature for the affected objects
-            var priorCertaintySignature = mvCompiler.GetTimelineSignatureForForwardConstraints(Date - 1, Parent.Sprig, Parent.Multiverse.SprigManager.Registry);
+            var priorCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, Parent.Sprig.Head);
 
             newSprig.And(priorCertaintySignature);
             
             //Constrain the new sprig to establish the changes defined by the diff
-            newSprig.And(_delta, AffectedObjects.ToArray());
-
-            var affectedLatObjects = new HashSet<DTFObject>();
-            foreach (var dtfObject in AffectedObjects) {
-                mvCompiler.PushLateralConstraints(dtfObject, newSprig, true, affectedLatObjects);
-            }
+            newSprig.And(_delta);
             
             //Constrain the parent sprig to back-propagate the new certainty signature
-            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta[Date - 1], AffectedObjects.Concat(affectedLatObjects));
-            Parent.Sprig.And(newCertaintySignature, AffectedObjects.Concat(affectedLatObjects).ToArray());
+            var newCertaintySignature = mvCompiler.GetTimelineVector(Date - 1, _delta.Head);
+            Parent.Sprig.And(newCertaintySignature);
 
             if (Parent.Multiverse.ValidateOperations)
                 if(!newSprig.Validate() || !Parent.Sprig.Validate())

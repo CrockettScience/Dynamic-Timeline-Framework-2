@@ -79,7 +79,6 @@ namespace DynamicTimelineFramework.Internal {
             var currentBuilderNode = _pointer;
 
             while (currentBuilderNode.Index > Diff.Date) {
-                //Todo - fix
                 currentBuilderNode.Add(obj, initPosition);
 
                 currentBuilderNode = (SprigNode) currentBuilderNode.Last;
@@ -123,6 +122,17 @@ namespace DynamicTimelineFramework.Internal {
             }
 
             return true;
+        }
+        
+        public void And(SprigVector other)
+        {
+            foreach (var dtfObject in other.Head.GetRootedObjects()) {
+                if (IsRooted(dtfObject))
+                    And(other.ToPositionVector(dtfObject), dtfObject);
+
+                else
+                    Diff.Parent.Sprig.And(other.ToPositionVector(dtfObject), dtfObject);
+            }
         }
         
         public bool And(PositionVector other, DTFObject dtfObject)
@@ -183,23 +193,9 @@ namespace DynamicTimelineFramework.Internal {
                             if (branchNode.Date > 0) {
                                 var branchSprig = branch.Next.Sprig;
                                 var last = (SprigNode) (underneath.Index == branchNode.Date ? underneath.Last : underneath);
-                                
-                                
-                                //Mask the other branch here to reflect the change
-                                var maskNode = new SprigNode(null, 0);
-                                
-                                //The mask needs to encode all objects that are rooted in the child sprig with the positions
-                                //they have on the new parent replacement sprig (THIS sprig)
-                                //Todo - fix
-                                foreach (var rootedObject in branchNode.Sprig.GetRootedObjects()) {
-                                    if(head.Contains(rootedObject))
-                                        maskNode.Add(rootedObject, head.GetSprigNode(branchNode.Date - 1).GetPosition(rootedObject));
-                                    
-                                    else
-                                        maskNode.Add(rootedObject, Position.Alloc(rootedObject.GetType(), true));
-                                }
 
-                                var maskVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, maskNode);
+                                //Mask the other branch here to reflect the change
+                                var maskVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, head);
                                 var newBranchHead = Node.And(branchSprig.Head, maskVector.Head, branchNode.Date);
 
                                 //Apply the mask only if we need to. If no changes occured, don't change anything
