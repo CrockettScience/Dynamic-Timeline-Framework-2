@@ -24,7 +24,7 @@ namespace DynamicTimelineFramework.Internal {
 
         public SprigNode Head {
             get => (SprigNode) _pointer.Last;
-            private set => _pointer.Last = value;
+            set => _pointer.Last = value;
         }
 
         public Sprig(ulong branchIndex, Sprig root, Diff diff)
@@ -122,6 +122,8 @@ namespace DynamicTimelineFramework.Internal {
                     if (current.GetPosition(obj).Uncertainty == -1)
                         return false;
                 }
+
+                current = (SprigNode) current.Last;
             }
 
             return true;
@@ -129,13 +131,17 @@ namespace DynamicTimelineFramework.Internal {
         
         public void And(SprigVector other)
         {
-            foreach (var dtfObject in other.Head.GetRootedObjects()) {
-                if (IsRooted(dtfObject))
-                    And(other.ToPositionVector(dtfObject), dtfObject);
-
-                else
-                    Diff.Parent.Sprig.And(other.ToPositionVector(dtfObject), dtfObject);
+            
+            //Todo - Something wrong here
+            var newHead = Node.And(Head, other.Head);
+            
+            if (!Head.Equals(newHead))
+            {
+                SetHeadAndRealign(0, newHead);
             }
+            
+            if(other.ActiveObjects > 0)
+                Diff.Parent?.Sprig.And(other);
         }
         
         public bool And(PositionVector other, DTFObject dtfObject)
@@ -198,7 +204,7 @@ namespace DynamicTimelineFramework.Internal {
                                 var last = (SprigNode) (underneath.Index == branchNode.Date ? underneath.Last : underneath);
 
                                 //Mask the other branch here to reflect the change
-                                var maskVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, head);
+                                var maskVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, Head);
                                 var newBranchHead = Node.And(branchSprig.Head, maskVector.Head, branchNode.Date);
 
                                 //Apply the mask only if we need to. If no changes occured, don't change anything

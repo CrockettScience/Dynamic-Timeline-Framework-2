@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal {
@@ -12,6 +13,9 @@ namespace DynamicTimelineFramework.Internal {
         }
         
         private readonly SprigNode _pointer = new SprigNode(null, ulong.MaxValue);
+        
+        private readonly Dictionary<DTFObject, bool> _objectActivity = new Dictionary<DTFObject, bool>();
+        public int ActiveObjects { get; private set; }
 
         public SprigNode Head {
             get => (SprigNode) _pointer.Last;
@@ -21,6 +25,17 @@ namespace DynamicTimelineFramework.Internal {
         public SprigVector() {
             Head = new SprigNode(null, 0);
         }
+
+        public bool IsActive(DTFObject obj)
+        {
+            return _objectActivity[obj];
+        }
+
+        public void DisableObject(DTFObject obj)
+        {
+            _objectActivity[obj] = false;
+            ActiveObjects--;
+        }
         
         public SprigVector(SprigNode head) {
             Head = head;
@@ -29,6 +44,9 @@ namespace DynamicTimelineFramework.Internal {
         public void Add(DTFObject obj, PositionVector vector) {
             var currentPositionNode = vector.Head;
             var currentBuilderNode = _pointer;
+            
+            _objectActivity[obj] = true;
+            ActiveObjects++;
 
             while (currentPositionNode != null) {
                 while (currentBuilderNode.Last.Index > currentPositionNode.Index) {
@@ -37,7 +55,7 @@ namespace DynamicTimelineFramework.Internal {
                 }
                 
                 if (currentBuilderNode.Last.Index < currentPositionNode.Index) {
-                    currentBuilderNode.Last = new SprigNode((SprigNode) currentBuilderNode.Last, currentPositionNode.Index, obj, currentPositionNode.SuperPosition);
+                    currentBuilderNode.Last = new SprigNode(this, (SprigNode) currentBuilderNode.Last, currentPositionNode.Index, obj, currentPositionNode.SuperPosition);
                     currentBuilderNode = (SprigNode) currentBuilderNode.Last;
                     
                     currentBuilderNode.Add((SprigNode) currentBuilderNode.Last);

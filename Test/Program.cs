@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using DynamicTimelineFramework.Core;
 
@@ -8,9 +7,12 @@ namespace Test
     internal class Program
     {
         public static void Main(string[] args) {
-            var multiverse = new Multiverse();
+            var multiverse = new Multiverse(false);
             
             var galaxy = new Galaxy(multiverse);
+            var timer = new Stopwatch();
+            
+            //Constrain_X_ObjectAndUniverseCount(50, timer, galaxy, multiverse);
             var star = new Star(galaxy, multiverse);
             var rootStarContinuity = multiverse.BaseUniverse.GetContinuity(star);
             var rootGalaxyContinuity = multiverse.BaseUniverse.GetContinuity(galaxy);
@@ -56,6 +58,7 @@ namespace Test
             Console.WriteLine("Year 11,000,000,000 - " + neutronStarContinuity[11_000_000_000]);    //Massive
             Console.WriteLine("Year 13,000,000,000 - " + neutronStarContinuity[13_000_000_000]);    //Supernova
             Console.WriteLine("Year 14,000,000,000 - " + neutronStarContinuity[14_000_000_000]);    //Neutron Star
+            
         }
 
         public static void Constrain_X_ObjectCount(int count, Stopwatch timer, Galaxy galaxy, Multiverse multiverse) {
@@ -66,7 +69,7 @@ namespace Test
                 var rootStarContinuity = multiverse.BaseUniverse.GetContinuity(star);
                 
                 timer.Restart();
-                rootStarContinuity.Constrain(10_000_000_000, Star.MainSequence, out _);
+                rootStarContinuity.Select(10_000_000_000);
                 Console.WriteLine(timer.ElapsedMilliseconds);
             }
         }
@@ -83,7 +86,7 @@ namespace Test
                 
                 rootStarContinuity.Constrain(10_000_000_000, Star.Massive, out var massiveStarDiff);
             
-                var massiveStarUniverse = new Universe(massiveStarDiff);
+                new Universe(massiveStarDiff);
             }
         }
 
@@ -99,7 +102,7 @@ namespace Test
                 
                 rootStarContinuity.Constrain(10_000_000_000, Star.Massive, out var massiveStarDiff);
             
-                var massiveStarUniverse = new Universe(massiveStarDiff);
+                new Universe(massiveStarDiff);
             }
         }
 
@@ -143,7 +146,7 @@ namespace Test
                 rootStarContinuity.Constrain(10_000_000_000, Star.Massive, out var massiveStarDiff);
             
                 timer.Restart();
-                var massiveStarUniverse = new Universe(massiveStarDiff);
+                var a = new Universe(massiveStarDiff);
                 Console.WriteLine(timer.ElapsedMilliseconds);
             }
         }
@@ -158,7 +161,7 @@ namespace Test
                 rootStarContinuity.Constrain(10_000_000_000, Star.Massive, out var massiveStarDiff);
             
                 timer.Restart();
-                var massiveStarUniverse = new Universe(massiveStarDiff);
+                new Universe(massiveStarDiff);
                 Console.WriteLine(timer.ElapsedMilliseconds);
             }
         }

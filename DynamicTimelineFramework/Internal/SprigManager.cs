@@ -8,8 +8,9 @@ using DynamicTimelineFramework.Objects.Attributes;
 namespace DynamicTimelineFramework.Internal {
     internal class SprigManager {
         public Spine Spine { get; }
-        
-        public readonly List<DTFObject> Registry = new List<DTFObject>();
+
+        public int ObjectCount { get; private set; }
+        public int UniverseCount { get; private set; }
 
         public readonly Multiverse Owner;
         
@@ -18,6 +19,7 @@ namespace DynamicTimelineFramework.Internal {
             Spine = new Spine(rootDiff, rootUniverse);
             rootUniverse.Sprig.Manager = this;
             Owner = rootUniverse.Multiverse;
+            UniverseCount++;
         }
 
         public Sprig BuildSprig(Diff diff)
@@ -27,6 +29,8 @@ namespace DynamicTimelineFramework.Internal {
             newSprig.Manager = this;
             
             diff.InstallChanges(newSprig);
+
+            UniverseCount++;
             
             return newSprig;
         }
@@ -36,9 +40,9 @@ namespace DynamicTimelineFramework.Internal {
             //Root the object in the root universe
             Owner.BaseUniverse.RootObject(obj);
             
-            Registry.Add(obj);
+            ObjectCount++;
 
-            referenceHash = Registry.Count ^ 397;
+            referenceHash = ObjectCount ^ 397;
             
             Owner.ClearPendingDiffs();
 
@@ -48,6 +52,8 @@ namespace DynamicTimelineFramework.Internal {
             
             //Remove the branch from the spine
             Spine.RemoveBranch(diff.GetDiffChain());
+
+            UniverseCount--;
         }
     }
 }

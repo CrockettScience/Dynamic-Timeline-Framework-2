@@ -4,16 +4,18 @@ using DynamicTimelineFramework.Core;
 using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal {
-    internal class SprigNode : Node.INode
-    {
+    internal class SprigNode : Node.INode {
+        public readonly SprigVector Owner;
+        
         public Node.INode Last { get; set; }
         
         public ulong Index { get; set; }
 
         private readonly Dictionary<DTFObject, Position> _positions;
 
-        public SprigNode(SprigNode last, ulong index, DTFObject obj, Position pos)
+        public SprigNode(SprigVector owner, SprigNode last, ulong index, DTFObject obj, Position pos)
         {
+            Owner = owner;
             Index = index;
             Last = last;
             _positions = new Dictionary<DTFObject, Position>();
@@ -85,8 +87,14 @@ namespace DynamicTimelineFramework.Internal {
             var newNode = leftNode.Copy();
 
             foreach (var rPair in rightNode._positions) {
-                if (newNode._positions.ContainsKey(rPair.Key))
-                    newNode._positions[rPair.Key] &= rPair.Value;
+                if (rightNode.Owner != null)
+                {
+                    if(rightNode.Owner.IsActive(rPair.Key) &&
+                       newNode._positions.ContainsKey(rPair.Key))
+                        newNode._positions[rPair.Key] &= rPair.Value;
+                        
+                    rightNode.Owner.DisableObject(rPair.Key);
+                }
             }
 
             newNode.Index = Node.Max(left.Index, right.Index, index);
@@ -101,7 +109,17 @@ namespace DynamicTimelineFramework.Internal {
             var newNode = leftNode.Copy();
 
             foreach (var rPair in rightNode._positions) {
-                if (newNode._positions.ContainsKey(rPair.Key))
+                //Disable right operand if needed
+                if (rightNode.Owner != null)
+                {
+                    if(rightNode.Owner.IsActive(rPair.Key) &&
+                       newNode._positions.ContainsKey(rPair.Key))
+                        newNode._positions[rPair.Key] |= rPair.Value;
+                        
+                    rightNode.Owner.DisableObject(rPair.Key);
+                }
+
+                else if (newNode._positions.ContainsKey(rPair.Key))
                     newNode._positions[rPair.Key] |= rPair.Value;
             }
             

@@ -670,7 +670,6 @@ namespace DynamicTimelineFramework.Core
                 
                 foreach (var dtfObject in objects) {
                     var superPosition = node.GetPosition(dtfObject);
-                    var dateObjectSuperPosition = GetTimelineVector(dtfObject, date, superPosition);
                     
                     foreach (var eigenstate in superPosition.GetEigenstates()) {
                         //Find the start of the eigenstate
@@ -685,9 +684,8 @@ namespace DynamicTimelineFramework.Core
                         //Collapse at the start where the state first appears,
                         //and by the prior position before start to establish in the signature
                         //that's where it starts
-                        var vector = dateObjectSuperPosition & 
-                                     GetTimelineVector(dtfObject, start, eigenstate) &
-                                     GetTimelineVector(dtfObject, start - 1, head.GetSprigNode(start - 1).GetPosition(dtfObject));
+                        var vector = GetTimelineVector(dtfObject, date, eigenstate) & 
+                                     GetTimelineVector(dtfObject, start, eigenstate);
 
                         if (sprigVector.Head.Contains(dtfObject)) {
 
