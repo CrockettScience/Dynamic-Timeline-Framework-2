@@ -60,6 +60,14 @@ namespace DynamicTimelineFramework.Core
             if(_universe.IsDisposed)
                 throw new ObjectDisposedException("Universe");
             
+            //Check if the position will result in net change
+            var currentPos = _universe.Sprig.GetSprigNode(date).GetPosition(_dtfObject);
+            if ((currentPos & pos).Equals(currentPos)) {
+                //Constraining this position will not result in net change, no work needed
+                outDiff = null;
+                return true;
+            }
+
             var multiverse = _universe.Multiverse;
             var compiler = multiverse.Compiler;
             
@@ -71,12 +79,9 @@ namespace DynamicTimelineFramework.Core
             
             //Pull parent constraints.
             compiler.PullParentInformation(_dtfObject, _universe);
-            
-            //Create a copy of the position with the correct operative slice
-            var deltaPosition = new Position(_dtfObject.GetType());
 
             //Get timeline position vector
-            var timelineVector = _universe.Multiverse.Compiler.GetTimelineVector(_dtfObject, date, deltaPosition);
+            var timelineVector = _universe.Multiverse.Compiler.GetTimelineVector(_dtfObject, date, pos);
 
             //Check if it's possible to constrain the position
             var existingVector = _universe.Sprig.ToPositionVector(_dtfObject);

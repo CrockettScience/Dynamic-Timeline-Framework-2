@@ -50,21 +50,22 @@ namespace DynamicTimelineFramework.Internal {
                 return Diff.Parent.Sprig.ToPositionVector(dtfObject);
             
             PositionNode currentPNode;
-            var pHead = currentPNode = new PositionNode(null, Head.Index, Head.GetPosition(dtfObject));
+            var currentSNode = Head;
+            var pHead = currentPNode = new PositionNode(null, currentSNode.Index, currentSNode.GetPosition(dtfObject));
 
-            var currentSNode = Head.Last;
-            
-            while (currentSNode != null) {
-                var newPNode = new PositionNode(null, currentSNode.Index, Head.GetPosition(dtfObject));
+            while (currentSNode.Last != null) {
+                currentSNode = (SprigNode) currentSNode.Last;
+                
+                var newPNode = new PositionNode(null, currentSNode.Index, currentSNode.GetPosition(dtfObject));
 
                 if (newPNode.SuperPosition.Equals(currentPNode.SuperPosition))
                     currentPNode.Index = newPNode.Index;
+                
                 else {
-                    currentPNode = newPNode;
                     currentPNode.Last = newPNode;
+                    currentPNode = newPNode;
                 }
 
-                currentSNode = currentSNode.Last;
             }
             
             return new PositionVector(pHead);
@@ -76,9 +77,9 @@ namespace DynamicTimelineFramework.Internal {
 
         public void RootObject(DTFObject obj) {
             var initPosition = Position.Alloc(obj.GetType(), true);
-            var currentBuilderNode = _pointer;
+            var currentBuilderNode = (SprigNode) _pointer.Last;
 
-            while (currentBuilderNode.Index > Diff.Date) {
+            while (currentBuilderNode != null && !currentBuilderNode.HasPosition(obj)) {
                 currentBuilderNode.Add(obj, initPosition);
 
                 currentBuilderNode = (SprigNode) currentBuilderNode.Last;
@@ -113,12 +114,14 @@ namespace DynamicTimelineFramework.Internal {
             return Head.GetRootedObjects();
         }
 
-        public bool Validate()
-        {
-            foreach (var dtfObject in Manager.Registry)
-            {
-                if (!((PositionNode) ToPositionVector(dtfObject).Head).Validate())
-                    return false;
+        public bool Validate() {
+            var current = Head;
+
+            while (current != null) {
+                foreach (var obj in current.GetRootedObjects()) {
+                    if (current.GetPosition(obj).Uncertainty == -1)
+                        return false;
+                }
             }
 
             return true;

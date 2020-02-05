@@ -36,11 +36,6 @@ namespace DynamicTimelineFramework.Core
             _children = new List<Diff>();
             _delta = new SprigVector();
 
-            var timelineVector = Parent.Multiverse.Compiler.GetTimelineVector(changedObject, date, newPosition);
-            
-            //Identify all affected objects and compute total delta
-            AffectedObjects = GetAllAffectedLateralObjectsInNetwork(changedObject, timelineVector);
-
             var parent = allegingParent;
             
             while (parent?.Diff.Date > Date)
@@ -53,6 +48,11 @@ namespace DynamicTimelineFramework.Core
             Parent.Multiverse.AddDiffPending(this);
 
             IsExpired = false;
+
+            var timelineVector = Parent.Multiverse.Compiler.GetTimelineVector(changedObject, date, newPosition);
+            
+            //Identify all affected objects and compute total delta
+            AffectedObjects = GetAllAffectedLateralObjectsInNetwork(changedObject, timelineVector);
         }
         
         internal Diff()

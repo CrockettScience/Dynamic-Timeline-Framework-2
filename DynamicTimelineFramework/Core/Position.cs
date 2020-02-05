@@ -17,10 +17,16 @@ namespace DynamicTimelineFramework.Core
         internal static Position Alloc(Type type, bool defaultValue = false)
         {
             var pos = new Position(type);
-            
-            if(defaultValue)
-                for (var i = 0; i < pos.bits.Length; i++)
+
+            if (defaultValue) {
+                var i = 0;
+                for (; i < pos.bits.Length - 1; i++)
                     pos.bits[i] = ~0;
+
+                var leftoverLength = pos.Length % 32;
+
+                pos.bits[i] = (1 << leftoverLength) - 1;
+            }
 
             return pos;
         }
@@ -57,6 +63,10 @@ namespace DynamicTimelineFramework.Core
             
             //Set appropriate bits
             foreach (var setBit in setBits) {
+                if(setBit >= pos.Length)
+                    throw new IndexOutOfRangeException("Set bit " + setBit + 
+                                                       " is not within range for position defined for DTFObject type " + 
+                                                       pos.Type.Name + ", which only has " + pos.Length + " states to encode.");
                 pos[setBit] = true;
             }
 
@@ -76,7 +86,7 @@ namespace DynamicTimelineFramework.Core
             var pos = Alloc(left.Type);
 
             for (var i = 0; i < left.bits.Length; i++) {
-                pos.bits[i] = left.bits[i] & right.bits[i];
+                pos.bits[i] = left.bits[i] | right.bits[i];
             }
 
             return pos;
@@ -203,6 +213,7 @@ namespace DynamicTimelineFramework.Core
 
                 return ((1 << modIndex) & bits[valueIndex]) != 0;
             }
+            
             set {
                 if(_readOnly)
                     throw new ReadOnlyException();

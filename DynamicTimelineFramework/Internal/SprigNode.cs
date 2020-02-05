@@ -89,6 +89,8 @@ namespace DynamicTimelineFramework.Internal {
                     newNode._positions[rPair.Key] &= rPair.Value;
             }
 
+            newNode.Index = Node.Max(left.Index, right.Index, index);
+
             return newNode;
         }
 
@@ -102,12 +104,20 @@ namespace DynamicTimelineFramework.Internal {
                 if (newNode._positions.ContainsKey(rPair.Key))
                     newNode._positions[rPair.Key] |= rPair.Value;
             }
+            
+            newNode.Index = Node.Max(left.Index, right.Index, index);
 
             return newNode;
         }
 
-        public bool IsSamePosition(Node.INode other) {
-            return _positions.Equals(((SprigNode) other)._positions);
+        public bool IsSamePosition(Node.INode node) {
+            if (!(node is SprigNode other)) return false;
+            
+            foreach (var pair in _positions) {
+                if (!other._positions.ContainsKey(pair.Key) || !other._positions[pair.Key].Equals(pair.Value)) return false;
+            }
+
+            return true;
         }
 
         private SprigNode Copy() {
@@ -123,10 +133,13 @@ namespace DynamicTimelineFramework.Internal {
         public override bool Equals(object obj) {
             if (!(obj is SprigNode other)) return false;
 
-            if (Index != other.Index || !_positions.Equals(other._positions)) return false;
+            if (Index != other.Index) 
+                return false;
 
-            return Last?.Equals(other.Last) ?? true;
+            if (!IsSamePosition(other))
+                return false;
 
+            return Last == null || Last.Equals(other.Last);
         }
     }
 }

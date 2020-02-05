@@ -120,14 +120,14 @@ namespace DynamicTimelineFramework.Core
                                                              " defined.");
                     
                     dtfTypes.Add(type);
-                    _objectMetaData[type] = new TypeMetaData();
+                    _objectMetaData[type] = new TypeMetaData(type);
                 }
 
                 foreach (var type in dtfTypes)
                 {
 
                     //This is a type we are looking for. Now iterate though each field and build the metadata
-                    var lateralTranslation = _objectMetaData[type].LateralTranslation.Map;
+                    var lateralTranslation = _objectMetaData[type].LateralTranslation;
                     
                     var positionType = typeof(Position);
                     
@@ -190,12 +190,13 @@ namespace DynamicTimelineFramework.Core
                             foreach (var attribute in lateralConstraintAttributes)
                             {
                                 //Make sure the structure exists
-                                if (!lateralTranslation.ContainsKey(attribute.LateralKey))
-                                    lateralTranslation[attribute.LateralKey] = new Dictionary<Position, Position>();
-                                
+                                if (!lateralTranslation.Contains(attribute.LateralKey)) {
+                                    lateralTranslation.AddType(attribute.LateralKey, _objectMetaData[attribute.Type]);
+                                }
+
                                 //Store the translation
                                 var translation = Position.Alloc(attribute.Type, attribute.ConstraintSetBits);
-                                lateralTranslation[attribute.LateralKey][fieldValue] = translation;
+                                lateralTranslation.GetPositionMap(attribute.LateralKey)[fieldValue] = translation;
                                 
                                 //Store the reverse translation using a confirmation mask
                                 
@@ -205,15 +206,16 @@ namespace DynamicTimelineFramework.Core
                                 if(!_objectMetaData.ContainsKey(attribute.Type))
                                     throw new DTFObjectCompilerException(attribute.Type + " has invalid metadata. Make sure it inherits from " + DTFObjectType.Name);
                                 
-                                var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation.Map;
+                                var otherLatTrans = _objectMetaData[attribute.Type].LateralTranslation;
                                 foreach (var otherField in attribute.Type.GetFields())
                                 {
                                     if (otherField.GetCustomAttribute(PositionAttr) is PositionAttribute)
                                     {
-                                        if (!otherLatTrans.ContainsKey(attribute.LateralKey + "-BACK_REFERENCE-" + type.Name))
-                                            otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.Name] = new Dictionary<Position, Position>();
+                                        if (!otherLatTrans.Contains(attribute.LateralKey + "-BACK_REFERENCE-" + type.Name)) {
+                                            otherLatTrans.AddType(attribute.LateralKey + "-BACK_REFERENCE-" + type.Name, _objectMetaData[type]);
+                                        }
 
-                                        var backTranslation = otherLatTrans[attribute.LateralKey + "-BACK_REFERENCE-" + type.Name];
+                                        var backTranslation = otherLatTrans.GetPositionMap(attribute.LateralKey + "-BACK_REFERENCE-" + type.Name);
                                         
                                         var otherPosition = (Position) otherField.GetValue(null);
 
@@ -590,7 +592,6 @@ namespace DynamicTimelineFramework.Core
                     
                     var dest = dtfObj.GetLateralObject(key);
                     
-                    
                     if (!ConstrainLateralObject(dtfObj, key, meta, universeSprig)) continue;
                     
                     //If the constraint results in change, then push it's constraints as well
@@ -653,26 +654,13 @@ namespace DynamicTimelineFramework.Core
 
             internal PositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
             {
-                var timelineVector = new PositionVector(new PositionNode(null, 0, Position.Alloc(dtfObject.GetType())));
-
-                var eigenVals = position.GetEigenstates();
-
-                foreach (var val in eigenVals)
-                {
-                    timelineVector |= _objectMetaData[dtfObject.GetType()].GetVector(val);
-                }
+                var vector = _objectMetaData[dtfObject.GetType()].GetVector(date, position);
                 
                 //Check for invalid bridging
-                if(Owner.ValidateOperations && !((PositionNode) timelineVector.Head).Validate())
+                if(Owner.ValidateOperations && !vector.Head.Validate())
                     throw new InvalidBridgingException();
-                
-                if(date < SprigCenter)
-                    timelineVector.ShiftBackward(SprigCenter - date);
-                
-                if(date > SprigCenter)
-                    timelineVector.ShiftForward(date - SprigCenter);
 
-                return timelineVector;
+                return vector;
             }
             
             internal SprigVector GetTimelineVector(ulong date, SprigNode head) {
@@ -682,6 +670,7 @@ namespace DynamicTimelineFramework.Core
                 
                 foreach (var dtfObject in objects) {
                     var superPosition = node.GetPosition(dtfObject);
+                    var dateObjectSuperPosition = GetTimelineVector(dtfObject, date, superPosition);
                     
                     foreach (var eigenstate in superPosition.GetEigenstates()) {
                         //Find the start of the eigenstate
@@ -693,12 +682,24 @@ namespace DynamicTimelineFramework.Core
                             start = startNode.Index;
                         }
                         
-                        //Collapse at the date, the start where the state first appears,
+                        //Collapse at the start where the state first appears,
                         //and by the prior position before start to establish in the signature
                         //that's where it starts
-                        sprigVector.Add(dtfObject, GetTimelineVector(dtfObject, start, eigenstate) & 
-                                                        GetTimelineVector(dtfObject, date, eigenstate) & 
-                                                        GetTimelineVector(dtfObject, start - 1, head.GetSprigNode(start - 1).GetPosition(dtfObject)));
+                        var vector = dateObjectSuperPosition & 
+                                     GetTimelineVector(dtfObject, start, eigenstate) &
+                                     GetTimelineVector(dtfObject, start - 1, head.GetSprigNode(start - 1).GetPosition(dtfObject));
+
+                        if (sprigVector.Head.Contains(dtfObject)) {
+
+                            var mask = new SprigVector();
+                            mask.Add(dtfObject, vector);
+
+                            sprigVector |= mask;
+                        }
+                        
+                        else {
+                            sprigVector.Add(dtfObject, vector);
+                        }
                     }
                 }
 
@@ -709,46 +710,50 @@ namespace DynamicTimelineFramework.Core
 
             internal class TypeMetaData
             {
+                private readonly Type _type;
                 public LateralTranslation LateralTranslation { get; }
                 
                 public Dictionary<Position, PositionMetaData> PreComputedVectors { get; }
                 
-                public TypeMetaData()
-                {
+                public TypeMetaData(Type type) {
+                    _type = type;
                     LateralTranslation = new LateralTranslation();
                     PreComputedVectors = new Dictionary<Position, PositionMetaData>();
                 }
 
-                public PositionVector Translate(string key, PositionVector input)
-                {
-                     
+                public PositionVector Translate(string key, PositionVector input) {
+                    var translateMeta = LateralTranslation.GetTypeMetaData(key);
+                    
                     var currentIn = input.Head;
-                    var currentOut = new PositionNode(null, currentIn.Index, LateralTranslation[key, currentIn.SuperPosition.Copy()]);
-                    var output = new PositionVector(currentOut);
+                    var output = translateMeta.GetVector(currentIn.Index, LateralTranslation[key, currentIn.SuperPosition]);
 
                     while (currentIn.Last != null)
                     {
                         currentIn = (PositionNode) currentIn.Last;
-
-                        var lastTranslate = LateralTranslation[key, currentIn.SuperPosition.Copy()];
-
-                        if (lastTranslate.Equals(currentOut.SuperPosition)) {
-                            currentOut.Index = currentIn.Index;
-                        }
-                        
-                        else {
-                            currentOut.Last = new PositionNode(null, currentIn.Index, lastTranslate);
-                            currentOut = (PositionNode) currentOut.Last;
-                        }
+                        output &= translateMeta.GetVector(currentIn.Index, LateralTranslation[key, currentIn.SuperPosition]);
                     }
 
                     return output;
 
                 }
 
-                public PositionVector GetVector(Position pos) {
-                    return PreComputedVectors[pos].TimelineVector;
+                public PositionVector GetVector(ulong date, Position position) {
+                    var timelineVector = new PositionVector(new PositionNode(null, 0, Position.Alloc(_type)));
 
+                    var eigenVals = position.GetEigenstates();
+
+                    foreach (var val in eigenVals)
+                    {
+                        timelineVector |= PreComputedVectors[val].TimelineVector;
+                    }
+                    
+                    if(date < SprigCenter)
+                        timelineVector.ShiftBackward(SprigCenter - date);
+                    
+                    if(date > SprigCenter)
+                        timelineVector.ShiftForward(date - SprigCenter);
+
+                    return timelineVector;
                 }
             }
 
@@ -765,14 +770,14 @@ namespace DynamicTimelineFramework.Core
                 }
             }
 
-
             internal class LateralTranslation {
-                public readonly Dictionary<string, Dictionary<Position, Position>> Map = new Dictionary<string, Dictionary<Position, Position>>();
+                private readonly Dictionary<string, Dictionary<Position, Position>> _positionMaps = new Dictionary<string, Dictionary<Position, Position>>();
+                private readonly Dictionary<string, TypeMetaData> _types = new Dictionary<string, TypeMetaData>();
                 private readonly Dictionary<string, string> _proxy = new Dictionary<string, string>();
 
                 public Position this[string key, Position input] {
                     get {
-                        var latMap = Map[_proxy.ContainsKey(key) ? _proxy[key] : key];
+                        var latMap = _positionMaps[_proxy.ContainsKey(key) ? _proxy[key] : key];
                         var eigenvals = input.GetEigenstates();
 
                         var superPosition = latMap[eigenvals[0]];
@@ -783,6 +788,23 @@ namespace DynamicTimelineFramework.Core
 
                         return superPosition;
                     }
+                }
+
+                public bool Contains(string key) {
+                    return _positionMaps.ContainsKey(key);
+                }
+
+                public Dictionary<Position, Position> GetPositionMap(string key) {
+                    return _positionMaps[key];
+                }
+
+                public TypeMetaData GetTypeMetaData(string key) {
+                    return _types[key];
+                }
+
+                public void AddType(string key, TypeMetaData meta) {
+                    _positionMaps[key] = new Dictionary<Position, Position>();
+                    _types[key] = meta;
                 }
 
                 public void AddProxy(string input, string output) {
