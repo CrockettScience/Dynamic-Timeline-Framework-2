@@ -12,9 +12,13 @@ namespace Test
             var galaxy = new Galaxy(multiverse);
             var timer = new Stopwatch();
             
-            //Constrain_X_ObjectAndUniverseCount(50, timer, galaxy, multiverse);
-            var star = new Star(galaxy, multiverse);
-            var rootStarContinuity = multiverse.BaseUniverse.GetContinuity(star);
+            /*
+            Console.WriteLine("Create 10 Universes");
+            CreateUniverse_X_UniverseCount(10, timer, galaxy, multiverse);
+            
+            Console.WriteLine("Create 1000 objects");
+            Constrain_X_ObjectCount(1000, timer, galaxy, multiverse);
+            */
             var rootGalaxyContinuity = multiverse.BaseUniverse.GetContinuity(galaxy);
 
             Console.WindowWidth = 256;
@@ -22,10 +26,18 @@ namespace Test
             //Galaxy in full superposition
             Console.WriteLine("Before Star Constraints:");
             Console.WriteLine("Year 11,000,000,000 - " + rootGalaxyContinuity[11_000_000_000]);
+            
+            //Collapse Galaxy
+            rootGalaxyContinuity.Constrain(10, Galaxy.Birth, out _);
+            rootGalaxyContinuity.Constrain(5, Galaxy.Birth, out var earlyBirthDiff);
+            var ebUniverse = new Universe(earlyBirthDiff);
+            
+            var star = new Star(galaxy, multiverse);
+            var ebStarContinuity = ebUniverse.GetContinuity(star);
 
             //Test branching multiverse
-            rootStarContinuity.Constrain(11_000_000_000, Star.MainSequence, out _);
-            rootStarContinuity.Constrain(11_000_000_000, Star.Massive, out var massiveStarDiff);
+            ebStarContinuity.Constrain(11_000_000_000, Star.MainSequence, out _);
+            ebStarContinuity.Constrain(11_000_000_000, Star.Massive, out var massiveStarDiff);
             
             var massiveStarUniverse = new Universe(massiveStarDiff);
             var massiveStarContinuity = massiveStarUniverse.GetContinuity(star);
@@ -43,9 +55,9 @@ namespace Test
             Console.WriteLine();
             Console.WriteLine("After Star Constraints:");
             Console.WriteLine("Year 11,000,000,000 - " + rootGalaxyContinuity[11_000_000_000]);
-            Console.WriteLine("Year 11,000,000,000 - " + rootStarContinuity[11_000_000_000]);       //Main Sequence
-            Console.WriteLine("Year 13,000,000,000 - " + rootStarContinuity[13_000_000_000]);       //Planetary Nebula
-            Console.WriteLine("Year 15,000,000,000 - " + rootStarContinuity[15_000_000_000]);       //White Dwarf
+            Console.WriteLine("Year 11,000,000,000 - " + ebStarContinuity[11_000_000_000]);       //Main Sequence
+            Console.WriteLine("Year 13,000,000,000 - " + ebStarContinuity[13_000_000_000]);       //Planetary Nebula
+            Console.WriteLine("Year 15,000,000,000 - " + ebStarContinuity[15_000_000_000]);       //White Dwarf
             
             Console.WriteLine();
             Console.WriteLine("Parallel Universe where the star became a massive star, and went supernova instead of burning off in a nebula, and ended up as a black hole:");

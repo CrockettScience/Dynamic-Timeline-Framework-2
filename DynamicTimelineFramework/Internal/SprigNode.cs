@@ -95,6 +95,9 @@ namespace DynamicTimelineFramework.Internal {
                         
                     rightNode.Owner.DisableObject(rPair.Key);
                 }
+
+                else if (newNode._positions.ContainsKey(rPair.Key))
+                    newNode._positions[rPair.Key] &= rPair.Value;
             }
 
             newNode.Index = Node.Max(left.Index, right.Index, index);

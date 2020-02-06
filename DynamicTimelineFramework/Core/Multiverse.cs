@@ -369,7 +369,7 @@ namespace DynamicTimelineFramework.Core
                             var backwardNodeVals = currentPosition.GetEigenstates();
                             var helperNodes = new List<HelperNode>();
 
-                            var index = SprigCenter;
+                            var index = SprigCenter - 1;
                             foreach (var backwardNodeVal in backwardNodeVals) {
                                 length = lengthsDictionary[backwardNodeVal];
                                 span = (ulong) length + (ulong) shift;

@@ -3,6 +3,7 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal {
     internal class SprigVector {
+        private readonly bool _dynamicObjectActivity;
 
         public static SprigVector operator &(SprigVector left, SprigVector right) {
             return new SprigVector(Node.And(left.Head, right.Head));
@@ -22,13 +23,15 @@ namespace DynamicTimelineFramework.Internal {
             private set => _pointer.Last = value;
         }
 
-        public SprigVector() {
+        public SprigVector(bool dynamicObjectActivity = false)
+        {
+            _dynamicObjectActivity = dynamicObjectActivity;
             Head = new SprigNode(null, 0);
         }
 
         public bool IsActive(DTFObject obj)
         {
-            return _objectActivity[obj];
+            return !_dynamicObjectActivity || _objectActivity[obj];
         }
 
         public void DisableObject(DTFObject obj)

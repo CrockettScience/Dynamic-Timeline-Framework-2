@@ -40,6 +40,12 @@ namespace DynamicTimelineFramework.Core
         {
             _universe = universe;
             _dtfObject = dtfObject;
+            
+            //Ask sprig if object is rooted to trigger rooting if needed
+            while (!_universe.Sprig.CheckChildRooted(_dtfObject))
+            {
+                _universe = _universe.Parent;
+            }
         }
 
         /// <summary>
@@ -61,7 +67,7 @@ namespace DynamicTimelineFramework.Core
                 throw new ObjectDisposedException("Universe");
             
             //Check if the position will result in net change
-            var currentPos = _universe.Sprig.GetSprigNode(date).GetPosition(_dtfObject);
+            var currentPos = _universe.Sprig[date, _dtfObject];
             if ((currentPos & pos).Equals(currentPos)) {
                 //Constraining this position will not result in net change, no work needed
                 outDiff = null;
@@ -73,9 +79,6 @@ namespace DynamicTimelineFramework.Core
             
             //Dequeue constraint Tasks
             _universe.ClearConstraintTasks();
-            
-            //First, ask sprig if object is rooted to trigger rooting if needed
-            _universe.Sprig.IsRooted(_dtfObject);
             
             //Pull parent constraints.
             compiler.PullParentInformation(_dtfObject, _universe);
@@ -128,7 +131,7 @@ namespace DynamicTimelineFramework.Core
             if(_universe.IsDisposed)
                 throw new ObjectDisposedException("Universe");
             
-            //The only data seeding the selection is the date and a reference hashed that's serialized (coming soon)
+            //The only data seeding the selection is the date and a reference hashed that's serialized
             //with the object reference. If that's not available, iterate through the indices until one is.
             var rand = new Random(((int) date * 967) ^ _dtfObject.ReferenceHash);
             var objDef = (DTFObjectDefinitionAttribute) _dtfObject.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));

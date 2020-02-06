@@ -46,7 +46,7 @@ namespace DynamicTimelineFramework.Internal {
         }
 
         public PositionVector ToPositionVector(DTFObject dtfObject) {
-            if (!IsRooted(dtfObject))
+            if (!Head.Contains(dtfObject))
                 return Diff.Parent.Sprig.ToPositionVector(dtfObject);
             
             PositionNode currentPNode;
@@ -85,14 +85,14 @@ namespace DynamicTimelineFramework.Internal {
                 currentBuilderNode = (SprigNode) currentBuilderNode.Last;
             }
         }
-
-        public bool IsRooted(DTFObject dtfObject) {
+        
+        public bool CheckChildRooted(DTFObject dtfObject) {
             if (Head.Contains(dtfObject))
                 return true;
-
+            
             //Only other case is if parent is rooted but child hasn't been checked yet
             //Check if parent is rooted
-            if (dtfObject.Parent != null & IsRooted(dtfObject.Parent)) {
+            if (dtfObject.Parent != null & CheckChildRooted(dtfObject.Parent)) {
                 //Get timeline as it is in this universe
                 var timeline = ToPositionVector(dtfObject.Parent);
 
@@ -102,6 +102,7 @@ namespace DynamicTimelineFramework.Internal {
                     var lats = new HashSet<DTFObject> {dtfObject};
                     Diff.AddToDelta(dtfObject, result);
                     Diff.AddAffectedLateralObjects(dtfObject, result, lats);
+                    RootObject(dtfObject);
 
                     return true;
                 }
@@ -132,7 +133,6 @@ namespace DynamicTimelineFramework.Internal {
         public void And(SprigVector other)
         {
             
-            //Todo - Something wrong here
             var newHead = Node.And(Head, other.Head);
             
             if (!Head.Equals(newHead))
@@ -146,7 +146,7 @@ namespace DynamicTimelineFramework.Internal {
         
         public bool And(PositionVector other, DTFObject dtfObject)
         {
-            if (!IsRooted(dtfObject)) {
+            if (!CheckChildRooted(dtfObject)) {
                 return Diff.Parent.Sprig.And(other, dtfObject);
             }
             
