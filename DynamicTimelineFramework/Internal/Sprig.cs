@@ -135,20 +135,21 @@ namespace DynamicTimelineFramework.Internal {
             
             var newHead = Node.And(Head, other.Head);
             
+            //We only should assign the new head if any changes were made
             if (!Head.Equals(newHead))
-            {
                 SetHeadAndRealign(0, newHead);
-            }
-            
+
+            foreach (var obj in GetRootedObjects())
+                other.DisableObject(obj);
+
             if(other.ActiveObjects > 0)
                 Diff.Parent?.Sprig.And(other);
         }
         
         public bool And(PositionVector other, DTFObject dtfObject)
         {
-            if (!CheckChildRooted(dtfObject)) {
+            if (!CheckChildRooted(dtfObject))
                 return Diff.Parent.Sprig.And(other, dtfObject);
-            }
             
             var sVector = new SprigVector();
             sVector.Add(dtfObject, other);
@@ -193,36 +194,35 @@ namespace DynamicTimelineFramework.Internal {
                     currentNode = branchNode[nextDiff];
 
                     //Realign all branches that come on or after realignFromDateOnward
-                    if (branchNode.Date >= realignFromDateOnward) {
+                    if (branchNode.Date >= realignFromDateOnward && branchNode.Date > 0) {
+                        var maskVector = Manager.Owner.Compiler.GetCertaintySignature(branchNode.Date - 1, head);
+                        
                         foreach (var diff in branchNode)
                         {
                             var underneath = head.GetSprigNode(branchNode.Date);
                             var branch = branchNode.GetBranch(diff);
+                        
+                            var branchSprig = branch.Next.Sprig;
+                            var last = (SprigNode) (underneath.Index == branchNode.Date ? underneath.Last : underneath);
+
+                            //Mask the other branch here to reflect the change
+                            var newBranchHead = Node.And(branchSprig.Head, maskVector.Head, branchNode.Date);
+
+                            //Apply the mask only if we need to. If no changes occured, don't change anything
+                            if(!newBranchHead.Equals(branchSprig.Head))
+                                branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead);
                             
-                            if (branchNode.Date > 0) {
-                                var branchSprig = branch.Next.Sprig;
-                                var last = (SprigNode) (underneath.Index == branchNode.Date ? underneath.Last : underneath);
+                            //Change the first node's previous to reflect the new structure
 
-                                //Mask the other branch here to reflect the change
-                                var maskVector = Manager.Owner.Compiler.GetTimelineVector(branchNode.Date - 1, Head);
-                                var newBranchHead = Node.And(branchSprig.Head, maskVector.Head, branchNode.Date);
+                            //If the first node on the branch has the same position as the node "underneath" it on the new head, just replace it
+                            if (branch.FirstNodeOnBranch.IsSamePosition(underneath))
+                                branch.FirstNodeOnBranch = underneath;
 
-                                //Apply the mask only if we need to. If no changes occured, don't change anything
-                                if(!newBranchHead.Equals(branchSprig.Head))
-                                    branchSprig.SetHeadAndRealign(branchNode.Date + 1, newBranchHead);
-                                
-                                //Change the first node's previous to reflect the new structure
-
-                                //If the first node on the branch has the same position as the node "underneath" it on the new head, just replace it
-                                if (branch.FirstNodeOnBranch.IsSamePosition(underneath))
-                                    branch.FirstNodeOnBranch = underneath;
-
-                                //Else, create a "new" node to represent that position
-                                else {
-                                    var oldFirst = branch.FirstNodeOnBranch;
-                                    branch.FirstNodeOnBranch = new SprigNode(last, branchNode.Date);
-                                    branch.FirstNodeOnBranch.Add(oldFirst);
-                                }
+                            //Else, create a "new" node to represent that position
+                            else if (branch.FirstNodeOnBranch.Index > branchNode.Date) {
+                                var oldFirst = branch.FirstNodeOnBranch;
+                                branch.FirstNodeOnBranch = new SprigNode(last, branchNode.Date);
+                                branch.FirstNodeOnBranch.Add(oldFirst);
                             }
                         }
                     }

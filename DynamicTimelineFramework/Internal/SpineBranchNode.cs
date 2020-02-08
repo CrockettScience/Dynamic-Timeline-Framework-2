@@ -75,6 +75,10 @@ namespace DynamicTimelineFramework.Internal {
 
                         second.Last = value;
                     }
+
+                    else {
+                        first.Last = value;
+                    }
                 }
             }
 

@@ -15,6 +15,8 @@ namespace DynamicTimelineFramework.Core
     {
         private readonly Universe _universe;
         private readonly DTFObject _dtfObject;
+        private readonly DTFObjectDefinitionAttribute _attr;
+        private readonly Random _rand;
 
         /// <summary>
         /// Gets the current read-only position at date. This position MAY be in SuperPosition
@@ -32,6 +34,9 @@ namespace DynamicTimelineFramework.Core
                 //Dequeue constraint Tasks
                 _universe.ClearConstraintTasks();
                 
+                //Pull parent constraints.
+                _universe.Multiverse.Compiler.PullParentInformation(_dtfObject, _universe);
+                
                 return _universe.Sprig[date, _dtfObject];
             }
         } 
@@ -40,6 +45,8 @@ namespace DynamicTimelineFramework.Core
         {
             _universe = universe;
             _dtfObject = dtfObject;
+            _attr = (DTFObjectDefinitionAttribute) _dtfObject.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
+            _rand = new Random();
             
             //Ask sprig if object is rooted to trigger rooting if needed
             while (!_universe.Sprig.CheckChildRooted(_dtfObject))
@@ -87,10 +94,10 @@ namespace DynamicTimelineFramework.Core
             var timelineVector = _universe.Multiverse.Compiler.GetTimelineVector(_dtfObject, date, pos);
 
             //Check if it's possible to constrain the position
-            var existingVector = _universe.Sprig.ToPositionVector(_dtfObject);
-
-            if (!(existingVector & timelineVector).Validate()) {
+            if ((_universe.Sprig[date, _dtfObject] & pos).Uncertainty == -1) {
                 //Not possible to constrain, check if it's transitionable
+
+                var existingVector = _universe.Sprig.ToPositionVector(_dtfObject);
 
                 while (existingVector.Head.Index >= date)
                     existingVector.Head = (PositionNode) existingVector.Head.Last;
@@ -131,15 +138,10 @@ namespace DynamicTimelineFramework.Core
             if(_universe.IsDisposed)
                 throw new ObjectDisposedException("Universe");
             
-            //The only data seeding the selection is the date and a reference hashed that's serialized
-            //with the object reference. If that's not available, iterate through the indices until one is.
-            var rand = new Random(((int) date * 967) ^ _dtfObject.ReferenceHash);
-            var objDef = (DTFObjectDefinitionAttribute) _dtfObject.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
-
-            var selectedIndex = rand.Next(objDef.PositionCount);
+            var selectedIndex = _rand.Next(_attr.PositionCount);
             
             while(!this[date][selectedIndex])
-                selectedIndex = (selectedIndex + 1) % objDef.PositionCount;
+                selectedIndex = (selectedIndex + 1) % _attr.PositionCount;
 
             var selectedPosition = Position.Alloc(_dtfObject.GetType());
             selectedPosition[selectedIndex] = true;

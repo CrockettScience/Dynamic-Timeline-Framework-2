@@ -36,8 +36,10 @@ namespace DynamicTimelineFramework.Internal {
 
         public void DisableObject(DTFObject obj)
         {
-            _objectActivity[obj] = false;
-            ActiveObjects--;
+            if (_objectActivity[obj]) {
+                _objectActivity[obj] = false;
+                ActiveObjects--;
+            }
         }
         
         public SprigVector(SprigNode head) {

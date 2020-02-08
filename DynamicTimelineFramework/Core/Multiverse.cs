@@ -373,7 +373,7 @@ namespace DynamicTimelineFramework.Core
                             foreach (var backwardNodeVal in backwardNodeVals) {
                                 length = lengthsDictionary[backwardNodeVal];
                                 span = (ulong) length + (ulong) shift;
-                                helperNodes.Add(new HelperNode(backwardNodeVal, index - span, span, shift, false, repeatsBackward || (backwardDictionary[backwardNodeVal] & backwardNodeVal).Uncertainty == 0));
+                                helperNodes.Add(new HelperNode(backwardNodeVal, index - span + 1, span, shift, false, repeatsBackward || (backwardDictionary[backwardNodeVal] & backwardNodeVal).Uncertainty == 0));
                             }
 
                             while (!currentPosition.Equals(initialPosition)) {
@@ -649,7 +649,7 @@ namespace DynamicTimelineFramework.Core
                     if(universe.Sprig.And(translationVector, dest))
                         PushLateralConstraints(dest, universe.Sprig, false);
                 }
-
+                
             }
 
             internal PositionVector GetTimelineVector(DTFObject dtfObject, ulong date, Position position)
@@ -663,45 +663,36 @@ namespace DynamicTimelineFramework.Core
                 return vector;
             }
             
-            internal SprigVector GetTimelineVector(ulong date, SprigNode head) {
-                var objects = head.GetRootedObjects();
-                var node = head.GetSprigNode(date);
-                var sprigVector = new SprigVector();
+            internal SprigVector GetCertaintySignature(ulong date, SprigNode head) {
+                var output = new SprigVector();
                 
-                foreach (var dtfObject in objects) {
-                    var superPosition = node.GetPosition(dtfObject);
+                //Get a "partial" vector
+                while (head.Index >= date)
+                    head = (SprigNode) head.Last;
+                
+
+                foreach (var obj in head.GetRootedObjects()) {
+                    var meta = _objectMetaData[obj.GetType()];
+                    var vector = new PositionVector(new PositionNode(null, 0, Position.Alloc(obj.GetType(), true)));
                     
-                    foreach (var eigenstate in superPosition.GetEigenstates()) {
-                        //Find the start of the eigenstate
-                        var start = node.Index;
-                        var startNode = node;
+                    //Navigate backwards from head and constrain at the start of every first instance of a position
+                    var current = head;
+                    var positionIndex = current.GetPosition(obj);
 
-                        while (startNode.Last != null && (((SprigNode) startNode.Last).GetPosition(dtfObject) & eigenstate).Uncertainty == 0) {
-                            startNode = (SprigNode) startNode.Last;
-                            start = startNode.Index;
-                        }
+                    while (positionIndex.Uncertainty > -1) {
+                        var lastPosition = current.Last == null ? new Position(obj.GetType()) : ((SprigNode) current.Last).GetPosition(obj);
                         
-                        //Collapse at the start where the state first appears,
-                        //and by the prior position before start to establish in the signature
-                        //that's where it starts
-                        var vector = GetTimelineVector(dtfObject, date, eigenstate) & 
-                                     GetTimelineVector(dtfObject, start, eigenstate);
+                        //Acquire a vector for the superposition that exists at current but not before it
+                        vector &= meta.GetVector(current.Index, (positionIndex ^ lastPosition) & positionIndex);
 
-                        if (sprigVector.Head.Contains(dtfObject)) {
-
-                            var mask = new SprigVector();
-                            mask.Add(dtfObject, vector);
-
-                            sprigVector |= mask;
-                        }
-                        
-                        else {
-                            sprigVector.Add(dtfObject, vector);
-                        }
+                        current = (SprigNode) current.Last;
+                        positionIndex &= lastPosition;
                     }
+                    
+                    output.Add(obj, vector);
                 }
 
-                return sprigVector;
+                return output;
             }
 
             #endregion

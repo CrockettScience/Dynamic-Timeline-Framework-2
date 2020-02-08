@@ -4,7 +4,6 @@ using DynamicTimelineFramework.Objects.Attributes;
 
 namespace Test
 {
-    //Lets say the period length is about 3.5 billion years
     [DTFObjectDefinition(8)]
     public class Galaxy : DTFObject {
         
@@ -14,16 +13,16 @@ namespace Test
         [Position(1, (int) Stage.ProtoGalaxy)]
         public static readonly Position Birth = Position.Alloc<Galaxy>((int) Stage.Birth);
         
-        [Position(1_250_000_000_000, (int) Stage.Young)]
+        [Position(100, (int) Stage.Young)]
         public static readonly Position ProtoGalaxy = Position.Alloc<Galaxy>((int) Stage.ProtoGalaxy);
         
-        [Position(1_250_000_000_000, (int) Stage.Middle)]
+        [Position(100, (int) Stage.Middle)]
         public static readonly Position Young =      Position.Alloc<Galaxy>((int) Stage.Young);
         
-        [Position(1_250_000_000_000, (int) Stage.Old)]
+        [Position(100, (int) Stage.Old)]
         public static readonly Position Middle =      Position.Alloc<Galaxy>((int) Stage.Middle);
         
-        [Position(1_250_000_000_000, (int) Stage.Death)]
+        [Position(100, (int) Stage.Death)]
         public static readonly Position Old =      Position.Alloc<Galaxy>((int) Stage.Old);
         
         [Position(1, (int) Stage.Degenerate)]

@@ -82,6 +82,17 @@ namespace DynamicTimelineFramework.Core
 
             return pos;
         }
+        
+        public static Position operator ^(Position left, Position right) {
+            var pos = Alloc(left.Type);
+
+            for (var i = 0; i < left.bits.Length; i++) {
+                pos.bits[i] = left.bits[i] ^ right.bits[i];
+            }
+
+            return pos;
+        }
+        
         public static Position operator |(Position left, Position right) {
             var pos = Alloc(left.Type);
 

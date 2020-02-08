@@ -86,19 +86,9 @@ namespace DynamicTimelineFramework.Internal {
 
             var newNode = leftNode.Copy();
 
-            foreach (var rPair in rightNode._positions) {
-                if (rightNode.Owner != null)
-                {
-                    if(rightNode.Owner.IsActive(rPair.Key) &&
-                       newNode._positions.ContainsKey(rPair.Key))
-                        newNode._positions[rPair.Key] &= rPair.Value;
-                        
-                    rightNode.Owner.DisableObject(rPair.Key);
-                }
-
-                else if (newNode._positions.ContainsKey(rPair.Key))
+            foreach (var rPair in rightNode._positions)
+                if (newNode._positions.ContainsKey(rPair.Key) && (rightNode.Owner == null || rightNode.Owner.IsActive(rPair.Key)))
                     newNode._positions[rPair.Key] &= rPair.Value;
-            }
 
             newNode.Index = Node.Max(left.Index, right.Index, index);
 
@@ -111,21 +101,10 @@ namespace DynamicTimelineFramework.Internal {
 
             var newNode = leftNode.Copy();
 
-            foreach (var rPair in rightNode._positions) {
-                //Disable right operand if needed
-                if (rightNode.Owner != null)
-                {
-                    if(rightNode.Owner.IsActive(rPair.Key) &&
-                       newNode._positions.ContainsKey(rPair.Key))
-                        newNode._positions[rPair.Key] |= rPair.Value;
-                        
-                    rightNode.Owner.DisableObject(rPair.Key);
-                }
-
-                else if (newNode._positions.ContainsKey(rPair.Key))
+            foreach (var rPair in rightNode._positions)
+                if (newNode._positions.ContainsKey(rPair.Key) && (rightNode.Owner == null || rightNode.Owner.IsActive(rPair.Key)))
                     newNode._positions[rPair.Key] |= rPair.Value;
-            }
-            
+
             newNode.Index = Node.Max(left.Index, right.Index, index);
 
             return newNode;
