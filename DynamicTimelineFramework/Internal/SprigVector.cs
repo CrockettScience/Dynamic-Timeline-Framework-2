@@ -3,7 +3,6 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal {
     internal class SprigVector {
-        private readonly bool _dynamicObjectActivity;
 
         public static SprigVector operator &(SprigVector left, SprigVector right) {
             return new SprigVector(Node.And(left.Head, right.Head));
@@ -15,43 +14,33 @@ namespace DynamicTimelineFramework.Internal {
         
         private readonly SprigNode _pointer = new SprigNode(null, ulong.MaxValue);
         
-        private readonly Dictionary<DTFObject, bool> _objectActivity = new Dictionary<DTFObject, bool>();
-        public int ActiveObjects { get; private set; }
+        private readonly Dictionary<DTFObject, PositionVector> _backingVectors = new Dictionary<DTFObject, PositionVector>();
 
         public SprigNode Head {
             get => (SprigNode) _pointer.Last;
             private set => _pointer.Last = value;
         }
 
-        public SprigVector(bool dynamicObjectActivity = false)
+        public SprigVector()
         {
-            _dynamicObjectActivity = dynamicObjectActivity;
             Head = new SprigNode(null, 0);
         }
 
-        public bool IsActive(DTFObject obj)
-        {
-            return !_dynamicObjectActivity || _objectActivity[obj];
+        private SprigVector(SprigNode head) {
+            Head = head;
         }
 
-        public void DisableObject(DTFObject obj)
-        {
-            if (_objectActivity[obj]) {
-                _objectActivity[obj] = false;
-                ActiveObjects--;
-            }
+        public IEnumerable<DTFObject> GetRootedObjects() {
+            return Head.GetRootedObjects();
         }
-        
-        public SprigVector(SprigNode head) {
-            Head = head;
+
+        public bool IsEmpty() {
+            return _backingVectors.Count == 0;
         }
 
         public void Add(DTFObject obj, PositionVector vector) {
             var currentPositionNode = vector.Head;
             var currentBuilderNode = _pointer;
-            
-            _objectActivity[obj] = true;
-            ActiveObjects++;
 
             while (currentPositionNode != null) {
                 while (currentBuilderNode.Last.Index > currentPositionNode.Index) {
@@ -60,7 +49,7 @@ namespace DynamicTimelineFramework.Internal {
                 }
                 
                 if (currentBuilderNode.Last.Index < currentPositionNode.Index) {
-                    currentBuilderNode.Last = new SprigNode(this, (SprigNode) currentBuilderNode.Last, currentPositionNode.Index, obj, currentPositionNode.SuperPosition);
+                    currentBuilderNode.Last = new SprigNode((SprigNode) currentBuilderNode.Last, currentPositionNode.Index, obj, currentPositionNode.SuperPosition);
                     currentBuilderNode = (SprigNode) currentBuilderNode.Last;
                     
                     currentBuilderNode.Add((SprigNode) currentBuilderNode.Last);
@@ -74,28 +63,12 @@ namespace DynamicTimelineFramework.Internal {
 
                 currentPositionNode = (PositionNode) currentPositionNode.Last;
             }
+
+            _backingVectors[obj] = vector;
         }
 
         public PositionVector ToPositionVector(DTFObject obj) {
-            var currentS = (SprigNode) _pointer.Last;
-            PositionNode currentP;
-            var posHead = currentP = new PositionNode(null, currentS.Index, currentS.GetPosition(obj));
-
-            currentS = (SprigNode) currentS.Last;
-
-            while (currentS != null) {
-                var newP = new PositionNode(null, currentS.Index, currentS.GetPosition(obj));
-
-                if (newP.IsSamePosition(currentP))
-                    currentP.Index = newP.Index;
-
-                else 
-                    currentP = (PositionNode) (currentP.Last = newP);
-                
-                currentS = (SprigNode) currentS.Last;
-            }
-            
-            return new PositionVector(posHead);
+            return _backingVectors[obj];
         }
 
         public bool Validate() {

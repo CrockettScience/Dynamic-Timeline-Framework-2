@@ -1,3 +1,4 @@
+using System;
 using DynamicTimelineFramework.Core;
 
 namespace DynamicTimelineFramework.Internal
@@ -29,18 +30,18 @@ namespace DynamicTimelineFramework.Internal
             return Last == null || Last.Validate();
         }
 
-        public Node.INode AndFactory(Node.INode left, Node.INode right, ulong index) {
+        public Node.INode AndFactory(Node.INode left, Node.INode right) {
             var leftPos = (PositionNode) left;
             var rightPos = (PositionNode) right;
             
-            return new PositionNode(null, Node.Max(leftPos.Index, rightPos.Index, index), leftPos.SuperPosition & rightPos.SuperPosition);
+            return new PositionNode(null, Math.Max(leftPos.Index, rightPos.Index), leftPos.SuperPosition & rightPos.SuperPosition);
         }
 
-        public Node.INode OrFactory(Node.INode left, Node.INode right, ulong index) {
+        public Node.INode OrFactory(Node.INode left, Node.INode right) {
             var leftPos = (PositionNode) left;
             var rightPos = (PositionNode) right;
             
-            return new PositionNode(null, Node.Max(leftPos.Index, rightPos.Index, index), leftPos.SuperPosition | rightPos.SuperPosition);
+            return new PositionNode(null, Math.Max(leftPos.Index, rightPos.Index), leftPos.SuperPosition | rightPos.SuperPosition);
         }
 
         public bool IsSamePosition(Node.INode other) {
