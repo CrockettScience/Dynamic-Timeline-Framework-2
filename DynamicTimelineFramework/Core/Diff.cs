@@ -149,25 +149,49 @@ namespace DynamicTimelineFramework.Core
             AddAffectedLateralObjects(obj, timelineVector, lats);
             
             //Add if needed from parent network
-            if (obj.Parent != null && Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, obj.Parent, obj.ParentKey, timelineVector, Parent.Sprig, out var result)) {
-                lats.Add(obj.Parent);
-                _delta.Add(obj.Parent, result);
-                GetAllAffectedLateralObjectsInNetwork(obj.Parent, result);
+            //If an object
+            if (obj.Parent != null) {
+                if (!Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, obj.Parent, obj.ParentKey, timelineVector, Parent.Sprig, out var deltaTranslation)) {
+                    //Clip and reconstruct
+                    var existingVector = Parent.Sprig.ToPositionVector(obj.Parent);
+                    
+                    while (existingVector.Head.Index >= Date)
+                        existingVector.Head = (PositionNode) existingVector.Head.Last;
+
+                    existingVector.Head = new PositionNode(existingVector.Head, Date, Position.Alloc(obj.Parent.GetType(), true));
+
+                    var parentDelta = existingVector & deltaTranslation;
+                    
+                    //Add fixed vector to delta
+                    lats.Add(obj.Parent);
+                    _delta.Add(obj.Parent, parentDelta);
+                    GetAllAffectedLateralObjectsInNetwork(obj.Parent, parentDelta);
+                }
             }
 
             return lats;
         }
 
-        internal void AddAffectedLateralObjects(DTFObject obj, PositionVector timelineVector, HashSet<DTFObject> lats) {
+        private void AddAffectedLateralObjects(DTFObject obj, PositionVector timelineVector, HashSet<DTFObject> lats) {
             foreach (var key in obj.GetLateralKeys()) {
                 var lat = obj.GetLateralObject(key);
 
                 //Get lateral translation and see if it's compatible with the current timeline
-                if (!lats.Contains(lat) && !Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, lat, key, timelineVector, Parent.Sprig, out var result)) {
-                        
+                if (!lats.Contains(lat) && !Parent.Multiverse.Compiler.CanConstrainLateralObject(obj, lat, key, timelineVector, Parent.Sprig, out var deltaTranslation)) {
+                    //Clip and reconstruct
+                    var existingVector = Parent.Sprig.ToPositionVector(obj.Parent);
+                    
+                    while (existingVector.Head.Index >= Date)
+                        existingVector.Head = (PositionNode) existingVector.Head.Last;
+
+                    existingVector.Head = new PositionNode(existingVector.Head, Date, Position.Alloc(obj.Parent.GetType(), true));
+
+                    var parentDelta = existingVector & deltaTranslation;
+                    
+                    //Add fixed vector to delta
                     lats.Add(lat);
-                    _delta.Add(lat, result);
-                    AddAffectedLateralObjects(lat, result, lats);
+                    _delta.Add(lat, parentDelta);
+                    AddAffectedLateralObjects(lat, parentDelta, lats);
                 }
             }
         }

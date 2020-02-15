@@ -16,7 +16,6 @@ namespace DynamicTimelineFramework.Core
         private readonly Universe _universe;
         private readonly DTFObject _dtfObject;
         private readonly DTFObjectDefinitionAttribute _attr;
-        private readonly Random _rand;
 
         /// <summary>
         /// Gets the current read-only position at date. This position MAY be in SuperPosition
@@ -46,10 +45,9 @@ namespace DynamicTimelineFramework.Core
             _universe = universe;
             _dtfObject = dtfObject;
             _attr = (DTFObjectDefinitionAttribute) _dtfObject.GetType().GetCustomAttribute(typeof(DTFObjectDefinitionAttribute));
-            _rand = new Random();
-            
+
             //Ask sprig if object is rooted to trigger rooting if needed
-            while (!_universe.Sprig.CheckChildRooted(_dtfObject))
+            while (!_universe.Sprig.CheckRooted(_dtfObject))
             {
                 _universe = _universe.Parent;
             }
@@ -83,9 +81,6 @@ namespace DynamicTimelineFramework.Core
 
             var multiverse = _universe.Multiverse;
             var compiler = multiverse.Compiler;
-            
-            //Dequeue constraint Tasks
-            _universe.ClearConstraintTasks();
             
             //Pull parent constraints.
             compiler.PullParentInformation(_dtfObject, _universe);
@@ -138,7 +133,7 @@ namespace DynamicTimelineFramework.Core
             if(_universe.IsDisposed)
                 throw new ObjectDisposedException("Universe");
             
-            var selectedIndex = _rand.Next(_attr.PositionCount);
+            var selectedIndex = (_dtfObject.ReferenceHash ^ (int) date) % _attr.PositionCount;
             
             while(!this[date][selectedIndex])
                 selectedIndex = (selectedIndex + 1) % _attr.PositionCount;

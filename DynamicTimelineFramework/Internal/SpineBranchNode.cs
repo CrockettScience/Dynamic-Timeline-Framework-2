@@ -77,7 +77,7 @@ namespace DynamicTimelineFramework.Internal {
                     }
 
                     else {
-                        first.Last = value;
+                        Next.Sprig.Head = value;
                     }
                 }
             }

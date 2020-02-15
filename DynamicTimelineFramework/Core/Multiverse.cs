@@ -611,13 +611,24 @@ namespace DynamicTimelineFramework.Core
                 return universeSprig.And(translationVector, dest);
             }
 
-            internal bool CanConstrainLateralObject(DTFObject source, DTFObject dest, string lateralKey, PositionVector input, Sprig sprig, out PositionVector output) {
+            internal bool CanConstrainLateralObject(DTFObject source, DTFObject dest, string lateralKey, PositionVector input, Sprig sprig, out PositionVector translation) {
                 var meta = _objectMetaData[source.GetType()];
 
-                var translation = meta.Translate(lateralKey, input);
-                output = sprig.ToPositionVector(dest);
+                translation = meta.Translate(lateralKey, input);
+                var destTimeline = sprig.ToPositionVector(dest);
 
-                return (translation & output).Validate();
+                var result = translation & destTimeline;
+
+                if (result.Validate()) {
+                    if (!destTimeline.Equals(result)) {
+                        sprig.And(result, dest);
+                        PushLateralConstraints(dest, sprig, true);
+                    }
+                    
+                    return true;
+                }
+                
+                return false;
             }
             
             internal void PullLateralConstraints(DTFObject source, DTFObject dest)
@@ -665,13 +676,14 @@ namespace DynamicTimelineFramework.Core
             
             internal SprigVector GetCertaintySignature(ulong date, SprigNode head) {
                 var output = new SprigVector();
+                var objects = head.GetRootedObjects();
                 
                 //Get a "partial" vector
                 while (head.Index >= date)
                     head = (SprigNode) head.Last;
                 
 
-                foreach (var obj in head.GetRootedObjects()) {
+                foreach (var obj in objects) {
                     var meta = _objectMetaData[obj.GetType()];
                     var vector = new PositionVector(new PositionNode(null, 0, Position.Alloc(obj.GetType(), true)));
                     
@@ -681,9 +693,11 @@ namespace DynamicTimelineFramework.Core
 
                     while (positionIndex.Uncertainty > -1) {
                         var lastPosition = current.Last == null ? new Position(obj.GetType()) : ((SprigNode) current.Last).GetPosition(obj);
-                        
-                        //Acquire a vector for the superposition that exists at current but not before it
-                        vector &= meta.GetVector(current.Index, (positionIndex ^ lastPosition) & positionIndex);
+
+                        if (positionIndex.Equals(lastPosition)) {
+                            //Acquire a vector for the superposition that exists at current but not before it
+                            vector &= meta.GetVector(current.Index, (positionIndex ^ lastPosition) & positionIndex);
+                        }
 
                         current = (SprigNode) current.Last;
                         positionIndex &= lastPosition;
@@ -716,10 +730,11 @@ namespace DynamicTimelineFramework.Core
                     var currentIn = input.Head;
                     var output = translateMeta.GetVector(currentIn.Index, LateralTranslation[key, currentIn.SuperPosition]);
 
-                    while (currentIn.Last != null)
-                    {
+                    while (currentIn.Last != null) {
+                        var auxillaryIndex = currentIn.Index - 1;
                         currentIn = (PositionNode) currentIn.Last;
-                        output &= translateMeta.GetVector(currentIn.Index, LateralTranslation[key, currentIn.SuperPosition]);
+                        output &= translateMeta.GetVector(currentIn.Index, LateralTranslation[key, currentIn.SuperPosition]) & 
+                                  translateMeta.GetVector(auxillaryIndex, LateralTranslation[key, currentIn.SuperPosition]);
                     }
 
                     return output;

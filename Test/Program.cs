@@ -10,9 +10,6 @@ namespace Test
             var multiverse = new Multiverse(true);
             
             var galaxy = new Galaxy(multiverse);
-            var timer = new Stopwatch();
-            
-            //Constrain_X_UniverseCount(200, timer, galaxy, multiverse);
             
             var rootGalaxyContinuity = multiverse.BaseUniverse.GetContinuity(galaxy);
 
@@ -63,7 +60,7 @@ namespace Test
             Console.WriteLine("Time 200 - " + neutronStarContinuity[200]);    //Massive
             Console.WriteLine("Time 220 - " + neutronStarContinuity[220]);    //Supernova
             Console.WriteLine("Time 230 - " + neutronStarContinuity[230]);    //Neutron Star
-            
+
         }
 
         public static void Constrain_X_ObjectCount(int count, Stopwatch timer, Galaxy galaxy, Multiverse multiverse) {

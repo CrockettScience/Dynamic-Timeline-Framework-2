@@ -5,17 +5,15 @@ using DynamicTimelineFramework.Objects;
 
 namespace DynamicTimelineFramework.Internal {
     internal class SprigNode : Node.INode {
-        public readonly SprigVector Owner;
-        
+
         public Node.INode Last { get; set; }
         
         public ulong Index { get; set; }
 
         private readonly Dictionary<DTFObject, Position> _positions;
 
-        public SprigNode(SprigVector owner, SprigNode last, ulong index, DTFObject obj, Position pos)
+        public SprigNode(SprigNode last, ulong index, DTFObject obj, Position pos)
         {
-            Owner = owner;
             Index = index;
             Last = last;
             _positions = new Dictionary<DTFObject, Position>();
@@ -80,32 +78,32 @@ namespace DynamicTimelineFramework.Internal {
             return true;    
         }
 
-        public Node.INode AndFactory(Node.INode left, Node.INode right, ulong index) {
+        public Node.INode AndFactory(Node.INode left, Node.INode right) {
             var leftNode = (SprigNode) left;
             var rightNode = (SprigNode) right;
 
             var newNode = leftNode.Copy();
 
             foreach (var rPair in rightNode._positions)
-                if (newNode._positions.ContainsKey(rPair.Key) && (rightNode.Owner == null || rightNode.Owner.IsActive(rPair.Key)))
+                if (newNode._positions.ContainsKey(rPair.Key))
                     newNode._positions[rPair.Key] &= rPair.Value;
 
-            newNode.Index = Node.Max(left.Index, right.Index, index);
+            newNode.Index = Math.Max(left.Index, right.Index);
 
             return newNode;
         }
 
-        public Node.INode OrFactory(Node.INode left, Node.INode right, ulong index) {
+        public Node.INode OrFactory(Node.INode left, Node.INode right) {
             var leftNode = (SprigNode) left;
             var rightNode = (SprigNode) right;
 
             var newNode = leftNode.Copy();
 
             foreach (var rPair in rightNode._positions)
-                if (newNode._positions.ContainsKey(rPair.Key) && (rightNode.Owner == null || rightNode.Owner.IsActive(rPair.Key)))
+                if (newNode._positions.ContainsKey(rPair.Key))
                     newNode._positions[rPair.Key] |= rPair.Value;
 
-            newNode.Index = Node.Max(left.Index, right.Index, index);
+            newNode.Index = Math.Max(left.Index, right.Index);
 
             return newNode;
         }
@@ -120,7 +118,7 @@ namespace DynamicTimelineFramework.Internal {
             return true;
         }
 
-        private SprigNode Copy() {
+        public SprigNode Copy() {
             var copy = new SprigNode(null, Index);
 
             foreach (var pair in _positions) {
