@@ -21,10 +21,4 @@ The important benefit to this framework is that, as mentioned before, operations
 
 ![T(n) graphs](https://i.imgur.com/KFbEC3N.png)
 
-It's important to note that the most costly growth variable by far is the number of universes active in the multiverse. It's important to keep this number low, especially if there's going to be a lot of objects and want to keep performance high. Universe's therefore implement the IDisposable interface. When disposed, the Universe is removed from the multiverse, the continuities created by the universe become invalid, and all universes that branch off of it **are preserved**.
-
-### Todo List
-
-1. More testing and bugfixes. I do not consider the current build "stable" and any and all reports of bugs are welcome.
-2. Building a tutorial wiki.
-3. Serialization. Long ways off, and lowest priority before this reaches a stable state.
+The speeds for these operations are SLOW in the very short run. While V2 is much more flexible, it comes at a huge cost of efficiancy. Maintaining lage flags and arrays of flags across the spans makes even small operations costly. V1 had the benefit of the tree like nature of the object relationships, which allowed a "lazier" flow of information. The system needs to be reengineered in such a way that the open object ralationship graph is reorganized into a tree in order to abuse the efficiencies that trees have. See [DynamicTimelineFramework 3](https://github.com/CrockettScience/Dynamic-Timeline-Framework-3).
